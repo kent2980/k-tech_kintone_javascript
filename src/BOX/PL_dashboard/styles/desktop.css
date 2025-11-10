@@ -1,0 +1,174 @@
+/* Google Fonts - 日本語フォント */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap");
+
+/* コンポーネント別CSS */
+/* @import "./components/table.css";
+@import "./components/filter.css";
+@import "./components/tabs.css"; */
+
+.box-inner-gaia {
+    display: none;
+}
+
+.gaia-argoui-app-index-pager {
+    display: none;
+}
+
+.contents-bottommenu-gaia {
+    height: 20px;
+}
+
+th.sorting.recordlist-header-cell-gaia.label-13458061.recordlist-header-sortable-gaia {
+    font-size: 10px;
+}
+
+tbody.recordlist-body-gaia {
+    font-size: 12px;
+}
+
+.dt-buttons {
+    margin-bottom: 10px;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+div#production-table_filter {
+    margin-right: 20px;
+}
+
+div#calculation-table_filter {
+    margin-right: 20px;
+}
+
+.gaia-argoui-app-index-toolbar {
+    display: none;
+}
+
+th {
+    white-space: normal; /* ← 改行を許可 */
+    word-break: keep-all; /* 日本語の単語をなるべく保持 */
+    word-wrap: break-word; /* 長すぎる英単語を折り返す */
+}
+
+.gaia-argoui-app-index-toolbar {
+    display: none;
+}
+
+/* kintone基本要素のスタイル調整 */
+
+header.sc-cwRAiK.fklbGN {
+    height: 30px;
+}
+
+img.sc-YizLo.elNSFO__image {
+    height: 10px;
+}
+
+img.sc-eFDpYj.eTWSDW__photo {
+    height: 20px;
+}
+
+span.sc-eFDpYj.eTWSDW__name {
+    font-size: 12px;
+}
+
+a.sc-eFDpYj.eTWSDW__link.sc-eFDpYj.eTWSDW__link-anchor {
+    padding: 0;
+}
+
+.sc-YizLo.elNSFO {
+    height: 30px;
+}
+
+.sc-eFDpYj.eTWSDW {
+    height: 30px;
+}
+
+div#header-global-navigation-root {
+    height: 30px;
+}
+
+svg {
+}
+
+span {
+}
+
+span.sc-gaZyOd.hxeOmP svg {
+    height: 15px !important;
+}
+
+ul.sc-cOHKVu.kBQnIh__menu-list svg {
+    height: 15px;
+}
+
+ul.sc-cOHKVu.kBQnIh__menu-list {
+}
+
+span.sc-eKePwe.eAueyp {
+    font-size: 12px;
+}
+
+span.sc-ePZdco.cPxpYE__text {
+    font-size: 12px;
+}
+
+a.sc-ePZdco.cPxpYE {
+    height: unset;
+    line-height: unset;
+}
+
+input.sc-gNJGCZ.IzoWt__input {
+    font-size: 12px;
+    height: 30px;
+}
+
+nav.sc-cOHKVu.kBQnIh {
+    height: 30px;
+}
+
+.container-gaia.app-index-container-gaia.no-navimenu-gaia.no-actionmenu-gaia {
+    margin-top: 32px;
+}
+
+img.gaia-argoui-app-titlebar-icon {
+    height: 30px;
+    width: 30px;
+}
+
+a.gaia-argoui-app-titlebar-content {
+    margin: unset !important;
+}
+
+.gaia-argoui-app-titlebar.gaia-argoui-app-titlebar-has-icon {
+    height: 30px;
+}
+
+.gaia-argoui-app-infobar-breadcrumb-iconlist {
+    height: 30px;
+}
+
+span.gaia-argoui-app-breadcrumb-item-caption {
+    font-size: 10px;
+}
+
+li.gaia-argoui-app-breadcrumb-app {
+    height: 30px;
+    line-height: 30px;
+}
+
+a.gaia-argoui-app-breadcrumb-item.gaia-argoui-app-breadcrumb-portal {
+    height: 30px;
+}
+
+li.gaia-argoui-app-breadcrumb-divider {
+    height: 30px;
+}
+
+span.gaia-argoui-app-breadcrumb-item {
+    font-size: 10px;
+}
+
+ol.gaia-argoui-breadcrumb-appbreadcrumbpath.gaia-argoui-app-breadcrumb-path {
+    height: 30px;
+}

@@ -1,0 +1,73 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug: 生産日報報告書 (App 22)",
+            "url": "https://d5wpzdj4iuwp.cybozu.com/k/22/",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "*": "${webRoot}/src/*"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug: マスタ機種一覧 (App 25)",
+            "url": "https://d5wpzdj4iuwp.cybozu.com/k/25/",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "*": "${webRoot}/src/*"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug: PL日次データ (App 32)",
+            "url": "https://d5wpzdj4iuwp.cybozu.com/k/32/",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "*": "${webRoot}/src/*"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug: PL月次データ (App 39)",
+            "url": "https://d5wpzdj4iuwp.cybozu.com/k/39/",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "*": "${webRoot}/src/*"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug: PLダッシュボード (App 43)",
+            "url": "https://d5wpzdj4iuwp.cybozu.com/k/43/",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "*": "${webRoot}/src/*"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "attach",
+            "name": "Attach to Chrome",
+            "port": 9222,
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true
+        }
+    ]
+}

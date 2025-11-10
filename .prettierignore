@@ -1,0 +1,32 @@
+# 依存関係
+node_modules/
+
+# ビルド出力
+dist/
+build/
+
+# ログファイル
+*.log
+
+# 環境変数ファイル
+.env*
+
+# カバレッジレポート
+coverage/
+
+# パッケージマネージャーファイル
+package-lock.json
+yarn.lock
+
+# 設定ファイル（必要に応じて）
+.eslintrc.js
+
+# kintone関連の自動生成ファイル
+kintone.d.ts
+globals.d.ts
+
+# README（フォーマットを維持したい場合）
+README.md
+
+# その他のドキュメント
+*.md

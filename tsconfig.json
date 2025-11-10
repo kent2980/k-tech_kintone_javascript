@@ -1,0 +1,17 @@
+{
+    // Visit https://aka.ms/tsconfig to read more about this file
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "allowJs": true,
+        "checkJs": true,
+        "outDir": "./dist",
+        "typeRoots": ["./node_modules/@types"],
+        "types": ["jest"],
+        "esModuleInterop": true
+    },
+    "include": ["./**/*.js", "./**/*.ts", "kintone.d.ts", "*_fields.d.ts"],
+    "exclude": ["node_modules", "dist", "coverage"]
+}

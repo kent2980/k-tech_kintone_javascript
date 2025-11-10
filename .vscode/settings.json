@@ -1,0 +1,44 @@
+{
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/coverage": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/coverage": true
+    },
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "emmet.includeLanguages": {
+        "typescript": "html"
+    },
+    "cSpell.words": [
+        "chg",
+        "cybozu",
+        "dashbord",
+        "datatables",
+        "deflist",
+        "dts",
+        "eslint",
+        "fieldTypes",
+        "husky",
+        "iuwp",
+        "jsdom",
+        "kintone",
+        "prettier",
+        "wpzdj"
+    ],
+    "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"]
+}

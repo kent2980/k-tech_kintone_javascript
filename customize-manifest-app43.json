@@ -1,0 +1,22 @@
+{
+    "app": "43",
+    "scope": "ALL",
+    "desktop": {
+        "js": ["dist/PL_dashboard.js"],
+        "css": [
+            "src/BOX/PL_dashboard/styles/desktop.css",
+            "src/BOX/PL_dashboard/styles/components/table.css",
+            "src/BOX/PL_dashboard/styles/components/filter.css",
+            "src/BOX/PL_dashboard/styles/components/tabs.css"
+        ]
+    },
+    "mobile": {
+        "js": ["dist/PL_dashboard.mobile.js"],
+        "css": [
+            "src/BOX/PL_dashboard/styles/mobile.css",
+            "src/BOX/PL_dashboard/styles/components/table.css",
+            "src/BOX/PL_dashboard/styles/components/filter.css",
+            "src/BOX/PL_dashboard/styles/components/tabs.css"
+        ]
+    }
+}

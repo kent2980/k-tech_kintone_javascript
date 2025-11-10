@@ -1,0 +1,346 @@
+/* =======================================================================
+   テーブル関連のスタイル
+   ======================================================================= */
+
+/* DataTables カスタムスタイル - kintoneデザインとの調和を図る */
+.dataTables_wrapper {
+    font-family: "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    font-size: 13px;
+    color: #333;
+}
+
+/* 検索ボックス */
+.dataTables_filter {
+    margin-bottom: 10px;
+}
+
+.dataTables_filter input {
+    border: 1px solid #e3e7e8;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    background-color: #fff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dataTables_filter input:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+/* 表示件数選択 */
+.dataTables_length select {
+    border: 1px solid #e3e7e8;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    background-color: #fff;
+}
+
+/* ページネーション */
+.dataTables_paginate {
+    margin-top: 15px;
+}
+
+.dataTables_paginate .paginate_button {
+    padding: 6px 12px;
+    margin-left: 2px;
+    border: 1px solid #e3e7e8;
+    border-radius: 3px;
+    background-color: #fff;
+    color: #333;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background-color: #4a90e2;
+    color: #fff;
+    border-color: #4a90e2;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    color: #999;
+    background-color: #f9f9f9;
+}
+
+/* 情報表示 */
+.dataTables_info {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* テーブルヘッダーの並び替えアイコン */
+table.dataTable thead th.sorting,
+table.dataTable thead th.sorting_asc,
+table.dataTable thead th.sorting_desc {
+    cursor: pointer;
+    position: relative;
+}
+
+table.dataTable thead th.sorting:after,
+table.dataTable thead th.sorting_asc:after,
+table.dataTable thead th.sorting_desc:after {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #999;
+}
+
+table.dataTable thead th.sorting:after {
+    content: "↕";
+}
+
+table.dataTable thead th.sorting_asc:after {
+    content: "↑";
+    color: #4a90e2;
+}
+
+table.dataTable thead th.sorting_desc:after {
+    content: "↓";
+    color: #4a90e2;
+}
+
+/* DataTablesボタン（エクスポート等） */
+.dt-buttons {
+    margin-bottom: 15px;
+}
+
+.dt-button {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-right: 5px;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid #e3e7e8;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+    text-decoration: none;
+}
+
+.dt-button:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+}
+
+.dt-button:active {
+    background-color: #e3e7e8;
+    border-color: #bbb;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+/* 数値列の右寄せスタイル */
+.dt-right {
+    text-align: right !important;
+}
+
+/* 利益率列の特別なスタイル */
+.profit-rate-column {
+    font-weight: bold;
+}
+
+/* DataTables カスタムレイアウト */
+.dt-top-controls {
+    display: flex;
+    margin: 0 10px;
+}
+
+.dataTables_wrapper .dt-length {
+    flex: 0 0 auto;
+}
+
+.dataTables_wrapper .dt-search {
+    flex: 0 0 auto;
+}
+
+.dataTables_wrapper .dt-buttons {
+    flex: 0 0 auto;
+}
+
+/* ラベルのインライン表示設定 */
+.dataTables_wrapper .dt-length label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.dataTables_wrapper .dt-search label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+/* フォーム要素のマージン調整 */
+.dataTables_wrapper .dt-length select {
+    margin: 0 5px;
+}
+
+.dataTables_wrapper .dt-search input {
+    margin: 0 5px;
+}
+
+/* DataTablesのデフォルトラベル構造に対応 */
+.dataTables_wrapper .dt-length label > * {
+    display: inline;
+    vertical-align: middle;
+}
+
+.dataTables_wrapper .dt-search label > * {
+    display: inline;
+    vertical-align: middle;
+}
+
+.dataTables_wrapper .dt-length select,
+.dataTables_wrapper .dt-search input {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 3px;
+}
+
+/* ボタンエリアのスタイル */
+.dataTables_wrapper .dt-buttons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.dataTables_wrapper .dt-buttons .dt-button {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.dataTables_wrapper .dt-buttons .dt-button:hover {
+    background-color: #f5f5f5;
+    border-color: #bbb;
+}
+
+/* DataTablesヘッダー表示修正 */
+.dataTables_wrapper {
+    position: relative;
+}
+
+/* オリジナルテーブルのヘッダーを確実に表示 */
+.dataTables_wrapper table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f5f5f5;
+    display: table-header-group !important;
+    height: auto !important;
+    min-height: 40px !important;
+}
+
+.dataTables_wrapper table thead tr {
+    display: table-row !important;
+    height: auto !important;
+    min-height: 40px !important;
+}
+
+/* テーブル基本スタイル */
+.pl-table-base {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ccc;
+}
+
+/* Sticky ヘッダー用のthead要素 */
+.pl-table-thead-sticky {
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 標準的なテーブルヘッダー（th要素） */
+.pl-table-th-standard {
+    border: 1px solid #ccc;
+    padding: 3px;
+    text-align: center;
+    background-color: #f5f5f5;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 150px;
+    min-width: 80px;
+    line-height: 1.3;
+    vertical-align: middle;
+}
+
+/* 利益計算テーブルの日付列（固定列） */
+.pl-table-th-date-fixed {
+    position: sticky;
+    left: 0;
+    z-index: 11;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+/* テーブルセル（td要素） */
+.pl-table-td-standard {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+/* 数値用テーブルセル（右寄せ） */
+.pl-table-td-numeric {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: right;
+}
+
+/* 利益計算テーブルの日付列セル（固定列） */
+.pl-table-td-date-fixed {
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    z-index: 9;
+}
+
+/* テーブルコンテナスタイル */
+.pl-table-container {
+    margin-top: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* 利益計算テーブル専用コンテナ（横スクロールも有効） */
+.pl-table-container-with-horizontal-scroll {
+    margin-top: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+}
+
+/* データなしメッセージ */
+.pl-no-data-message {
+    margin-top: 20px;
+}

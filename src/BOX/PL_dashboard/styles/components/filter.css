@@ -1,0 +1,146 @@
+/* =======================================================================
+   フィルター関連のスタイル
+   ======================================================================= */
+
+button,
+input,
+select {
+    font-size: 12px !important;
+}
+
+/* フィルターコンテナ */
+.filter-container {
+    margin: 10px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #e3e7e8;
+    border-radius: 6px;
+}
+
+/* フィルターボタン基本スタイル */
+.filter-button {
+    height: 20px;
+    margin: 0 5px;
+    padding: 6px 12px;
+    font-size: 10px !important;
+    border: 1px solid #e3e7e8;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-button:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+}
+
+.filter-button:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+/* セレクト要素 */
+select.filter-select {
+    height: 20px;
+    margin: 0 5px;
+    padding: 6px 10px;
+    font-size: 10px !important;
+    border: 1px solid #e3e7e8;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
+select.filter-select:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+/* ラベル */
+.filter-label {
+    display: inline-block;
+    margin: 0 5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    vertical-align: middle;
+}
+
+/* フィルター行 */
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filter-row:last-child {
+    margin-bottom: 0;
+}
+
+/* モバイル用フィルタースタイル */
+.mobile-filter-container {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.mobile-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: nowrap;
+}
+
+.mobile-filter-row:last-child {
+    margin-bottom: 0;
+}
+
+.mobile-filter-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    min-width: 35px;
+}
+
+.mobile-filter-select {
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid #e3e7e8;
+    border-radius: 4px;
+    background-color: #fff;
+    flex: 1;
+    max-width: 100px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .filter-container {
+        padding: 10px;
+    }
+
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+    }
+
+    .filter-button,
+    .filter-select {
+        width: 100%;
+        height: 40px;
+    }
+
+    .filter-label {
+        margin: 5px 0;
+    }
+}
