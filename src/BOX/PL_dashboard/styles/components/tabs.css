@@ -7,6 +7,10 @@
     margin: 20px 0;
 }
 
+div#tab-container {
+    margin-top: 6px !important;
+}
+
 /* タブボタンコンテナ */
 .tab-buttons-container {
     display: flex;
@@ -16,13 +20,18 @@
 }
 
 /* タブボタン */
+
+#tab-buttons {
+    margin-bottom: 0 !important;
+}
+
 .tab-button {
-    padding: 12px 24px;
+    padding: 4px 24px;
     border: none;
     border-bottom: 3px solid transparent;
     background-color: transparent;
     color: #666;
-    font-size: 14px;
+    font-size: 10px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;

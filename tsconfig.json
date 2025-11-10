@@ -9,8 +9,10 @@
         "checkJs": true,
         "outDir": "./dist",
         "typeRoots": ["./node_modules/@types"],
-        "types": ["jest"],
-        "esModuleInterop": true
+        "types": ["jest", "node"],
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
     },
     "include": ["./**/*.js", "./**/*.ts", "kintone.d.ts", "*_fields.d.ts"],
     "exclude": ["node_modules", "dist", "coverage"]

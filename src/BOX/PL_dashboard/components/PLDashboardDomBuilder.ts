@@ -125,7 +125,6 @@ export class PLDashboardDomBuilder {
         button.id = `${tabId}-button`;
         button.textContent = tabLabel;
         button.className = "tab-button";
-        button.style.padding = "10px 20px";
         button.style.border = "none";
         button.style.backgroundColor = isActive ? "#3498db" : "#ecf0f1";
         button.style.color = isActive ? "#fff" : "#2c3e50";

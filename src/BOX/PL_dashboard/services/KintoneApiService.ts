@@ -80,6 +80,8 @@ export class KintoneApiService {
             "outside_overtime_cost",
             "inside_holiday_expenses",
             "outside_holiday_expenses",
+            "indirect_overtime",
+            "indirect_holiday_work",
         ];
 
         const today = DateUtil.getTodayString();

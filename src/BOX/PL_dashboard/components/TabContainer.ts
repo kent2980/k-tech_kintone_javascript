@@ -91,7 +91,6 @@ export class TabContainer {
 
         // スタイル設定
         Object.assign(button.style, {
-            padding: "10px 20px",
             border: "none",
             backgroundColor: isActive ? "#3498db" : "#ecf0f1",
             color: isActive ? "#fff" : "#333",

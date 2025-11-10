@@ -404,7 +404,6 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         button.className = "tab-button";
         button.dataset.tabId = tabId;
         button.textContent = tabLabel;
-        button.style.padding = "10px 20px";
         button.style.border = "none";
         button.style.backgroundColor = isActive ? "#3498db" : "#ecf0f1";
         button.style.color = isActive ? "#fff" : "#333";

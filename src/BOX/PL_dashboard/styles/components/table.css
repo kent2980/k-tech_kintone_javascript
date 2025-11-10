@@ -112,7 +112,7 @@ table.dataTable thead th.sorting_desc:after {
 
 /* DataTablesボタン（エクスポート等） */
 .dt-buttons {
-    margin-bottom: 15px;
+    margin-bottom: 5px !important;
 }
 
 .dt-button {
@@ -325,7 +325,7 @@ table.dataTable thead th.sorting_desc:after {
 
 /* テーブルコンテナスタイル */
 .pl-table-container {
-    margin-top: 20px;
+    margin-top: 10px;
     max-height: 600px;
     overflow-y: auto;
     position: relative;
