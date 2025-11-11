@@ -9,6 +9,7 @@ export const API_CONFIG = {
         MASTER_MODEL: 25, // マスタ機種一覧
         PL_DAILY: 32, // PL日次
         PL_MONTHLY: 39, // PL月次
+        HOLIDAY: 44, // 祝日マスタ
     },
 
     // API制限とパフォーマンス設定

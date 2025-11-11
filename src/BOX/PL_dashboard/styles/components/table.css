@@ -246,9 +246,9 @@ table.dataTable thead th.sorting_desc:after {
 
 /* オリジナルテーブルのヘッダーを確実に表示 */
 .dataTables_wrapper table thead {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    /* position: sticky; */
+    /* top: 0; */
+    /* z-index: 10; */
     background-color: #f5f5f5;
     display: table-header-group !important;
     height: auto !important;
@@ -270,10 +270,10 @@ table.dataTable thead th.sorting_desc:after {
 
 /* Sticky ヘッダー用のthead要素 */
 .pl-table-thead-sticky {
-    position: sticky;
-    top: 0;
+    /* position: sticky; */
+    /* top: 0; */
     background-color: #f5f5f5;
-    z-index: 10;
+    /* z-index: 10; */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -294,9 +294,9 @@ table.dataTable thead th.sorting_desc:after {
 
 /* 利益計算テーブルの日付列（固定列） */
 .pl-table-th-date-fixed {
-    position: sticky;
-    left: 0;
-    z-index: 11;
+    /* position: sticky; */
+    /* left: 0; */
+    /* z-index: 11; */
     min-width: 100px;
     max-width: 120px;
 }
@@ -317,17 +317,16 @@ table.dataTable thead th.sorting_desc:after {
 
 /* 利益計算テーブルの日付列セル（固定列） */
 .pl-table-td-date-fixed {
-    position: sticky;
-    left: 0;
+    /* position: sticky; */
+    /* left: 0; */
     background-color: #fff;
-    z-index: 9;
+    /* z-index: 9; */
 }
 
 /* テーブルコンテナスタイル */
 .pl-table-container {
     margin-top: 10px;
     max-height: 600px;
-    overflow-y: auto;
     position: relative;
 }
 
@@ -335,12 +334,24 @@ table.dataTable thead th.sorting_desc:after {
 .pl-table-container-with-horizontal-scroll {
     margin-top: 20px;
     max-height: 600px;
-    overflow-y: auto;
-    overflow-x: auto;
-    position: relative;
+    /* overflow-x: auto;
+    position: relative; */
 }
 
 /* データなしメッセージ */
 .pl-no-data-message {
     margin-top: 20px;
+}
+
+/* DataTables情報表示の背景色調整 */
+div#production-table_info {
+    background-color: white;
+}
+
+div#calculation-table_info {
+    background-color: white;
+}
+
+.dt-paging {
+    background-color: white;
 }

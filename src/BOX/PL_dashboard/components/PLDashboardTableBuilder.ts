@@ -5,6 +5,7 @@
 /// <reference path="../fields/month_fields.d.ts" />
 /// <reference path="../fields/model_master_fields.d.ts" />
 
+import { TABLE_COLUMNS } from "../config";
 import { ProductHistoryData, RevenueAnalysis, TotalsByDate } from "../types";
 import { Logger } from "../utils";
 
@@ -248,24 +249,7 @@ export class PLDashboardTableBuilder {
         const outside_unit = plMonthlyData ? Number(plMonthlyData.outside_unit?.value || 0) : 0;
 
         // テーブルカラム
-        const columns = [
-            "日付",
-            "ライン",
-            "機種名",
-            "台数",
-            "付加価値",
-            "社員工数(h)",
-            "社員工数(円)",
-            "派遣工数(h)",
-            "派遣工数(円)",
-            "【社】残業工数(h)",
-            "【社】残業工数(円)",
-            "派残業工数(h)",
-            "派残業工数(円)",
-            "経費合計",
-            "粗利益",
-            "利益率",
-        ];
+        const columns = [...TABLE_COLUMNS.PRODUCTION];
 
         // テーブル要素の作成
         const table = this.createTable("production-table");
@@ -412,41 +396,7 @@ export class PLDashboardTableBuilder {
         getDayOfWeek: (date: Date) => string,
         RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
-        const columns = [
-            "日付",
-            "付加価値売上高",
-            "直行人員",
-            "直行経費",
-            "派遣社員",
-            "派遣経費",
-            "間接人員",
-            "間接経費",
-            "直行残業(h)",
-            "直行休出(h)",
-            "直行経費",
-            "派遣残業(h)",
-            "派遣休出(h)",
-            "派遣経費",
-            "間接残業(h)",
-            "間接休出(h)",
-            "間接経費",
-            "直行/間接人件費(残業・休出含まない）",
-            "間接材料費",
-            "間接材料費,残業休出経費以外",
-            "夜勤手当",
-            "工具器具消耗品、荷造運賃",
-            "残業経費（社員）",
-            "残業経費（派遣）",
-            "休出経費（社員）",
-            "休出経費（派遣）",
-            "派遣人員経費",
-            "総人員/製造経費 計",
-            // "一人当/付加価値（打）",
-            // "一人当/粗利益（打）",
-            // "実績 粗利益率（打）",
-            // "EBITDA（打）",
-            // "EBITDA率",
-        ];
+        const columns = [...TABLE_COLUMNS.PROFIT_CALCULATION];
 
         // コンテナ要素の作成
         const container = document.createElement("div");
@@ -717,23 +667,16 @@ export class PLDashboardTableBuilder {
         RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
         // カラムを設定
-        const columns = [
-            "日付",
-            "付加価値",
-            "経費",
-            "粗利益",
-            "利益率",
-            "累積付加価値",
-            "累積経費",
-            "累積粗利益",
-            "累積利益率",
-        ];
+        const columns = [...TABLE_COLUMNS.REVENUE_ANALYSIS];
         // コンテナ要素を作成
         const container = document.createElement("div");
         container.id = "revenue-analysis-summary-table";
         container.className = "pl-table-container";
         // テーブル要素の作成
-        const table = this.createTable("revenue-summary-table", "pl-summary-table");
+        const table = this.createTable(
+            "revenue-summary-table",
+            "pl-summary-table listView-control-gaia, recordlist-gaia"
+        );
         // ヘッダー行の作成
         const thead = this.createStickyTableHeader(columns);
         table.appendChild(thead);
@@ -772,9 +715,9 @@ export class PLDashboardTableBuilder {
                 }
                 // 利益率列は右寄せ
                 if (index === 4) {
-                    td.className = "dt-right";
+                    td.className = "pl-table-td-standard dt-right";
                 } else if (index > 0) {
-                    td.className = "dt-right";
+                    td.className = "pl-table-td-standard dt-right";
                 } else {
                     td.className = "pl-table-td-standard";
                 }

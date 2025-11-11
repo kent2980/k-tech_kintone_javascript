@@ -1,4 +1,4 @@
-import { API_LIMITS, APP_IDS } from "../constants";
+import { API_LIMITS, APP_IDS } from "../config";
 import { FilterConfig } from "../types";
 import { DateUtil, Logger, PerformanceUtil } from "../utils";
 

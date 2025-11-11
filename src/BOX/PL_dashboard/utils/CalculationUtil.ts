@@ -1,4 +1,4 @@
-import { OVERTIME_MULTIPLIER } from "../constants";
+import { OVERTIME_MULTIPLIER } from "../config";
 
 /**
  * 計算関連のユーティリティ関数
