@@ -402,7 +402,7 @@ export class PLDashboardTableBuilder {
         getRecordsByDate: (date: string) => daily.SavedFields[],
         getDayOfWeek: (date: Date) => string,
         RevenueAnalysisList: RevenueAnalysis[],
-        holidayData: { date?: { value: string } }[] = []
+        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): HTMLDivElement {
         const columns = [...TABLE_COLUMNS.PROFIT_CALCULATION];
 
@@ -684,7 +684,7 @@ export class PLDashboardTableBuilder {
      */
     static createRevenueAnalysisSummaryTable(
         RevenueAnalysisList: RevenueAnalysis[],
-        holidayData: { date?: { value: string } }[] = []
+        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): HTMLDivElement {
         // カラムを設定
         const columns = [...TABLE_COLUMNS.REVENUE_ANALYSIS];
@@ -1039,20 +1039,30 @@ export class PLDashboardTableBuilder {
      */
     static getDateBackgroundColor(
         date: string,
-        holidayData: { date?: { value: string } }[] = []
+        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): string {
         const dateObj = new Date(date);
         const dayOfWeek = dateObj.getDay();
 
-        // 土曜日の場合は薄い青
-        if (dayOfWeek === 6) {
-            return "#e6f3ff"; // 薄い青
+        // 会社休日マスタの日付と一致する場合はholiday_typeに応じた背景色を設定
+        const holidayRecord = holidayData.find((holiday) => holiday.date?.value === date);
+        if (holidayRecord) {
+            const holidayType = holidayRecord.holiday_type?.value;
+            switch (holidayType) {
+                case "法定休日":
+                    return "#e6f3ff"; // 薄い青
+                case "所定休日":
+                    return "#ffe6e6"; // 薄い赤
+                case "一斉有給":
+                    return "#fffacd"; // 薄い黄色
+                default:
+                    return "#ffe6e6"; // デフォルトは薄い赤
+            }
         }
 
-        // 会社休日マスタに含まれる日付の場合は薄い赤
-        const isHoliday = holidayData.some((holiday) => holiday.date?.value === date);
-        if (isHoliday) {
-            return "#ffe6e6"; // 薄い赤
+        // 土曜日の場合は薄いグレー（会社休日より優先度低め）
+        if (dayOfWeek === 6) {
+            return "#f5f5f5"; // 薄いグレー
         }
 
         // 通常日は背景色なし
