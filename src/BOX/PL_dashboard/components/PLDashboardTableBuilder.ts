@@ -375,7 +375,9 @@ export class PLDashboardTableBuilder {
         setTimeout(() => {
             this.enhanceProductionTable("production-table");
         }, 100);
-
+        product_history_data.forEach((item) => {
+            console.log(`${item.date}`);
+        });
         return container;
     }
 
@@ -465,10 +467,11 @@ export class PLDashboardTableBuilder {
             const records = getRecordsByDate(date);
             const firstRecord: daily.SavedFields | null = records.length > 0 ? records[0] : null;
 
-            // firstRecordがnullの場合は処理を終了
+            // firstRecordがnullの場合（データが存在しない日）でも0値でレコードを作成
             if (!firstRecord) {
-                Logger.warn(`日付 ${date} のPL日次データが存在しません。`);
-                return;
+                Logger.debug(
+                    `日付 ${date} のPL日次データが存在しません。0値でレコードを作成します。`
+                );
             }
 
             // 日付を短い形式(mm/dd(曜日))に変換※月と日付は０埋めして２桁に

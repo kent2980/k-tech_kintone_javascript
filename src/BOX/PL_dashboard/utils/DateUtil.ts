@@ -59,4 +59,59 @@ export class DateUtil {
     static getCurrentMonth(): number {
         return new Date().getMonth() + 1;
     }
+
+    /**
+     * 指定された年月の全日付リストを生成（YYYY-MM-DD形式）
+     * @param year - 年（文字列）
+     * @param month - 月（文字列、1-12）
+     * @returns 月の全日付の配列
+     */
+    static generateMonthlyDateList(year: string, month: string): string[] {
+        if (!year || !month) {
+            return [];
+        }
+
+        const yearNum = parseInt(year, 10);
+        const monthNum = parseInt(month, 10);
+
+        if (isNaN(yearNum) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+            return [];
+        }
+
+        const datesInMonth = this.getLastDayOfMonth(yearNum, monthNum);
+        const dateList: string[] = [];
+
+        for (let day = 1; day <= datesInMonth; day++) {
+            const dateString = `${year}-${month.padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            dateList.push(dateString);
+        }
+
+        return dateList;
+    }
+
+    /**
+     * 指定された年月の全日付リスト（祝日を除く）を生成
+     * @param year - 年（文字列）
+     * @param month - 月（文字列、1-12）
+     * @param holidayData - 祝日データ
+     * @returns 祝日を除く月の全日付の配列
+     */
+    static generateWorkingDaysList(
+        year: string,
+        month: string,
+        holidayData: { date?: { value: string } }[] = []
+    ): string[] {
+        const allDates = this.generateMonthlyDateList(year, month);
+        const holidaySet = new Set(
+            holidayData.map((holiday) => holiday.date?.value).filter(Boolean)
+        );
+
+        return allDates.filter((date) => {
+            const dateObj = new Date(date);
+            const dayOfWeek = dateObj.getDay();
+
+            // 土曜日（6）と日曜日（0）、および祝日を除外
+            return dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(date);
+        });
+    }
 }

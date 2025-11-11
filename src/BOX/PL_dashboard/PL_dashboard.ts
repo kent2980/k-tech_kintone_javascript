@@ -341,15 +341,28 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
     }
 
     /**
-     * product_history_dataから日付リストを取得する関数
+     * 完全な日付リストを取得する関数（欠損日を0値で補完）
      * @return 日付リスト
      */
     function getDateList(): string[] {
+        // 現在選択されている年月を取得
+        const yearSelect = document.getElementById("year-select") as HTMLSelectElement | null;
+        const monthSelect = document.getElementById("month-select") as HTMLSelectElement | null;
+
+        const selectedYear = yearSelect?.value;
+        const selectedMonth = monthSelect?.value;
+
+        // 年月が選択されている場合は完全な日付リストを生成
+        if (selectedYear && selectedMonth) {
+            return DateUtil.generateMonthlyDateList(selectedYear, selectedMonth);
+        }
+
+        // フォールバック: 元データから日付を取得（従来の動作）
         const dateSet = new Set<string>();
         product_history_data?.forEach((item) => {
             dateSet.add(item.date);
         });
-        return Array.from(dateSet);
+        return Array.from(dateSet).sort();
     }
 
     /**
