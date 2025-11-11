@@ -54,6 +54,27 @@ export interface TotalsByDate {
     totalOutsideHolidayOvertime: number;
 }
 
+export interface RevenueAnalysis {
+    /** 日付 */
+    date: string;
+    /** 付加価値 */
+    addedValue: number;
+    /** 経費 */
+    expenses: number;
+    /** 粗利 */
+    grossProfit: number;
+    /** 利益率 */
+    profitRate: string | number;
+    /** 累計付加価値 */
+    CumulativeAddedValue: number;
+    /** 累計経費 */
+    CumulativeExpenses: number;
+    /** 累計粗利 */
+    CumulativeGrossProfit: number;
+    /** 累計利益率 */
+    CumulativeProfitRate: string | number;
+}
+
 export interface TabContainerResult {
     tabContainer: HTMLDivElement;
     tabButtonsContainer: HTMLDivElement;

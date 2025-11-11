@@ -1,61 +1,110 @@
 import Chart from "chart.js/auto";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
+import { RevenueAnalysis } from "../types";
 export class PLDashboardGraphBuilder {
     private chart: Chart | null = null;
 
     /**
      * 折れ線と棒グラフの複合グラフを作成したコンテナを作成
      */
-    static createMixedChartContainer(canvasId: string): HTMLDivElement {
+    static createMixedChartContainer(
+        canvasId: string,
+        RevenueAnalysisList: RevenueAnalysis[]
+    ): HTMLDivElement {
         const container = document.createElement("div");
         container.style.width = "100%";
         container.style.height = "400px";
         const canvas = document.createElement("canvas");
         canvas.id = canvasId;
         container.appendChild(canvas);
-
-        // サンプルデータ
-        const sampleData = {
-            labels: ["January", "February", "March", "April", "May"],
-            lineDataset: {
-                label: "Line Dataset",
-                data: [65, 59, 80, 81, 56],
-                borderColor: "rgb(255, 99, 132)",
-                backgroundColor: "rgba(255, 99, 132, 0.2)",
-            },
-            barDataset: {
-                label: "Bar Dataset",
-                data: [28, 48, 40, 19, 86],
-                backgroundColor: "rgba(54, 162, 235, 0.5)",
-                borderColor: "rgb(54, 162, 235)",
-            },
-        };
         const ctx = canvas.getContext("2d");
         if (ctx) {
+            const labels = RevenueAnalysisList.map((item) => item.date);
+            const addedValueData = RevenueAnalysisList.map((item) => item.CumulativeAddedValue);
+            const expensesData = RevenueAnalysisList.map((item) => item.CumulativeExpenses);
+            const profitRateData = RevenueAnalysisList.map((item) =>
+                Number(item.CumulativeProfitRate)
+            );
+
             new Chart(ctx, {
                 type: "bar",
                 data: {
-                    labels: sampleData.labels,
+                    labels: labels,
                     datasets: [
                         {
-                            ...sampleData.barDataset,
                             type: "bar",
+                            label: "付加価値",
+                            data: addedValueData,
+                            backgroundColor: "rgba(75, 192, 192, 0.6)",
+                            yAxisID: "y-axis-1",
                         },
                         {
-                            ...sampleData.lineDataset,
+                            type: "bar",
+                            label: "経費",
+                            data: expensesData,
+                            backgroundColor: "rgba(255, 99, 132, 0.6)",
+                            yAxisID: "y-axis-1",
+                        },
+                        {
                             type: "line",
-                            fill: false,
+                            label: "利益率",
+                            data: profitRateData,
+                            borderColor: "rgba(255, 206, 86, 1)",
+                            backgroundColor: "rgba(255, 206, 86, 0.6)",
+                            yAxisID: "y-axis-2",
                         },
                     ],
                 },
                 options: {
                     responsive: true,
+                    plugins: {
+                        datalabels: {
+                            display: true,
+                            color: "#000",
+                            font: {
+                                weight: "normal",
+                                size: 10,
+                            },
+                            formatter: (value, context) => {
+                                // 利益率（折れ線グラフ）の場合は%を付ける
+                                if (context.dataset.label === "利益率") {
+                                    return value.toFixed(1) + "%";
+                                }
+                                // 金額の場合は桁区切りで表示
+                                return value.toLocaleString();
+                            },
+                            anchor: "end",
+                            align: "top",
+                        },
+                    },
                     scales: {
-                        y: {
-                            beginAtZero: true,
+                        "y-axis-1": {
+                            type: "linear",
+                            position: "left",
+                            max: 120000,
+                            title: {
+                                display: true,
+                                text: "金額",
+                            },
+                        },
+                        "y-axis-2": {
+                            type: "linear",
+                            position: "right",
+                            max: 80,
+                            title: {
+                                display: true,
+                                text: "利益率 (%)",
+                            },
+                            ticks: {
+                                callback: function (value) {
+                                    return value + "%";
+                                },
+                            },
                         },
                     },
                 },
+                plugins: [ChartDataLabels],
             });
         }
 

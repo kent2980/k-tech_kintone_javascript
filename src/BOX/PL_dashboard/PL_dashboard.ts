@@ -13,7 +13,13 @@ import "./styles/components/tabs.css";
 import "./styles/desktop.css";
 
 // Import modular components
-import { FilterConfig, ProductHistoryData, TabContainerResult, TotalsByDate } from "./types";
+import {
+    FilterConfig,
+    ProductHistoryData,
+    RevenueAnalysis,
+    TabContainerResult,
+    TotalsByDate,
+} from "./types";
 
 import { DateUtil, Logger, PerformanceUtil } from "./utils";
 
@@ -33,6 +39,7 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
     let plMonthlyData: monthly.SavedFields | null = null;
     let filteredRecords: line_daily.SavedFields[] = []; // line_dailyが見つからないのでdailyを使用
     let holidayData: holiday.SavedFields[] = [];
+    let RevenueAnalysisList: RevenueAnalysis[] = [];
 
     // DOM構築関数は PLDashboardDomBuilder クラスに移動しました
 
@@ -169,14 +176,20 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                             getDateList,
                             getTotalsByDate,
                             getRecordsByDate,
-                            DateUtil.getDayOfWeek
+                            DateUtil.getDayOfWeek,
+                            RevenueAnalysisList
                         )
                     ),
                     PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createRevenueAnalysisSummaryTable()
+                        PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                            RevenueAnalysisList
+                        )
                     ),
                     PerformanceUtil.createElementLazy(() =>
-                        PLDashboardGraphBuilder.createMixedChartContainer("mixed-chart")
+                        PLDashboardGraphBuilder.createMixedChartContainer(
+                            "mixed-chart",
+                            RevenueAnalysisList
+                        )
                     ),
                 ]);
 
@@ -276,10 +289,10 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                     totalOutsideHolidayOvertime += Number(item.outsideRegularTime); // 社外休日残業時間の合計
                     // 所定休日の場合
                 } else if (holidayTypeCode === -2) {
-                    totalInsideOvertime += Number(item.insideRegularTime); // 社内休日残業時間の合計
-                    totalInsideOvertime += Number(item.insideOvertime); // 社内休日残業時間の合計
-                    totalOutsideOvertime += Number(item.outsideRegularTime); // 社外休日残業時間の合計
-                    totalOutsideOvertime += Number(item.outsideOvertime); // 社外休日残業時間の合計
+                    totalInsideHolidayOvertime += Number(item.insideRegularTime); // 社内休日残業時間の合計
+                    totalInsideHolidayOvertime += Number(item.insideOvertime); // 社内休日残業時間の合計
+                    totalOutsideHolidayOvertime += Number(item.outsideRegularTime); // 社外休日残業時間の合計
+                    totalOutsideHolidayOvertime += Number(item.outsideOvertime); // 社外休日残業時間の合計
                 }
 
                 details.push(
@@ -369,14 +382,10 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         // メインコンテナ
         const tabContainer = document.createElement("div");
         tabContainer.id = "tab-container";
-        tabContainer.style.marginTop = "20px";
 
         // タブボタンエリア
         const tabButtonsContainer = document.createElement("div");
         tabButtonsContainer.id = "tab-buttons";
-        tabButtonsContainer.style.display = "flex";
-        tabButtonsContainer.style.borderBottom = "2px solid #3498db";
-        tabButtonsContainer.style.marginBottom = "10px";
 
         // タブコンテンツエリア
         const tabContentsContainer = document.createElement("div");
@@ -401,33 +410,9 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         isActive: boolean = false
     ): HTMLButtonElement {
         const button = document.createElement("button");
-        button.className = "tab-button";
+        button.className = "tab-button" + (isActive ? " active" : "");
         button.dataset.tabId = tabId;
         button.textContent = tabLabel;
-        button.style.border = "none";
-        button.style.backgroundColor = isActive ? "#3498db" : "#ecf0f1";
-        button.style.color = isActive ? "#fff" : "#333";
-        button.style.cursor = "pointer";
-        button.style.marginRight = "2px";
-        button.style.fontWeight = isActive ? "bold" : "normal";
-        button.style.transition = "all 0.3s";
-
-        // ホバー効果
-        button.addEventListener("mouseenter", function () {
-            if (!this.classList.contains("active")) {
-                this.style.backgroundColor = "#bdc3c7";
-            }
-        });
-        button.addEventListener("mouseleave", function () {
-            if (!this.classList.contains("active")) {
-                this.style.backgroundColor = "#ecf0f1";
-            }
-        });
-
-        if (isActive) {
-            button.classList.add("active");
-        }
-
         return button;
     }
 
@@ -444,9 +429,8 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         isActive: boolean = false
     ): HTMLDivElement {
         const contentDiv = document.createElement("div");
-        contentDiv.className = "tab-content";
+        contentDiv.className = "tab-content" + (isActive ? " active" : "");
         contentDiv.dataset.tabId = tabId;
-        contentDiv.style.display = isActive ? "block" : "none";
         contentDiv.appendChild(content);
         return contentDiv;
     }
@@ -459,37 +443,25 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         // すべてのタブボタンを非アクティブ化
         const allTabButtons = document.querySelectorAll(".tab-button");
         allTabButtons.forEach((button) => {
-            const htmlButton = button as HTMLElement;
             button.classList.remove("active");
-            htmlButton.style.backgroundColor = "#ecf0f1";
-            htmlButton.style.color = "#333";
-            htmlButton.style.fontWeight = "normal";
         });
 
         // すべてのタブコンテンツを非表示
         const allTabContents = document.querySelectorAll(".tab-content");
         allTabContents.forEach((content) => {
-            const htmlContent = content as HTMLElement;
-            htmlContent.style.display = "none";
+            content.classList.remove("active");
         });
 
         // 指定されたタブをアクティブ化
-        const targetButton = document.querySelector(
-            `.tab-button[data-tab-id="${targetTabId}"]`
-        ) as HTMLElement | null;
+        const targetButton = document.querySelector(`.tab-button[data-tab-id="${targetTabId}"]`);
         if (targetButton) {
             targetButton.classList.add("active");
-            targetButton.style.backgroundColor = "#3498db";
-            targetButton.style.color = "#fff";
-            targetButton.style.fontWeight = "bold";
         }
 
         // 指定されたコンテンツを表示
-        const targetContent = document.querySelector(
-            `.tab-content[data-tab-id="${targetTabId}"]`
-        ) as HTMLElement | null;
+        const targetContent = document.querySelector(`.tab-content[data-tab-id="${targetTabId}"]`);
         if (targetContent) {
-            targetContent.style.display = "block";
+            targetContent.classList.add("active");
         }
     }
 

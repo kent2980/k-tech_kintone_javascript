@@ -13,7 +13,7 @@ export class HeaderContainer {
      */
     private static createFilterContainer(): HTMLDivElement {
         const container = document.createElement("div");
-        container.style.margin = "10px 0";
+        container.className = "header-filter-container";
 
         // 年フィルター
         container.appendChild(DomUtil.createLabel("年: ", "year-select"));
@@ -37,8 +37,7 @@ export class HeaderContainer {
         settingsLink.textContent = "⚙️ 設定";
         settingsLink.href = settingsHref;
         settingsLink.target = "_blank";
-        settingsLink.style.cursor = "pointer";
-        settingsLink.style.whiteSpace = "nowrap"; // 折り返しを防止
+        settingsLink.className = "header-settings-link";
         return settingsLink;
     }
 
@@ -48,17 +47,10 @@ export class HeaderContainer {
      */
     static create(): HTMLDivElement {
         const headerContainer = document.createElement("div");
-        headerContainer.style.display = "flex";
-        headerContainer.style.justifyContent = "space-between";
-        headerContainer.style.alignItems = "center";
-        headerContainer.style.marginTop = "10px";
-        headerContainer.style.marginLeft = "20px";
-        headerContainer.style.marginRight = "20px";
-        headerContainer.style.gap = "20px";
+        headerContainer.className = "header-container";
 
         // フィルターコンテナを作成
         const filterContainer = this.createFilterContainer();
-        filterContainer.style.margin = "0"; // 既存のmarginをリセット
         headerContainer.appendChild(filterContainer);
 
         // 設定リンクを作成

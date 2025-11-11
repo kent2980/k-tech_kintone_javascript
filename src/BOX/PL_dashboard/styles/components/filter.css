@@ -122,6 +122,40 @@ select.filter-select:focus {
     max-width: 100px;
 }
 
+/* ヘッダーコンテナ */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 20px;
+    gap: 20px;
+}
+
+.header-filter-container {
+    margin: 0;
+}
+
+.header-settings-link {
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #333;
+    transition: color 0.2s ease;
+}
+
+.header-settings-link:hover {
+    color: #4a90e2;
+}
+
+/* フィルターラベル */
+.filter-label {
+    margin-left: 0;
+}
+
+.filter-label.with-margin {
+    margin-left: 20px;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .filter-container {

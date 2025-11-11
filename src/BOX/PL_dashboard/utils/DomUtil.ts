@@ -3,6 +3,23 @@
  */
 export class DomUtil {
     /**
+     * 要素を作成する
+     * @param tagName - 作成するタグ名
+     * @param className - クラス名（オプション）
+     * @returns 作成された要素
+     */
+    static createElement<K extends keyof HTMLElementTagNameMap>(
+        tagName: K,
+        className?: string
+    ): HTMLElementTagNameMap[K] {
+        const element = document.createElement(tagName);
+        if (className) {
+            element.className = className;
+        }
+        return element;
+    }
+
+    /**
      * セレクトボックスにオプションを追加する
      * @param selectElement - セレクトボックス要素
      * @param value - オプションの値
@@ -30,9 +47,7 @@ export class DomUtil {
         const label = document.createElement("label");
         label.textContent = text;
         label.setAttribute("for", forId);
-        if (marginLeft) {
-            label.style.marginLeft = marginLeft;
-        }
+        label.className = "filter-label" + (marginLeft ? " with-margin" : "");
         return label;
     }
 
