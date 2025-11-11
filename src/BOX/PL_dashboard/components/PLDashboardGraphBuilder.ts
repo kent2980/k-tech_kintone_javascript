@@ -2,6 +2,7 @@ import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import { RevenueAnalysis } from "../types";
+import { DateUtil } from "../utils";
 export class PLDashboardGraphBuilder {
     private chart: Chart | null = null;
 
@@ -20,7 +21,11 @@ export class PLDashboardGraphBuilder {
         container.appendChild(canvas);
         const ctx = canvas.getContext("2d");
         if (ctx) {
-            const labels = RevenueAnalysisList.map((item) => item.date);
+            const labels = RevenueAnalysisList.map((item) => {
+                // YYYY-MM-DD形式をMM/DD形式に変換
+                const dateObj = new Date(item.date);
+                return `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
+            });
             const addedValueData = RevenueAnalysisList.map((item) => item.CumulativeAddedValue);
             const expensesData = RevenueAnalysisList.map((item) => item.CumulativeExpenses);
             const profitRateData = RevenueAnalysisList.map((item) =>
