@@ -15,7 +15,7 @@ import {
     TableRowData,
     TotalsByDate,
 } from "../types";
-import { Logger } from "../utils";
+import { Logger, DateUtil } from "../utils";
 
 // jQueryを最初にインポート（DataTablesが依存するため）
 import $ from "jquery";
@@ -361,8 +361,17 @@ export class PLDashboardTableBuilder {
 
             product_history_data.push(historyItem);
 
+            // データ欠損日かどうかを判定（付加価値と総コストが共に0の場合）
+            const isMissingData = this.isDataMissingDay(addedValue, totalCost);
+
             cells.forEach((cellValue) => {
                 const td = this.createTableCell(cellValue);
+
+                // データ欠損日の場合は薄い赤の背景色を設定
+                if (isMissingData) {
+                    td.style.backgroundColor = "#ffe6e6"; // 薄い赤
+                }
+
                 row.appendChild(td);
             });
 
@@ -626,6 +635,11 @@ export class PLDashboardTableBuilder {
                     td.className = "pl-table-td-standard";
                 }
 
+                // データ欠損日の場合は薄い赤の背景色を設定
+                if (!firstRecord) {
+                    td.style.backgroundColor = "#ffe6e6"; // 薄い赤
+                }
+
                 row.appendChild(td);
             });
 
@@ -695,12 +709,15 @@ export class PLDashboardTableBuilder {
             const row = document.createElement("tr");
             row.className = "recordlist-row-gaia recordlist-row-gaia-hover-highlight";
 
-            // 日付を短い形式(mm/dd)に変換※月と日付は０埋めして２桁に
+            // 日付を短い形式(mm/dd(曜日))に変換※月と日付は０埋めして２桁に
             const dateObj = new Date(item.date);
             const formattedDate = `${String(dateObj.getMonth() + 1).padStart(
                 2,
                 "0"
-            )}/${String(dateObj.getDate()).padStart(2, "0")}`;
+            )}/${String(dateObj.getDate()).padStart(2, "0")}(${DateUtil.getDayOfWeek(dateObj)})`;
+
+            // データ欠損日かどうかを判定
+            const isMissingData = this.isDataMissingDay(item.addedValue, item.expenses);
 
             // 各列のデータを追加
             const cells = [
@@ -730,6 +747,12 @@ export class PLDashboardTableBuilder {
                 } else {
                     td.className = "pl-table-td-standard";
                 }
+
+                // データ欠損日の場合は薄い赤の背景色を設定
+                if (isMissingData) {
+                    td.style.backgroundColor = "#ffe6e6"; // 薄い赤
+                }
+
                 row.appendChild(td);
             });
             tbody.appendChild(row);
@@ -809,7 +832,7 @@ export class PLDashboardTableBuilder {
             // デフォルトオプション
             const defaultOptions: DataTablesOptions = {
                 paging: true,
-                pageLength: 25,
+                pageLength: 50,
                 searching: true,
                 ordering: true,
                 info: true,
@@ -1009,6 +1032,16 @@ export class PLDashboardTableBuilder {
         } catch (error) {
             Logger.debug(`カスタムスタイル適用でエラーが発生しました: ${error}`);
         }
+    }
+
+    /**
+     * データ欠損日かどうかを判定する
+     * @param addedValue - 付加価値
+     * @param expenses - 経費
+     * @returns データ欠損日の場合true
+     */
+    static isDataMissingDay(addedValue: number, expenses: number): boolean {
+        return addedValue === 0 && expenses === 0;
     }
 
     /**
