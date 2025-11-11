@@ -243,7 +243,7 @@ export class PLDashboardTableBuilder {
         if (!records || records.length === 0) {
             const noDataMessage = document.createElement("div");
             noDataMessage.textContent = "該当するPL日次データが存在しません。";
-            noDataMessage.className = "pl-no-data-message";
+            // noDataMessage.className = "pl-no-data-message";
             container.appendChild(noDataMessage);
             return container;
         }
@@ -389,6 +389,8 @@ export class PLDashboardTableBuilder {
      * @param getTotalsByDate - 日付別集計取得関数
      * @param getRecordsByDate - 日付別レコード取得関数
      * @param getDayOfWeek - 曜日取得関数
+     * @param RevenueAnalysisList - 収益分析リスト
+     * @param holidayData - 会社休日マスタデータ
      * @returns 損益計算テーブルのコンテナ要素
      */
     static createProfitCalculationTable(
@@ -399,7 +401,8 @@ export class PLDashboardTableBuilder {
         getTotalsByDate: (date: string) => TotalsByDate,
         getRecordsByDate: (date: string) => daily.SavedFields[],
         getDayOfWeek: (date: Date) => string,
-        RevenueAnalysisList: RevenueAnalysis[]
+        RevenueAnalysisList: RevenueAnalysis[],
+        holidayData: { date?: { value: string } }[] = []
     ): HTMLDivElement {
         const columns = [...TABLE_COLUMNS.PROFIT_CALCULATION];
 
@@ -625,9 +628,10 @@ export class PLDashboardTableBuilder {
                     td.className = "pl-table-td-standard";
                 }
 
-                // データ欠損日の場合は薄い赤の背景色を設定
-                if (!firstRecord) {
-                    td.style.backgroundColor = "#ffe6e6"; // 薄い赤
+                // 会社休日または土曜日の場合は背景色を設定
+                const backgroundColor = this.getDateBackgroundColor(totals.date, holidayData);
+                if (backgroundColor) {
+                    td.style.backgroundColor = backgroundColor;
                 }
 
                 row.appendChild(td);
@@ -674,10 +678,13 @@ export class PLDashboardTableBuilder {
 
     /**
      * 収益分析サマリテーブルを作成する
+     * @param RevenueAnalysisList - 収益分析データ
+     * @param holidayData - 会社休日マスタデータ
      * @returns 収益分析サマリテーブルのコンテナ要素
      */
     static createRevenueAnalysisSummaryTable(
-        RevenueAnalysisList: RevenueAnalysis[]
+        RevenueAnalysisList: RevenueAnalysis[],
+        holidayData: { date?: { value: string } }[] = []
     ): HTMLDivElement {
         // カラムを設定
         const columns = [...TABLE_COLUMNS.REVENUE_ANALYSIS];
@@ -706,8 +713,8 @@ export class PLDashboardTableBuilder {
                 "0"
             )}/${String(dateObj.getDate()).padStart(2, "0")}(${DateUtil.getDayOfWeek(dateObj)})`;
 
-            // データ欠損日かどうかを判定
-            const isMissingData = this.isDataMissingDay(item.addedValue, item.expenses);
+            // 日付に応じた背景色を取得
+            const backgroundColor = this.getDateBackgroundColor(item.date, holidayData);
 
             // 各列のデータを追加
             const cells = [
@@ -738,9 +745,9 @@ export class PLDashboardTableBuilder {
                     td.className = "pl-table-td-standard";
                 }
 
-                // データ欠損日の場合は薄い赤の背景色を設定
-                if (isMissingData) {
-                    td.style.backgroundColor = "#ffe6e6"; // 薄い赤
+                // 会社休日または土曜日の場合は背景色を設定
+                if (backgroundColor) {
+                    td.style.backgroundColor = backgroundColor;
                 }
 
                 row.appendChild(td);
@@ -1025,13 +1032,31 @@ export class PLDashboardTableBuilder {
     }
 
     /**
-     * データ欠損日かどうかを判定する
-     * @param addedValue - 付加価値
-     * @param expenses - 経費
-     * @returns データ欠損日の場合true
+     * 日付に応じた背景色を取得する
+     * @param date - 日付文字列（YYYY-MM-DD形式）
+     * @param holidayData - 会社休日マスタデータ
+     * @returns 背景色の文字列、通常日の場合は空文字
      */
-    static isDataMissingDay(addedValue: number, expenses: number): boolean {
-        return addedValue === 0 && expenses === 0;
+    static getDateBackgroundColor(
+        date: string,
+        holidayData: { date?: { value: string } }[] = []
+    ): string {
+        const dateObj = new Date(date);
+        const dayOfWeek = dateObj.getDay();
+
+        // 土曜日の場合は薄い青
+        if (dayOfWeek === 6) {
+            return "#e6f3ff"; // 薄い青
+        }
+
+        // 会社休日マスタに含まれる日付の場合は薄い赤
+        const isHoliday = holidayData.some((holiday) => holiday.date?.value === date);
+        if (isHoliday) {
+            return "#ffe6e6"; // 薄い赤
+        }
+
+        // 通常日は背景色なし
+        return "";
     }
 
     /**

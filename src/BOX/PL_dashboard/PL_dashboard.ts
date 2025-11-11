@@ -177,12 +177,14 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                             getTotalsByDate,
                             getRecordsByDate,
                             DateUtil.getDayOfWeek,
-                            RevenueAnalysisList
+                            RevenueAnalysisList,
+                            holidayData
                         )
                     ),
                     PerformanceUtil.createElementLazy(() =>
                         PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
-                            RevenueAnalysisList
+                            RevenueAnalysisList,
+                            holidayData
                         )
                     ),
                     PerformanceUtil.createElementLazy(() =>
