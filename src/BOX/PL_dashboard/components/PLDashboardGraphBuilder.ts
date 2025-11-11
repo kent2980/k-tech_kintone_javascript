@@ -2,7 +2,6 @@ import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import { RevenueAnalysis } from "../types";
-import { DateUtil } from "../utils";
 export class PLDashboardGraphBuilder {
     private chart: Chart | null = null;
 
@@ -15,7 +14,10 @@ export class PLDashboardGraphBuilder {
     ): HTMLDivElement {
         const container = document.createElement("div");
         container.style.width = "100%";
-        container.style.height = "400px";
+        container.style.height = "600px";
+        container.style.minHeight = "500px";
+        container.style.padding = "20px";
+        container.style.boxSizing = "border-box";
         const canvas = document.createElement("canvas");
         canvas.id = canvasId;
         container.appendChild(canvas);
@@ -63,6 +65,15 @@ export class PLDashboardGraphBuilder {
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 20,
+                            right: 30,
+                            bottom: 20,
+                            left: 10,
+                        },
+                    },
                     plugins: {
                         datalabels: {
                             display: true,
