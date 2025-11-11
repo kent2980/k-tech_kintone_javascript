@@ -1,17 +1,38 @@
 module.exports = {
-    "*.{ts,tsx,js,jsx}": (filenames) => {
-        // ファイルを小さなバッチに分割
-        const batchSize = 5;
-        const commands = [];
+    "*.{ts,tsx}": (filenames) => {
+        // 生成されたファイル、スクリプトファイル、特定のパスを除外
+        const filteredFilenames = filenames.filter(
+            (filename) =>
+                !filename.includes("/generated/") &&
+                !filename.includes("/scripts/") &&
+                !filename.endsWith("generate-fields.js") &&
+                !filename.includes("node_modules")
+        );
 
-        for (let i = 0; i < filenames.length; i += batchSize) {
-            const batch = filenames.slice(i, i + batchSize);
-            // 警告は許容し、エラーのみをチェック
-            commands.push(`eslint --fix ${batch.join(" ")}`);
-            commands.push(`prettier --write --ignore-unknown ${batch.join(" ")}`);
+        if (filteredFilenames.length === 0) {
+            return [];
         }
 
-        return commands;
+        return [
+            `eslint --fix ${filteredFilenames.join(" ")}`,
+            `prettier --write ${filteredFilenames.join(" ")}`,
+        ];
+    },
+    "*.{js,jsx}": (filenames) => {
+        // JavaScriptファイルも同様に除外
+        const filteredFilenames = filenames.filter(
+            (filename) =>
+                !filename.includes("/generated/") &&
+                !filename.includes("/scripts/") &&
+                !filename.endsWith("generate-fields.js") &&
+                !filename.includes("node_modules")
+        );
+
+        if (filteredFilenames.length === 0) {
+            return [];
+        }
+
+        return [`prettier --write ${filteredFilenames.join(" ")}`];
     },
     "*.{json,md,css}": (filenames) => {
         const batchSize = 20;

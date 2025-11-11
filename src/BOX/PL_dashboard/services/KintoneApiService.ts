@@ -1,6 +1,6 @@
 import { API_LIMITS, APP_IDS } from "../config";
 import { FilterConfig } from "../types";
-import { DateUtil, Logger, PerformanceUtil } from "../utils";
+import { DateUtil, FieldsUtil, Logger, PerformanceUtil } from "../utils";
 
 /// <reference path="../fields/month_fields.d.ts" />
 /// <reference path="../fields/daily_fields.d.ts" />
@@ -30,7 +30,7 @@ export class KintoneApiService {
             return cachedData;
         }
 
-        const fields = ["inside_unit", "outside_unit", "direct", "dispatch", "indirect"];
+        const fields = FieldsUtil.getMonthlyFields();
         const query = `year_month = "${year}_${month}"`;
 
         try {
@@ -66,24 +66,7 @@ export class KintoneApiService {
      * @returns レコードの配列
      */
     static async fetchPLDailyData(year: string, month: string): Promise<daily.SavedFields[]> {
-        const fields = [
-            "date",
-            "direct_personnel",
-            "temporary_employees",
-            "indirect_personnel",
-            "labor_costs",
-            "indirect_material_costs",
-            "other_indirect_material_costs",
-            "other_added_value",
-            "night_shift_allowance",
-            "total_sub_cost",
-            "inside_overtime_cost",
-            "outside_overtime_cost",
-            "inside_holiday_expenses",
-            "outside_holiday_expenses",
-            "indirect_overtime",
-            "indirect_holiday_work",
-        ];
+        const fields = FieldsUtil.getDailyFields();
 
         const today = DateUtil.getTodayString();
         const startDate = `${year}-${month.padStart(2, "0")}-01`;
@@ -117,18 +100,7 @@ export class KintoneApiService {
     static async fetchProductionReportData(
         filterConfig: FilterConfig
     ): Promise<line_daily.SavedFields[]> {
-        const fields = [
-            "date",
-            "line_name",
-            "model_name",
-            "model_code",
-            "actual_number",
-            "inside_time",
-            "outside_time",
-            "inside_overtime",
-            "outside_overtime",
-            "added_value",
-        ];
+        const fields = FieldsUtil.getLineDailyFields();
 
         const today = DateUtil.getTodayString();
         let queryCondition = "";
@@ -185,15 +157,7 @@ export class KintoneApiService {
             return cachedData;
         }
 
-        const fields = [
-            "line_name",
-            "model_code",
-            "model_name",
-            "customer",
-            "time",
-            "number_of_people",
-            "added_value",
-        ];
+        const fields = FieldsUtil.getModelMasterFields();
 
         try {
             PerformanceUtil.startMeasure("master-model-fetch");
@@ -224,7 +188,7 @@ export class KintoneApiService {
      * @returns レコードの配列
      */
     static async fetchHolidayData(): Promise<holiday.SavedFields[]> {
-        const fields = ["date", "holiday_type"];
+        const fields = FieldsUtil.getHolidayFields();
 
         return await this.fetchAllRecords<holiday.SavedFields>(
             APP_IDS.HOLIDAY,

@@ -54,6 +54,8 @@ module.exports = [
             "src/setupTests.ts",
             "src/**/__tests__/**",
             "src/BOX/PL_dashboard/PL_dashboard.ts", // Legacy file - will be refactored
+            "src/BOX/PL_dashboard/generated/**", // 自動生成されたファイル
+            "src/BOX/PL_dashboard/scripts/generate-fields.js", // Node.jsスクリプト
         ],
     },
 ];
