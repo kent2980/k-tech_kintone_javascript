@@ -6,6 +6,7 @@
 /// <reference path="../fields/model_master_fields.d.ts" />
 
 import { TABLE_COLUMNS } from "../config";
+import { BusinessCalculationHelperService, BusinessCalculationService } from "../services";
 import {
     DataTablesApi,
     DataTablesOptions,
@@ -266,53 +267,29 @@ export class PLDashboardTableBuilder {
         // データ行の作成
         const tbody = this.createTableBody();
         records.forEach((record) => {
-            // マスタ機種一覧データからmodel_nameに対応する付加価値情報を取得
-            let addedValue = 0;
-            if (record.added_value?.value !== "") {
-                Logger.debug(`直接付加価値が設定されています: ${record.added_value.value}`);
-                addedValue = Number(record.added_value.value);
-            } else {
-                const modelName = record.model_name?.value || "";
-                const modelCode = record.model_code?.value || "";
-                if (masterModelData && masterModelData.length > 0) {
-                    const matchedModel = masterModelData.find((item) => {
-                        if (modelCode !== "") {
-                            return (
-                                item.model_name.value === modelName &&
-                                item.model_code.value === modelCode
-                            );
-                        } else {
-                            return item.model_name.value === modelName;
-                        }
-                    });
-                    if (matchedModel) {
-                        addedValue = Number(matchedModel.added_value?.value || 0);
-                    }
-                }
-                // 台数を取得
-                const actualNumber = Number(record.actual_number?.value || 0);
-                addedValue = addedValue * actualNumber; // 台数分を掛ける
-                addedValue = Math.round(addedValue); // 四捨五入
+            // 経営指標を計算（新しいBusinessCalculationServiceを使用）
+            const metrics = BusinessCalculationService.calculateBusinessMetrics(
+                record,
+                masterModelData,
+                plMonthlyData
+            );
+
+            // 計算結果の検証とログ出力（開発環境）
+            const recordInfo = `${record.date?.value} - ${record.line_name?.value} - ${record.model_name?.value}`;
+            const validation = BusinessCalculationHelperService.validateBusinessMetrics(
+                metrics,
+                record.date?.value
+            );
+
+            if (!validation.isValid) {
+                Logger.debug(`計算エラー検出 [${recordInfo}]: ${validation.errors.join(", ")}`);
             }
-            // 社員工数を計算する
-            const insideTime = Number(record.inside_time?.value || 0);
-            const insideCost = insideTime * inside_unit;
-            // 派遣工数を計算する
-            const outsideTime = Number(record.outside_time?.value || 0);
-            const outsideCost = outsideTime * outside_unit;
-            // 社員残業工数を計算する
-            const insideOvertime = Number(record.inside_overtime?.value || 0);
-            const insideOvertimeCost = insideOvertime * inside_unit * 1.25; // 1.25倍で計算
-            // 派遣残業工数を計算する
-            const outsideOvertime = Number(record.outside_overtime?.value || 0);
-            const outsideOvertimeCost = outsideOvertime * outside_unit * 1.25; // 1.25倍で計算
-            // 経費合計を計算する
-            const totalCost = insideCost + outsideCost + insideOvertimeCost + outsideOvertimeCost;
-            // 粗利益を計算する
-            const grossProfit = addedValue - totalCost;
-            // 利益率を計算する
-            const profitRate =
-                addedValue > 0 ? ((grossProfit / addedValue) * 100).toFixed(2) + "%" : "0%";
+
+            // 異常値検出
+            const anomalies = BusinessCalculationHelperService.detectAnomalies(metrics);
+            if (anomalies.length > 0) {
+                Logger.debug(`異常値検出 [${recordInfo}]: ${anomalies.join(", ")}`);
+            }
 
             // 新しい行を作成
             const row = document.createElement("tr");
@@ -331,18 +308,18 @@ export class PLDashboardTableBuilder {
                 record.line_name?.value || "", // ライン
                 record.model_name?.value || "", // 機種名
                 record.actual_number?.value || "0", // 台数
-                addedValue, // 付加価値
+                metrics.addedValue.addedValue, // 付加価値
                 record.inside_time?.value || "0", // 社員工数(h)
-                insideCost, // 社員工数(円)
+                metrics.cost.insideCost, // 社員工数(円)
                 record.outside_time?.value || "0", // 派遣工数(h)
-                outsideCost, // 派遣工数(円)
+                metrics.cost.outsideCost, // 派遣工数(円)
                 record.inside_overtime?.value || "0", // 社員残業工数(h)
-                insideOvertimeCost, // 社員残業工数(円)
+                metrics.cost.insideOvertimeCost, // 社員残業工数(円)
                 record.outside_overtime?.value || "0", // 派遣残業工数(h)
-                outsideOvertimeCost, // 派遣残業工数(円)
-                totalCost, // 経費合計
-                grossProfit, // 粗利益
-                profitRate, // 利益率
+                metrics.cost.outsideOvertimeCost, // 派遣残業工数(円)
+                metrics.cost.totalCost, // 経費合計
+                metrics.profit.grossProfit, // 粗利益
+                metrics.profit.profitRateString, // 利益率
             ];
 
             // テーブルデータを格納するリストにも追加
@@ -350,10 +327,10 @@ export class PLDashboardTableBuilder {
                 date: record.date?.value || "",
                 line_name: record.line_name?.value || "",
                 actual_number: record.actual_number?.value || "0",
-                addedValue: addedValue,
-                totalCost: totalCost,
-                grossProfit: grossProfit,
-                profitRate: profitRate,
+                addedValue: metrics.addedValue.addedValue,
+                totalCost: metrics.cost.totalCost,
+                grossProfit: metrics.profit.grossProfit,
+                profitRate: metrics.profit.profitRateString,
                 insideOvertime: record.inside_overtime?.value || "0",
                 outsideOvertime: record.outside_overtime?.value || "0",
                 insideRegularTime: record.inside_time?.value || "0",
