@@ -15,7 +15,7 @@ import {
     TableRowData,
     TotalsByDate,
 } from "../types";
-import { Logger, DateUtil } from "../utils";
+import { DateUtil, Logger } from "../utils";
 
 // jQueryを最初にインポート（DataTablesが依存するため）
 import $ from "jquery";
@@ -361,20 +361,10 @@ export class PLDashboardTableBuilder {
 
             product_history_data.push(historyItem);
 
-            // データ欠損日かどうかを判定（付加価値と総コストが共に0の場合）
-            const isMissingData = this.isDataMissingDay(addedValue, totalCost);
-
             cells.forEach((cellValue) => {
                 const td = this.createTableCell(cellValue);
-
-                // データ欠損日の場合は薄い赤の背景色を設定
-                if (isMissingData) {
-                    td.style.backgroundColor = "#ffe6e6"; // 薄い赤
-                }
-
                 row.appendChild(td);
             });
-
             tbody.appendChild(row);
         });
         table.appendChild(tbody);
