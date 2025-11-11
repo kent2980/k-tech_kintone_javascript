@@ -190,7 +190,8 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                     PerformanceUtil.createElementLazy(() =>
                         PLDashboardGraphBuilder.createMixedChartContainer(
                             "mixed-chart",
-                            RevenueAnalysisList
+                            RevenueAnalysisList,
+                            holidayData
                         )
                     ),
                 ]);

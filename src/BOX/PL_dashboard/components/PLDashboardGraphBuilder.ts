@@ -2,6 +2,7 @@ import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import { RevenueAnalysis } from "../types";
+import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
 export class PLDashboardGraphBuilder {
     private chart: Chart | null = null;
 
@@ -10,7 +11,8 @@ export class PLDashboardGraphBuilder {
      */
     static createMixedChartContainer(
         canvasId: string,
-        RevenueAnalysisList: RevenueAnalysis[]
+        RevenueAnalysisList: RevenueAnalysis[],
+        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): HTMLDivElement {
         const container = document.createElement("div");
         container.style.width = "100%";
@@ -95,6 +97,45 @@ export class PLDashboardGraphBuilder {
                         },
                     },
                     scales: {
+                        x: {
+                            ticks: {
+                                color: function (context: any) {
+                                    // ラベルのインデックスから対応する日付を取得
+                                    const index = context.index;
+                                    if (index < RevenueAnalysisList.length) {
+                                        const date = RevenueAnalysisList[index].date;
+                                        const backgroundColor =
+                                            PLDashboardTableBuilder.getDateBackgroundColor(
+                                                date,
+                                                holidayData
+                                            );
+
+                                        // 背景色に応じてテキスト色を調整
+                                        if (backgroundColor === "#e6f3ff") return "#0066cc"; // 法定休日: 青色テキスト
+                                        if (backgroundColor === "#ffe6e6") return "#cc0000"; // 所定休日: 赤色テキスト
+                                        if (backgroundColor === "#fffacd") return "#cc8800"; // 一斉有給: 黄色テキスト
+                                        if (backgroundColor === "#f5f5f5") return "#666666"; // 土曜日: グレーテキスト
+                                    }
+                                    return "#333333"; // 通常日: デフォルト色
+                                },
+                                font: {
+                                    weight: function (context: any) {
+                                        // 休日の場合は太字にする
+                                        const index = context.index;
+                                        if (index < RevenueAnalysisList.length) {
+                                            const date = RevenueAnalysisList[index].date;
+                                            const backgroundColor =
+                                                PLDashboardTableBuilder.getDateBackgroundColor(
+                                                    date,
+                                                    holidayData
+                                                );
+                                            return backgroundColor ? "bold" : "normal";
+                                        }
+                                        return "normal";
+                                    },
+                                },
+                            },
+                        },
                         "y-axis-1": {
                             type: "linear",
                             position: "left",
