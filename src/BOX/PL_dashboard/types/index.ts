@@ -230,3 +230,10 @@ export interface HookResult<T> {
     error: string | null;
     refetch: () => Promise<void>;
 }
+
+// =======================================================================
+// 追加の型定義モジュールのエクスポート
+// =======================================================================
+export * from "./dataTables";
+export * from "./mobile";
+export * from "./table";

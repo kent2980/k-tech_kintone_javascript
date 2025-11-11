@@ -157,42 +157,47 @@ export class ExcelImporter {
         return result;
     }
 
-    /** 開始行から最終行までの指定列の値を取得
-     * @param colName - 列名（例: "A", "B"）
+    /** 開始行から最終行までの指定列の値を取得（最終行は自動検出）
+     * @param startColumn - 列名または列番号（1始まり）
+     * @param endColumn - 列名または列番号（1始まり）
      * @param startRow - 開始行番号（1始まり）
      * @param sheetName - シート名
      * @returns 値の配列
      */
-    getColumnValues(colName: string, startRow: number, sheetName?: string): string[] {
+    getColumnValuesUntilLastRow(
+        startColumn: string | number,
+        endColumn: string | number,
+        startRow: number,
+        sheetName?: string
+    ): string[][] {
         const sheet = this.getSheet(sheetName);
-        const colIndex = XLSX.utils.decode_col(colName);
-        const result: string[] = [];
+        const startColIndex =
+            typeof startColumn === "string" ? XLSX.utils.decode_col(startColumn) : startColumn - 1;
+        const endColIndex =
+            typeof endColumn === "string" ? XLSX.utils.decode_col(endColumn) : endColumn - 1;
+        const result: string[][] = [];
 
-        if (!sheet["!ref"]) {
-            Logger.warn("シートに範囲が定義されていません");
-            return result;
-        }
-
-        const range = XLSX.utils.decode_range(sheet["!ref"]);
-
-        // 指定列で値が入っている最終行を探す
-        let lastRowWithValue = startRow - 1;
-        for (let row = range.e.r; row >= startRow - 1; row--) {
-            const cellAddress = ExcelImporter.getCellAddress(row, colIndex);
-            const cellValue = this.getCellValueAsString(cellAddress, sheetName);
-            if (cellValue !== "") {
-                lastRowWithValue = row;
-                break;
+        let currentRow = startRow - 1; // 0始まりに変換
+        while (true) {
+            const firstCellAddress = XLSX.utils.encode_cell({ r: currentRow, c: startColIndex });
+            const firstCell = sheet[firstCellAddress];
+            if (
+                !firstCell ||
+                firstCell.v === null ||
+                firstCell.v === undefined ||
+                firstCell.v === ""
+            ) {
+                break; // 最終行に到達
             }
+            const rowData: string[] = [];
+            for (let col = startColIndex; col <= endColIndex; col++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: currentRow, c: col });
+                const cell = sheet[cellAddress];
+                rowData.push(cell ? String(cell.v) : "");
+            }
+            result.push(rowData);
+            currentRow++;
         }
-
-        // 開始行から値が入っている最終行までループ
-        for (let row = startRow - 1; row <= lastRowWithValue; row++) {
-            const cellAddress = ExcelImporter.getCellAddress(row, colIndex);
-            const cellValue = this.getCellValueAsString(cellAddress, sheetName);
-            result.push(cellValue);
-        }
-
         return result;
     }
 

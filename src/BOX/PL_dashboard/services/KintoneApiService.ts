@@ -74,6 +74,7 @@ export class KintoneApiService {
             "labor_costs",
             "indirect_material_costs",
             "other_indirect_material_costs",
+            "other_added_value",
             "night_shift_allowance",
             "total_sub_cost",
             "inside_overtime_cost",

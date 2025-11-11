@@ -6,15 +6,23 @@
 /// <reference path="../fields/model_master_fields.d.ts" />
 
 import { TABLE_COLUMNS } from "../config";
-import { ProductHistoryData, RevenueAnalysis, TotalsByDate } from "../types";
+import {
+    DataTablesApi,
+    DataTablesOptions,
+    ProductHistoryData,
+    RevenueAnalysis,
+    TableOptions,
+    TableRowData,
+    TotalsByDate,
+} from "../types";
 import { Logger } from "../utils";
 
 // jQueryを最初にインポート（DataTablesが依存するため）
 import $ from "jquery";
 
 // jQueryをグローバルに設定
-(window as any).$ = $;
-(window as any).jQuery = $;
+(window as unknown as { $: typeof $; jQuery: typeof $ }).$ = $;
+(window as unknown as { $: typeof $; jQuery: typeof $ }).jQuery = $;
 
 // DataTables関連のimport（jQueryの後に）
 import "datatables.net";
@@ -176,12 +184,8 @@ export class PLDashboardTableBuilder {
     static createCompleteTable(
         id: string,
         columns: string[],
-        data: any[],
-        options: {
-            stickyHeader?: boolean;
-            className?: string;
-            bodyClassName?: string;
-        } = {}
+        data: TableRowData,
+        options: TableOptions = {}
     ): HTMLTableElement {
         const {
             stickyHeader = true,
@@ -625,8 +629,10 @@ export class PLDashboardTableBuilder {
             tbody.appendChild(row);
 
             // 収益分析リストにもデータを追加
+            console.log(firstRecord);
             const totalAddedValue =
                 roundedAddedValue + Number(firstRecord?.other_added_value?.value || 0);
+            console.log(`日付: ${totals.date}, 付加価値売上高: ${totalAddedValue}`);
             CumulativeAddedValue += totalAddedValue;
             CumulativeExpenses += total_personnel_expenses;
             CumulativeGrossProfit =
@@ -740,8 +746,8 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @returns DataTables APIインスタンス
      */
-    static enhanceRevenueSummaryTable(tableId: string): any | null {
-        const summaryTableOptions: any = {
+    static enhanceRevenueSummaryTable(tableId: string): DataTablesApi | null {
+        const summaryTableOptions: DataTablesOptions = {
             paging: true, // ページングを有効化
             searching: true, // 検索を有効化
             ordering: true, // ソートを有効化
@@ -787,7 +793,10 @@ export class PLDashboardTableBuilder {
      * @param options - DataTablesのオプション
      * @returns DataTables APIインスタンス（利用可能な場合）
      */
-    static enhanceTableWithDataTables(tableId: string, options: any = {}): any | null {
+    static enhanceTableWithDataTables(
+        tableId: string,
+        options: Partial<DataTablesOptions> = {}
+    ): DataTablesApi | null {
         try {
             // DataTablesが利用可能かチェック
             if (!this.isDataTablesAvailable()) {
@@ -795,7 +804,7 @@ export class PLDashboardTableBuilder {
             }
 
             // デフォルトオプション
-            const defaultOptions: any = {
+            const defaultOptions: DataTablesOptions = {
                 paging: true,
                 pageLength: 25,
                 searching: true,
@@ -862,9 +871,9 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @returns DataTables APIインスタンス
      */
-    static enhanceProductionTable(tableId: string): any | null {
-        const productionTableOptions: any = {
-            order: [[0, "desc"]], // 日付の降順でソート
+    static enhanceProductionTable(tableId: string): DataTablesApi | null {
+        const productionTableOptions: Partial<DataTablesOptions> = {
+            order: [[0, "desc"]] as [number, "asc" | "desc"][], // 日付の降順でソート
             columnDefs: [
                 {
                     targets: [0], // 日付列
@@ -889,9 +898,9 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @returns DataTables APIインスタンス
      */
-    static enhanceProfitCalculationTable(tableId: string): any | null {
-        const calculationTableOptions: any = {
-            order: [[0, "asc"]], // 日付の昇順でソート
+    static enhanceProfitCalculationTable(tableId: string): DataTablesApi | null {
+        const calculationTableOptions: Partial<DataTablesOptions> = {
+            order: [[0, "asc"]] as [number, "asc" | "desc"][], // 日付の昇順でソート
             scrollX: false,
             // fixedColumns: {
             //   leftColumns: 1, // 日付列を固定
@@ -937,7 +946,7 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @param newData - 新しいデータ
      */
-    static updateTableData(tableId: string, newData: any[]): void {
+    static updateTableData(tableId: string, newData: unknown[]): void {
         try {
             if (this.isDataTablesAvailable()) {
                 const table = $(`#${tableId}`);
@@ -1004,7 +1013,7 @@ export class PLDashboardTableBuilder {
      * @param message - ログメッセージ
      * @param data - ログデータ
      */
-    static debugLog(message: string, data?: any): void {
+    static debugLog(message: string, data?: unknown): void {
         Logger.debug(`[TableBuilder] ${message}`, data);
     }
 }
