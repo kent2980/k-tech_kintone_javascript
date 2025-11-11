@@ -3,6 +3,7 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import { RevenueAnalysis } from "../types";
 import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
+import { DateUtil } from "../utils";
 export class PLDashboardGraphBuilder {
     private chart: Chart | null = null;
 
@@ -26,9 +27,11 @@ export class PLDashboardGraphBuilder {
         const ctx = canvas.getContext("2d");
         if (ctx) {
             const labels = RevenueAnalysisList.map((item) => {
-                // YYYY-MM-DD形式をMM/DD形式に変換
+                // YYYY-MM-DD形式をMM/DD\n曜日形式に変換
                 const dateObj = new Date(item.date);
-                return `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
+                const monthDay = `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
+                const dayOfWeek = DateUtil.getDayOfWeek(dateObj);
+                return `${monthDay}\n(${dayOfWeek})`;
             });
             const addedValueData = RevenueAnalysisList.map((item) => item.CumulativeAddedValue);
             const expensesData = RevenueAnalysisList.map((item) => item.CumulativeExpenses);
@@ -99,6 +102,8 @@ export class PLDashboardGraphBuilder {
                     scales: {
                         x: {
                             ticks: {
+                                maxRotation: 0,
+                                minRotation: 0,
                                 color: function (context: any) {
                                     // ラベルのインデックスから対応する日付を取得
                                     const index = context.index;
