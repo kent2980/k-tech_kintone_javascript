@@ -2,8 +2,8 @@ import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import { RevenueAnalysis } from "../types";
-import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
 import { DateUtil } from "../utils";
+import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
 export class PLDashboardGraphBuilder {
     private chart: Chart | null = null;
 
@@ -27,11 +27,11 @@ export class PLDashboardGraphBuilder {
         const ctx = canvas.getContext("2d");
         if (ctx) {
             const labels = RevenueAnalysisList.map((item) => {
-                // YYYY-MM-DD形式をMM/DD\n曜日形式に変換
+                // YYYY-MM-DD形式を配列で改行表示（MM/DD と (曜日) を別々の行に）
                 const dateObj = new Date(item.date);
                 const monthDay = `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}`;
-                const dayOfWeek = DateUtil.getDayOfWeek(dateObj);
-                return `${monthDay}\n(${dayOfWeek})`;
+                const dayOfWeek = `(${DateUtil.getDayOfWeek(dateObj)})`;
+                return [monthDay, dayOfWeek];
             });
             const addedValueData = RevenueAnalysisList.map((item) => item.CumulativeAddedValue);
             const expensesData = RevenueAnalysisList.map((item) => item.CumulativeExpenses);
@@ -104,6 +104,7 @@ export class PLDashboardGraphBuilder {
                             ticks: {
                                 maxRotation: 0,
                                 minRotation: 0,
+                                maxTicksLimit: undefined,
                                 color: function (context: any) {
                                     // ラベルのインデックスから対応する日付を取得
                                     const index = context.index;
@@ -139,6 +140,12 @@ export class PLDashboardGraphBuilder {
                                         return "normal";
                                     },
                                 },
+                            },
+                            grid: {
+                                display: true,
+                            },
+                            border: {
+                                display: true,
                             },
                         },
                         "y-axis-1": {
