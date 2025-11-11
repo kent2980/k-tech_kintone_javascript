@@ -165,7 +165,8 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                             plMonthlyData,
                             masterModelData || [],
                             product_history_data,
-                            DateUtil.getDayOfWeek
+                            DateUtil.getDayOfWeek,
+                            holidayData
                         )
                     ),
                     PerformanceUtil.createElementLazy(() =>

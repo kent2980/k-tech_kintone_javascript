@@ -233,7 +233,8 @@ export class PLDashboardTableBuilder {
         plMonthlyData: monthly.SavedFields | null,
         masterModelData: model_master.SavedFields[],
         product_history_data: ProductHistoryData[],
-        getDayOfWeek: (date: Date) => string
+        getDayOfWeek: (date: Date) => string,
+        holidayData: holiday.SavedFields[] = []
     ): HTMLDivElement {
         // コンテナ要素を作成
         const container = document.createElement("div");
@@ -365,6 +366,16 @@ export class PLDashboardTableBuilder {
                 const td = this.createTableCell(cellValue);
                 row.appendChild(td);
             });
+
+            // 休日色分けを適用
+            const backgroundColor = this.getDateBackgroundColor(
+                record.date?.value || "",
+                holidayData
+            );
+            if (backgroundColor) {
+                row.style.backgroundColor = backgroundColor;
+            }
+
             tbody.appendChild(row);
         });
         table.appendChild(tbody);
@@ -775,7 +786,7 @@ export class PLDashboardTableBuilder {
             searching: true, // 検索を有効化
             ordering: true, // ソートを有効化
             info: false, // 情報表示を無効化
-            dom: "Bt", // ボタンのみ表示
+            dom: "<'dt-top-controls'Bf>rt<'row'<'col-sm-6'i><'col-sm-6'p>>", // dt-top-controlsでボタンとフィルターを横並び配置
             buttons: [
                 {
                     extend: "csv",
@@ -872,19 +883,26 @@ export class PLDashboardTableBuilder {
                 ],
             };
 
-            // オプションをマージ
-            const finalOptions = { ...defaultOptions, ...options };
+            // オプションをマージして、initCompleteコールバックを追加
+            const finalOptions = {
+                ...defaultOptions,
+                ...options,
+                // initCompleteコールバックでDataTables初期化完了後に色分けラベルを追加
+                initComplete: function (settings: any, json: any) {
+                    console.log(`DataTables初期化完了: ${tableId}`);
+
+                    // カスタムスタイルを適用
+                    PLDashboardTableBuilder.applyCustomTableStyles(tableId);
+
+                    // 色分けラベルを追加
+                    setTimeout(() => {
+                        PLDashboardTableBuilder.addColorLegendToDataTable(tableId);
+                    }, 100);
+                },
+            };
 
             // DataTablesを適用
             const dataTable = $(`#${tableId}`).DataTable(finalOptions);
-
-            // カスタムスタイルを適用
-            this.applyCustomTableStyles(tableId);
-
-            // 色分けラベルを追加（少し遅延させてDOM構築完了を待つ）
-            setTimeout(() => {
-                this.addColorLegendToDataTable(tableId);
-            }, 100);
 
             Logger.debug(`DataTables が ${tableId} に適用されました`);
             return dataTable;
@@ -1065,11 +1083,6 @@ export class PLDashboardTableBuilder {
             }
         }
 
-        // 土曜日の場合は薄いグレー（会社休日より優先度低め）
-        if (dayOfWeek === 6) {
-            return "#f5f5f5"; // 薄いグレー
-        }
-
         // 通常日は背景色なし
         return "";
     }
@@ -1087,7 +1100,6 @@ export class PLDashboardTableBuilder {
             { className: "legal-holiday", label: "法定休日" },
             { className: "company-holiday", label: "所定休日" },
             { className: "collective-leave", label: "一斉有給" },
-            { className: "saturday", label: "土曜日" },
         ];
 
         legendItems.forEach((item) => {
@@ -1114,26 +1126,80 @@ export class PLDashboardTableBuilder {
      */
     static addColorLegendToDataTable(tableId: string): void {
         try {
-            // DataTablesのfilter要素を取得
-            const filterElement = document.querySelector(`#${tableId}_filter`);
-            if (filterElement) {
+            console.log(`色分けラベル追加処理開始: ${tableId}`);
+
+            // DataTablesのdt-top-controlsクラスを持つ要素を探す（優先順位順）
+            let targetElement = null;
+
+            // 優先1: dt-top-controls要素を直接探す
+            const dtTopControls = document.querySelector(`#${tableId}_wrapper .dt-top-controls`);
+            if (dtTopControls) {
+                console.log(`dt-top-controls要素が見つかりました: ${tableId}`);
+                targetElement = dtTopControls;
+            } else {
+                // 優先2: DataTablesのwrapper内でdt-top-controlsを探す
+                const wrapperElement = document.querySelector(`#${tableId}_wrapper`);
+                if (wrapperElement) {
+                    // dt-top-controlsクラスの要素を探すか、なければ作成
+                    let topControls = wrapperElement.querySelector(".dt-top-controls");
+                    if (!topControls) {
+                        // dt-top-controlsが見つからない場合は作成
+                        topControls = document.createElement("div");
+                        topControls.className = "dt-top-controls";
+                        // wrapper内の最初の子要素の前に挿入
+                        const firstChild = wrapperElement.firstElementChild;
+                        if (firstChild) {
+                            wrapperElement.insertBefore(topControls, firstChild);
+                        } else {
+                            wrapperElement.appendChild(topControls);
+                        }
+                        console.log(`dt-top-controls要素を新規作成: ${tableId}`);
+                    }
+                    targetElement = topControls;
+                    console.log(`dt-top-controls要素を使用: ${tableId}`);
+                } else {
+                    // 優先3: DataTablesのfilter要素
+                    const filterElement = document.querySelector(`#${tableId}_filter`);
+                    if (filterElement) {
+                        targetElement = filterElement;
+                        console.log(`Filter要素をフォールバックとして使用: ${tableId}`);
+                    }
+                }
+
+                // 利用可能な要素を確認
+                const allElements = document.querySelectorAll(`[id*="${tableId}"]`);
+                console.log(
+                    `${tableId}関連の要素:`,
+                    Array.from(allElements).map((el) => el.id)
+                );
+            }
+
+            if (targetElement) {
                 // 既存の凡例があれば削除
-                const existingLegend = filterElement.querySelector(".color-legend");
+                const existingLegend =
+                    targetElement.querySelector(".color-legend") ||
+                    document.querySelector(`.color-legend[data-table="${tableId}"]`);
                 if (existingLegend) {
+                    console.log(`既存の凡例を削除: ${tableId}`);
                     existingLegend.remove();
                 }
 
-                // 新しい色分けラベルを作成して追加
+                // 新しい色分けラベルを作成
                 const colorLegend = this.createColorLegend();
-                filterElement.appendChild(colorLegend);
+                colorLegend.setAttribute("data-table", tableId);
+                console.log(`作成した色分けラベル:`, colorLegend);
 
+                // dt-top-controlsに追加
+                targetElement.appendChild(colorLegend);
+
+                console.log(`色分けラベルが ${tableId} のdt-top-controlsに追加されました`);
                 Logger.debug(`色分けラベルが ${tableId} に追加されました`);
             } else {
-                Logger.debug(
-                    `${tableId}_filter が見つからないため、色分けラベル追加をスキップします`
-                );
+                console.log(`${tableId} に適切な追加先が見つかりませんでした`);
+                Logger.debug(`${tableId} に適切な追加先が見つかりませんでした`);
             }
         } catch (error) {
+            console.error(`色分けラベル追加でエラーが発生しました:`, error);
             Logger.debug(`色分けラベル追加でエラーが発生しました: ${error}`);
         }
     }

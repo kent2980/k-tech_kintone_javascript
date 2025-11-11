@@ -27,26 +27,60 @@ tbody.recordlist-body-gaia {
 }
 
 .dt-buttons {
-    margin-bottom: 10px;
-    margin-right: 10px;
-    margin-left: 10px;
+    margin: 0;
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
 }
 
 div#production-table_filter {
-    margin-right: 20px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 div#calculation-table_filter {
-    margin-right: 20px;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+div#revenue-summary-table_filter {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+/* DataTables内でのフィルターとボタンの調整 */
+.dt-top-controls .dt-buttons,
+.dt-top-controls .dataTables_filter {
+    margin: 0;
+}
+
+.dt-top-controls .dataTables_filter input {
+    margin-left: 5px;
+}
+
+/* DataTables トップコントロール */
+.dt-top-controls {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    gap: 10px;
 }
 
 /* 色分けラベル */
 .color-legend {
     display: inline-flex;
     align-items: center;
-    margin-left: 15px;
+    margin: 0;
     font-size: 12px;
     gap: 15px;
+    padding: 6px 12px;
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
 .color-legend-item {
@@ -56,10 +90,10 @@ div#calculation-table_filter {
 }
 
 .color-legend-box {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border: 1px solid #ccc;
-    border-radius: 2px;
+    border-radius: 3px;
 }
 
 .color-legend-box.legal-holiday {
@@ -72,10 +106,6 @@ div#calculation-table_filter {
 
 .color-legend-box.collective-leave {
     background-color: #fffacd; /* 一斉有給: 薄い黄色 */
-}
-
-.color-legend-box.saturday {
-    background-color: #f5f5f5; /* 土曜日: 薄いグレー */
 }
 
 .gaia-argoui-app-index-toolbar {
