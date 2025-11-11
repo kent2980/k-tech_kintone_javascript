@@ -6,3 +6,6 @@ node_modules/
 
 # Build output
 dist/
+
+# Auto-generated files
+src/BOX/PL_dashboard/generated/
