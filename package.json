@@ -13,7 +13,7 @@
         "upload:app43": "dotenv kintone-customize-uploader customize-manifest-app43.json",
         "deploy": "npm run build && npm run upload",
         "deploy:app43": "npm run build && npm run upload:app43",
-        "auto:deploy:app43": "chokidar \"src/**/*.ts\" \"src/**/*.css\" -c \"npm run deploy:app43\"",
+        "auto:deploy:app43": "chokidar \"src/**/*.ts\" \"src/**/*.css\" --ignore \"src/**/generated/**\" -c \"npm run deploy:app43\"",
         "watch:vite": "vite build --watch",
         "watch:upload:app43": "chokidar \"dist/**/*.js\" -c \"npm run upload:app43\"",
         "dev:auto:app43": "npm-run-all --parallel watch:vite watch:upload:app43",
