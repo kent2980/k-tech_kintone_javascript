@@ -40,6 +40,44 @@ div#calculation-table_filter {
     margin-right: 20px;
 }
 
+/* 色分けラベル */
+.color-legend {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 15px;
+    font-size: 12px;
+    gap: 15px;
+}
+
+.color-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.color-legend-box {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+}
+
+.color-legend-box.legal-holiday {
+    background-color: #e6f3ff; /* 法定休日: 薄い青 */
+}
+
+.color-legend-box.company-holiday {
+    background-color: #ffe6e6; /* 所定休日: 薄い赤 */
+}
+
+.color-legend-box.collective-leave {
+    background-color: #fffacd; /* 一斉有給: 薄い黄色 */
+}
+
+.color-legend-box.saturday {
+    background-color: #f5f5f5; /* 土曜日: 薄いグレー */
+}
+
 .gaia-argoui-app-index-toolbar {
     display: none;
 }
@@ -58,6 +96,10 @@ th {
 
 header.sc-cwRAiK.fklbGN {
     height: 30px;
+}
+.sc-gNJGCZ.IzoWt__button {
+    height: 30px !important;
+    width: 30px !important;
 }
 
 img.sc-YizLo.elNSFO__image {
@@ -88,10 +130,14 @@ div#header-global-navigation-root {
     height: 30px;
 }
 
+/* SVG要素の基本スタイル */
 svg {
+    display: inline-block;
 }
 
+/* Span要素の基本スタイル */
 span {
+    display: inline;
 }
 
 span.sc-gaZyOd.hxeOmP svg {
@@ -103,6 +149,7 @@ ul.sc-cOHKVu.kBQnIh__menu-list svg {
 }
 
 ul.sc-cOHKVu.kBQnIh__menu-list {
+    list-style: none;
 }
 
 span.sc-eKePwe.eAueyp {

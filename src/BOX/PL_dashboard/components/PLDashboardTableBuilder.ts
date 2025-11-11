@@ -881,6 +881,11 @@ export class PLDashboardTableBuilder {
             // カスタムスタイルを適用
             this.applyCustomTableStyles(tableId);
 
+            // 色分けラベルを追加（少し遅延させてDOM構築完了を待つ）
+            setTimeout(() => {
+                this.addColorLegendToDataTable(tableId);
+            }, 100);
+
             Logger.debug(`DataTables が ${tableId} に適用されました`);
             return dataTable;
         } catch (error) {
@@ -1067,6 +1072,70 @@ export class PLDashboardTableBuilder {
 
         // 通常日は背景色なし
         return "";
+    }
+
+    /**
+     * 色分けラベルを作成する
+     * @returns 色分けラベルのHTML要素
+     */
+    static createColorLegend(): HTMLDivElement {
+        const legend = document.createElement("div");
+        legend.className = "color-legend";
+
+        // 各色分けアイテムを作成
+        const legendItems = [
+            { className: "legal-holiday", label: "法定休日" },
+            { className: "company-holiday", label: "所定休日" },
+            { className: "collective-leave", label: "一斉有給" },
+            { className: "saturday", label: "土曜日" },
+        ];
+
+        legendItems.forEach((item) => {
+            const legendItem = document.createElement("div");
+            legendItem.className = "color-legend-item";
+
+            const colorBox = document.createElement("div");
+            colorBox.className = `color-legend-box ${item.className}`;
+
+            const label = document.createElement("span");
+            label.textContent = item.label;
+
+            legendItem.appendChild(colorBox);
+            legendItem.appendChild(label);
+            legend.appendChild(legendItem);
+        });
+
+        return legend;
+    }
+
+    /**
+     * DataTablesの検索バーの右に色分けラベルを追加する
+     * @param tableId - テーブルのID
+     */
+    static addColorLegendToDataTable(tableId: string): void {
+        try {
+            // DataTablesのfilter要素を取得
+            const filterElement = document.querySelector(`#${tableId}_filter`);
+            if (filterElement) {
+                // 既存の凡例があれば削除
+                const existingLegend = filterElement.querySelector(".color-legend");
+                if (existingLegend) {
+                    existingLegend.remove();
+                }
+
+                // 新しい色分けラベルを作成して追加
+                const colorLegend = this.createColorLegend();
+                filterElement.appendChild(colorLegend);
+
+                Logger.debug(`色分けラベルが ${tableId} に追加されました`);
+            } else {
+                Logger.debug(
+                    `${tableId}_filter が見つからないため、色分けラベル追加をスキップします`
+                );
+            }
+        } catch (error) {
+            Logger.debug(`色分けラベル追加でエラーが発生しました: ${error}`);
+        }
     }
 
     /**
