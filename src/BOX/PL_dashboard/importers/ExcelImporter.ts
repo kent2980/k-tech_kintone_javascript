@@ -2,6 +2,21 @@ import * as XLSX from "xlsx";
 import { Logger } from "../utils";
 
 /**
+ * DataFrameの形式でテーブルデータを格納するインターフェース
+ * Pythonの pandas DataFrame に相当する構造
+ */
+export interface TableDataFrame<T extends Record<string, any> = Record<string, any>> {
+    /** カラム名の配列 */
+    columns: string[];
+    /** レコードの配列（オブジェクト形式） */
+    records: T[];
+    /** 行数 */
+    rowCount: number;
+    /** 列数 */
+    columnCount: number;
+}
+
+/**
  * PL管理Excel専用インポーター
  * 表形式ではないExcelファイルから特定のセルを読み込むためのクラス
  */
@@ -36,6 +51,18 @@ export class ExcelImporter {
             Logger.error("Excelファイルの読み込みに失敗しました", error);
             throw new Error("Excelファイルの読み込みに失敗しました");
         }
+    }
+
+    /**
+     * 指定したシートが存在するか確認
+     * @param sheetName - シート名
+     * @returns 存在する場合はtrue、存在しない場合はfalse
+     */
+    hasSheet(sheetName: string): boolean {
+        if (!this.workbook) {
+            throw new Error("Excelファイルが読み込まれていません。load()を先に実行してください");
+        }
+        return this.workbook.SheetNames.includes(sheetName);
     }
 
     /**
@@ -164,7 +191,7 @@ export class ExcelImporter {
      * @param sheetName - シート名
      * @returns 値の配列
      */
-    getColumnValuesUntilLastRow(
+    getTableData(
         startColumn: string | number,
         endColumn: string | number,
         startRow: number,
@@ -199,6 +226,182 @@ export class ExcelImporter {
             currentRow++;
         }
         return result;
+    }
+
+    /**
+     * 開始行から最終行までのテーブルデータをDataFrame形式で取得
+     * Pythonの pandas DataFrame に相当する構造で、カラム名とレコード（オブジェクト形式）を返す
+     * @param startColumn - 列名または列番号（1始まり）
+     * @param endColumn - 列名または列番号（1始まり）
+     * @param headerRow - ヘッダー行番号（1始まり、ここからカラム名を取得）
+     * @param dataStartRow - データ開始行番号（1始まり、ここから実データを読み込む）
+     * @param sheetName - シート名
+     * @returns DataFrame形式のデータ
+     */
+    getTableDataAsDataFrame(
+        startColumn: string | number,
+        endColumn: string | number,
+        headerRow: number,
+        dataStartRow: number,
+        sheetName?: string
+    ): TableDataFrame {
+        const sheet = this.getSheet(sheetName);
+        const startColIndex =
+            typeof startColumn === "string" ? XLSX.utils.decode_col(startColumn) : startColumn - 1;
+        const endColIndex =
+            typeof endColumn === "string" ? XLSX.utils.decode_col(endColumn) : endColumn - 1;
+
+        // ヘッダー行からカラム名を取得
+        const columns: string[] = [];
+        const headerRowIndex = headerRow - 1; // 0始まりに変換
+        for (let col = startColIndex; col <= endColIndex; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+            const cell = sheet[cellAddress];
+            const columnName = cell ? String(cell.v) : `Column_${col + 1}`;
+            columns.push(columnName);
+        }
+
+        // データ行を読み込んでレコード（オブジェクト形式）に変換
+        const records: Record<string, any>[] = [];
+        let currentRow = dataStartRow - 1; // 0始まりに変換
+
+        while (true) {
+            const firstCellAddress = XLSX.utils.encode_cell({ r: currentRow, c: startColIndex });
+            const firstCell = sheet[firstCellAddress];
+
+            // 最初のセルが空の場合は読み込み終了
+            if (
+                !firstCell ||
+                firstCell.v === null ||
+                firstCell.v === undefined ||
+                firstCell.v === ""
+            ) {
+                break;
+            }
+
+            // 行のデータをオブジェクトに変換
+            const record: Record<string, any> = {};
+            for (let col = startColIndex; col <= endColIndex; col++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: currentRow, c: col });
+                const cell = sheet[cellAddress];
+                const columnName = columns[col - startColIndex];
+                const value = cell ? cell.v : null;
+
+                // 値の型を自動判定
+                if (value === null || value === undefined || value === "") {
+                    record[columnName] = null;
+                } else if (typeof value === "number") {
+                    record[columnName] = value;
+                } else if (value instanceof Date) {
+                    record[columnName] = value;
+                } else {
+                    record[columnName] = String(value);
+                }
+            }
+
+            records.push(record);
+            currentRow++;
+        }
+
+        return {
+            columns,
+            records,
+            rowCount: records.length,
+            columnCount: columns.length,
+        };
+    }
+
+    /**
+     * 縦方向のテーブルデータをDataFrame形式で取得（転置テーブル）
+     * 左端（指定列）がカラム名で、右方向にデータが横並びのテーブル構造に対応
+     * 例: A1:A10がカラム名、B1:X10がデータ（各行がレコード）
+     * @param headerColumn - ヘッダー列名または列番号（1始まり）。ここからカラム名を取得
+     * @param dataStartColumn - データ開始列名または列番号（1始まり）。ここからデータを読み込む
+     * @param dataEndColumn - データ終了列名または列番号（1始まり）
+     * @param startRow - 開始行番号（1始まり）
+     * @param endRow - 終了行番号（1始まり）
+     * @param sheetName - シート名
+     * @returns DataFrame形式のデータ
+     */
+    getTableDataAsDataFrameTransposed(
+        headerColumn: string | number,
+        dataStartColumn: string | number,
+        dataEndColumn: string | number,
+        startRow: number,
+        endRow: number,
+        sheetName?: string
+    ): TableDataFrame {
+        const sheet = this.getSheet(sheetName);
+        const headerColIndex =
+            typeof headerColumn === "string"
+                ? XLSX.utils.decode_col(headerColumn)
+                : headerColumn - 1;
+        const dataStartColIndex =
+            typeof dataStartColumn === "string"
+                ? XLSX.utils.decode_col(dataStartColumn)
+                : dataStartColumn - 1;
+        const dataEndColIndex =
+            typeof dataEndColumn === "string"
+                ? XLSX.utils.decode_col(dataEndColumn)
+                : dataEndColumn - 1;
+        const columns: string[] = [];
+        const records: Record<string, any>[] = [];
+        const startRowIndex = startRow - 1; // 0始まりに変換
+        const endRowIndex = endRow - 1; // 0始まりに変換
+        // カラム名を取得
+        for (let row = startRowIndex; row <= endRowIndex; row++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: headerColIndex });
+            const cell = sheet[cellAddress];
+            let columnName = cell ? String(cell.v) : `Column_${row + 1}`;
+            // columnNameが空かすでに存在する場合はrowを代入
+            if (!columnName || columns.includes(columnName)) {
+                columnName = `Column_${row + 1}`;
+            }
+            columns.push(columnName);
+        }
+        // レコードを取得
+        for (let column = dataStartColIndex; column <= dataEndColIndex; column++) {
+            const headerCellAddress = XLSX.utils.encode_cell({
+                r: startRowIndex,
+                c: headerColIndex,
+            });
+            const headerCell = sheet[headerCellAddress];
+
+            // ヘッダーセルが空の場合は読み込み終了
+            if (
+                !headerCell ||
+                headerCell.v === null ||
+                headerCell.v === undefined ||
+                headerCell.v === ""
+            ) {
+                break;
+            }
+            const record: Record<string, any> = {};
+            let columnIndex = 0;
+            for (let row = startRowIndex; row <= endRowIndex; row++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: row, c: column });
+                const cell = sheet[cellAddress];
+                const columnName = columns[columnIndex++];
+                const value = cell ? cell.v : null;
+                // 値の型を自動判定
+                if (value === null || value === undefined || value === "") {
+                    record[columnName] = null;
+                } else if (typeof value === "number") {
+                    record[columnName] = value;
+                } else if (value instanceof Date) {
+                    record[columnName] = value;
+                } else {
+                    record[columnName] = String(value);
+                }
+            }
+            records.push(record);
+        }
+        return {
+            columns,
+            records,
+            rowCount: records.length,
+            columnCount: columns.length,
+        };
     }
 
     /**

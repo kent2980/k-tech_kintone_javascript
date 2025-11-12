@@ -9,3 +9,6 @@ dist/
 
 # Auto-generated files
 src/BOX/PL_dashboard/generated/
+
+# test data
+src/BOX/PL_dashboard/__tests__/data

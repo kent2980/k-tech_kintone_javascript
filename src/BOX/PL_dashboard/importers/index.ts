@@ -3,5 +3,6 @@
  */
 
 export { CsvImporter } from "./CsvImporter";
-export { ExcelImporter } from "./ExcelImporter";
+export { ExcelImporter, type TableDataFrame } from "./ExcelImporter";
 export { FileImporter } from "./FileImporter";
+export { PLExcelImporter } from "./PLExcelImporter";
