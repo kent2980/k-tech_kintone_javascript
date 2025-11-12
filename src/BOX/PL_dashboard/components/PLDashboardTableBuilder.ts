@@ -6,7 +6,12 @@
 /// <reference path="../fields/model_master_fields.d.ts" />
 
 import { TABLE_COLUMNS } from "../config";
-import { BusinessCalculationHelperService, BusinessCalculationService } from "../services";
+import {
+    BusinessCalculationHelperService,
+    BusinessCalculationService,
+    ProfitCalculationService,
+    RevenueAnalysisCalculationService,
+} from "../services";
 import {
     DataTablesApi,
     DataTablesOptions,
@@ -443,12 +448,10 @@ export class PLDashboardTableBuilder {
 
         // データ行の作成
         const tbody = this.createTableBody();
-        // 累積計算用の変数
-        let CumulativeAddedValue = 0;
-        let CumulativeExpenses = 0;
-        let CumulativeGrossProfit = 0;
-        let CumulativeProfitRate = 0;
-        let YesterdayGrossProfit = 0;
+        // 累積データ管理オブジェクトを作成
+        const cumulativeDataManager =
+            RevenueAnalysisCalculationService.createCumulativeDataManager();
+
         dateList.forEach((date) => {
             const totals = getTotalsByDate(date);
             const row = document.createElement("tr");
@@ -471,12 +474,17 @@ export class PLDashboardTableBuilder {
                 "0"
             )}/${String(dateObj.getDate()).padStart(2, "0")}(${getDayOfWeek(dateObj)})`;
 
-            // 各値を変数として宣言
+            // 損益計算サービスを使用して計算を実行
+            const profitResult = ProfitCalculationService.calculateDailyProfit(
+                firstRecord,
+                plMonthlyData,
+                totals
+            );
+
+            // 各値を変数として宣言（テーブル表示用）
             const directPersonnel = Number(firstRecord?.direct_personnel?.value || 0);
             const temporaryEmployees = Number(firstRecord?.temporary_employees?.value || 0);
             const indirectPersonnel = Number(firstRecord?.indirect_personnel?.value || 0);
-            const indirectOvertimeHours = Number(firstRecord?.indirect_overtime?.value || 0);
-            const indirectHolidayWorkHours = Number(firstRecord?.indirect_holiday_work?.value || 0);
             const laborCosts = Number(firstRecord?.labor_costs?.value || 0);
             const indirectMaterialCosts = Number(firstRecord?.indirect_material_costs?.value || 0);
             const nightShiftAllowance = Number(firstRecord?.night_shift_allowance?.value || 0);
@@ -490,114 +498,40 @@ export class PLDashboardTableBuilder {
 
             // 付加価値の小数点以下を四捨五入
             const roundedAddedValue = Math.round(totals.totalAddedValue);
-            // 間接材料費,残業休出経費以外を四捨五入
-            const other_indirect_material_costs = firstRecord
-                ? Math.round(Number(firstRecord.other_indirect_material_costs?.value || 0))
-                : 0;
 
-            // 直行経費を計算
-            const direct = plMonthlyData?.direct?.value || "0";
-            const direct_personnel = firstRecord?.direct_personnel?.value || "0";
-            const direct_cost = Math.round(Number(direct) * Number(direct_personnel));
-            // 派遣経費を計算
-            const dispatch = plMonthlyData?.dispatch?.value || "0";
-            const temporary_employees = firstRecord?.temporary_employees?.value || "0";
-            const dispatch_cost = Math.round(Number(dispatch) * Number(temporary_employees));
-            // 間接経費を計算
-            const indirect = plMonthlyData?.indirect?.value || "0";
-            const indirect_personnel = firstRecord?.indirect_personnel?.value || "0";
-            const indirect_cost = Math.round(Number(indirect) * Number(indirect_personnel));
-            // 直行残業(1.25)&休出経費(1.35)を計算
-            let unit_price = plMonthlyData?.direct?.value
-                ? Number(plMonthlyData?.direct?.value)
-                : 0;
-            let unit_overtime_cost = (unit_price * 1.25) / 1000;
-            let unit_holiday_cost = (unit_price * 1.35) / 1000;
-            const totalInsideOvertime = totals.totalInsideOvertime
-                ? Math.round(totals.totalInsideOvertime * unit_overtime_cost)
-                : 0;
-            const totalInsideHolidayOvertime = totals.totalInsideHolidayOvertime
-                ? Math.round(totals.totalInsideHolidayOvertime * unit_holiday_cost)
-                : 0;
-            const directOvertimeAndHolidayCost = totalInsideOvertime + totalInsideHolidayOvertime;
-            // 派遣残業(1.25)&休出経費(1.35)を計算
-            unit_price = plMonthlyData?.dispatch?.value
-                ? Number(plMonthlyData?.dispatch?.value)
-                : 0;
-            unit_overtime_cost = (unit_price * 1.25) / 1000;
-            unit_holiday_cost = (unit_price * 1.35) / 1000;
-            const totalOutsideOvertime = totals.totalOutsideOvertime
-                ? Math.round(totals.totalOutsideOvertime * unit_overtime_cost)
-                : 0;
-            const totalOutsideHolidayOvertime = totals.totalOutsideHolidayOvertime
-                ? Math.round(totals.totalOutsideHolidayOvertime * unit_holiday_cost)
-                : 0;
-            const dispatchOvertimeAndHolidayCost =
-                totalOutsideOvertime + totalOutsideHolidayOvertime;
-            // 間接残業(1.25)&休出経費(1.35)を計算
-            unit_price = plMonthlyData?.indirect?.value
-                ? Number(plMonthlyData?.indirect?.value)
-                : 0;
-            unit_overtime_cost = (unit_price * 1.25) / 1000;
-            unit_holiday_cost = (unit_price * 1.35) / 1000;
-            const indirectOvertime = firstRecord
-                ? Math.round(Number(firstRecord.indirect_overtime?.value) * unit_overtime_cost)
-                : 0;
-            const indirectHolidayWork = firstRecord
-                ? Math.round(Number(firstRecord.indirect_holiday_work?.value) * unit_holiday_cost)
-                : 0;
-            const indirectOvertimeAndHolidayCost = indirectOvertime + indirectHolidayWork;
-            console.log(firstRecord?.indirect_overtime?.value);
-
-            // 派遣経費を計算する
-            const outside_overtime_cost = firstRecord
-                ? Number(firstRecord.outside_overtime_cost?.value || 0)
-                : 0;
-            const outside_holiday_expenses = firstRecord
-                ? Number(firstRecord.outside_holiday_expenses?.value || 0)
-                : 0;
-            const dispatch_expenses = outside_overtime_cost + outside_holiday_expenses;
-            // 総人員/製造経費 計
-            const total_personnel_expenses =
-                directOvertimeAndHolidayCost +
-                indirectOvertimeAndHolidayCost +
-                laborCosts +
-                indirectMaterialCosts +
-                other_indirect_material_costs +
-                nightShiftAllowance +
-                totalSubCost +
-                insideOvertimeCost +
-                outsideOvertimeCostValue;
+            // 間接残業・休出時間を取得
+            const indirectOvertimeHours = Number(firstRecord?.indirect_overtime?.value || 0);
+            const indirectHolidayWorkHours = Number(firstRecord?.indirect_holiday_work?.value || 0);
 
             const cellValues = [
                 formattedDate,
                 roundedAddedValue, // 付加価値売上高
                 directPersonnel, // 直行人員
-                direct_cost, // 直行経費
+                profitResult.directCost, // 直行経費
                 temporaryEmployees, // 派遣社員
-                dispatch_cost, // 派遣経費
+                profitResult.dispatchCost, // 派遣経費
                 indirectPersonnel, // 間接人員
-                indirect_cost, // 間接経費
-                totals.totalInsideOvertime, // 直行残業(h)
-                totals.totalInsideHolidayOvertime, // 直行休出(h)
-                directOvertimeAndHolidayCost, // 直行残業&休出経費
-                totals.totalOutsideOvertime, // 派遣残業(h)
-                totals.totalOutsideHolidayOvertime, // 派遣休出(h)
-                dispatchOvertimeAndHolidayCost, // 派遣残業&休出経費
+                profitResult.indirectCost, // 間接経費
+                profitResult.totalInsideOvertime, // 直行残業(h)
+                profitResult.totalInsideHolidayOvertime, // 直行休出(h)
+                profitResult.directOvertimeAndHolidayCost, // 直行残業&休出経費
+                profitResult.totalOutsideOvertime, // 派遣残業(h)
+                profitResult.totalOutsideHolidayOvertime, // 派遣休出(h)
+                profitResult.dispatchOvertimeAndHolidayCost, // 派遣残業&休出経費
                 indirectOvertimeHours, // 間接残業(h)
                 indirectHolidayWorkHours, // 間接休出(h)
-                indirectOvertimeAndHolidayCost, // 間接残業&休出経費
+                profitResult.indirectOvertimeAndHolidayCost, // 間接残業&休出経費
                 laborCosts, // 直行/間接人件費(残業・休出含まない)
                 indirectMaterialCosts, // 間接材料費
-                other_indirect_material_costs, // 間接材料費,残業休出経費以外
+                profitResult.otherIndirectMaterialCosts, // 間接材料費,残業休出経費以外
                 nightShiftAllowance, // 夜勤手当
                 totalSubCost, // 工具器具消耗品、荷造運賃
                 insideOvertimeCost, // 残業経費(社員)
                 outsideOvertimeCostValue, // 残業経費(派遣)
                 insideHolidayExpenses, // 休出経費(社員)
                 outsideHolidayExpensesValue, // 休出経費(派遣)
-                dispatch_expenses, // 派遣人員経費(22名×21日)
-                total_personnel_expenses, // 総人員/製造経費 計
+                profitResult.dispatchExpenses, // 派遣人員経費(22名×21日)
+                profitResult.totalPersonnelExpenses, // 総人員/製造経費 計
                 // "", // 一人当/付加価値(打)
                 // "", // 一人当/粗利益(打)
                 // "", // 実績 粗利益率(打)
@@ -628,29 +562,16 @@ export class PLDashboardTableBuilder {
             tbody.appendChild(row);
 
             // 収益分析リストにもデータを追加
-            console.log(firstRecord);
             const totalAddedValue =
                 roundedAddedValue + Number(firstRecord?.other_added_value?.value || 0);
-            console.log(`日付: ${totals.date}, 付加価値売上高: ${totalAddedValue}`);
-            CumulativeAddedValue += totalAddedValue;
-            CumulativeExpenses += total_personnel_expenses;
-            CumulativeGrossProfit =
-                totalAddedValue - total_personnel_expenses + YesterdayGrossProfit;
-            YesterdayGrossProfit = totalAddedValue - total_personnel_expenses;
-            CumulativeProfitRate =
-                ((CumulativeAddedValue - CumulativeExpenses) / CumulativeAddedValue) * 100 || 0;
-            const RevenueAnalysisItem: RevenueAnalysis = {
-                date: totals.date, // 日付(YYYY-MM-DD形式)
-                addedValue: totalAddedValue, // 付加価値売上高
-                expenses: total_personnel_expenses, // 経費
-                grossProfit: totalAddedValue - total_personnel_expenses, // 粗利益
-                profitRate:
-                    ((totalAddedValue - total_personnel_expenses) / totalAddedValue) * 100 || 0, // 利益率
-                CumulativeAddedValue: CumulativeAddedValue, // 累積付加価値
-                CumulativeExpenses: CumulativeExpenses, // 累積経費
-                CumulativeGrossProfit: CumulativeGrossProfit, // 累積粗利益
-                CumulativeProfitRate: CumulativeProfitRate, // 累積利益率
-            };
+
+            // 収益分析アイテムを作成（累積計算を含む）
+            const RevenueAnalysisItem = RevenueAnalysisCalculationService.createRevenueAnalysisItem(
+                totals.date,
+                totalAddedValue,
+                profitResult.totalPersonnelExpenses,
+                cumulativeDataManager
+            );
             RevenueAnalysisList.push(RevenueAnalysisItem);
         });
         table.appendChild(tbody);
