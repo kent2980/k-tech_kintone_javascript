@@ -38,6 +38,7 @@
         "jsdom",
         "kintone",
         "prettier",
+        "VITE",
         "wpzdj"
     ],
     "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"]
