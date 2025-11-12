@@ -260,4 +260,297 @@ export class KintoneApiService {
 
         throw lastError!;
     }
+
+    // ========================================
+    // レコード登録・更新メソッド
+    // ========================================
+
+    /**
+     * PL月次データを登録する
+     * @param record - 登録するレコード
+     * @returns 登録されたレコードID
+     */
+    static async savePLMonthlyData(record: Record<string, any>): Promise<number> {
+        try {
+            Logger.debug("PL月次データを登録しています...");
+            const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                app: APP_IDS.PL_MONTHLY,
+                records: [{ fields: record }],
+            });
+
+            const recordId = response.records[0].id;
+            Logger.success(`PL月次データを登録しました (ID: ${recordId})`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return recordId;
+        } catch (error) {
+            Logger.error("PL月次データ登録エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * PL日次データを登録する
+     * @param records - 登録するレコード配列
+     * @returns 登録されたレコードID配列
+     */
+    static async savePLDailyData(records: Record<string, any>[]): Promise<number[]> {
+        try {
+            Logger.debug(`${records.length}件のPL日次データを登録しています...`);
+
+            const recordIds: number[] = [];
+            const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
+
+            // バッチ処理で登録
+            for (let i = 0; i < records.length; i += batchSize) {
+                const batch = records.slice(i, i + batchSize);
+                const batchRecords = batch.map((record) => ({ fields: record }));
+
+                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                    app: APP_IDS.PL_DAILY,
+                    records: batchRecords,
+                });
+
+                recordIds.push(...response.records.map((r: any) => r.id));
+                Logger.debug(`${batchRecords.length}件のPL日次データを登録しました`);
+            }
+
+            Logger.success(`合計${recordIds.length}件のPL日次データを登録しました`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return recordIds;
+        } catch (error) {
+            Logger.error("PL日次データ登録エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * 生産日報データを登録する
+     * @param records - 登録するレコード配列
+     * @returns 登録されたレコードID配列
+     */
+    static async saveProductionReportData(records: Record<string, any>[]): Promise<number[]> {
+        try {
+            Logger.debug(`${records.length}件の生産日報データを登録しています...`);
+
+            const recordIds: number[] = [];
+            const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
+
+            // バッチ処理で登録
+            for (let i = 0; i < records.length; i += batchSize) {
+                const batch = records.slice(i, i + batchSize);
+                const batchRecords = batch.map((record) => ({ fields: record }));
+
+                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                    app: APP_IDS.PRODUCTION_REPORT,
+                    records: batchRecords,
+                });
+
+                recordIds.push(...response.records.map((r: any) => r.id));
+                Logger.debug(`${batchRecords.length}件の生産日報データを登録しました`);
+            }
+
+            Logger.success(`合計${recordIds.length}件の生産日報データを登録しました`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return recordIds;
+        } catch (error) {
+            Logger.error("生産日報データ登録エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * マスタ機種データを登録する
+     * @param records - 登録するレコード配列
+     * @returns 登録されたレコードID配列
+     */
+    static async saveMasterModelData(records: Record<string, any>[]): Promise<number[]> {
+        try {
+            Logger.debug(`${records.length}件のマスタ機種データを登録しています...`);
+
+            const recordIds: number[] = [];
+            const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
+
+            // バッチ処理で登録
+            for (let i = 0; i < records.length; i += batchSize) {
+                const batch = records.slice(i, i + batchSize);
+                const batchRecords = batch.map((record) => ({ fields: record }));
+
+                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                    app: APP_IDS.MASTER_MODEL,
+                    records: batchRecords,
+                });
+
+                recordIds.push(...response.records.map((r: any) => r.id));
+                Logger.debug(`${batchRecords.length}件のマスタ機種データを登録しました`);
+            }
+
+            Logger.success(`合計${recordIds.length}件のマスタ機種データを登録しました`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return recordIds;
+        } catch (error) {
+            Logger.error("マスタ機種データ登録エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * 祝日データを登録する
+     * @param records - 登録するレコード配列
+     * @returns 登録されたレコードID配列
+     */
+    static async saveHolidayData(records: Record<string, any>[]): Promise<number[]> {
+        try {
+            Logger.debug(`${records.length}件の祝日データを登録しています...`);
+
+            const recordIds: number[] = [];
+            const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
+
+            // バッチ処理で登録
+            for (let i = 0; i < records.length; i += batchSize) {
+                const batch = records.slice(i, i + batchSize);
+                const batchRecords = batch.map((record) => ({ fields: record }));
+
+                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                    app: APP_IDS.HOLIDAY,
+                    records: batchRecords,
+                });
+
+                recordIds.push(...response.records.map((r: any) => r.id));
+                Logger.debug(`${batchRecords.length}件の祝日データを登録しました`);
+            }
+
+            Logger.success(`合計${recordIds.length}件の祝日データを登録しました`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return recordIds;
+        } catch (error) {
+            Logger.error("祝日データ登録エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * 単一レコードを更新する
+     * @param appId - アプリID
+     * @param recordId - レコードID
+     * @param record - 更新するデータ
+     * @returns 更新結果
+     */
+    static async updateRecord(
+        appId: number,
+        recordId: number,
+        record: Record<string, any>
+    ): Promise<any> {
+        try {
+            Logger.debug(`レコードを更新しています (AppID: ${appId}, RecordID: ${recordId})`);
+
+            const response = await kintone.api(kintone.api.url("/k/v1/record", true), "PUT", {
+                app: appId,
+                id: recordId,
+                record: record,
+            });
+
+            Logger.success(`レコードを更新しました (RecordID: ${recordId})`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return response;
+        } catch (error) {
+            Logger.error("レコード更新エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * 複数レコードを更新する
+     * @param appId - アプリID
+     * @param records - 更新するレコードデータ配列（idを含む）
+     * @returns 更新結果
+     */
+    static async updateRecords(appId: number, records: Record<string, any>[]): Promise<any> {
+        try {
+            Logger.debug(`${records.length}件のレコードを更新しています (AppID: ${appId})`);
+
+            const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
+            const updateData = [];
+
+            // バッチ処理で更新
+            for (let i = 0; i < records.length; i += batchSize) {
+                const batch = records.slice(i, i + batchSize);
+                const batchRecords = batch.map((record) => ({
+                    id: record.id,
+                    record: record.data || record,
+                }));
+
+                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", {
+                    app: appId,
+                    records: batchRecords,
+                });
+
+                updateData.push(...response.records);
+                Logger.debug(`${batchRecords.length}件のレコードを更新しました`);
+            }
+
+            Logger.success(`合計${updateData.length}件のレコードを更新しました`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return updateData;
+        } catch (error) {
+            Logger.error("レコード一括更新エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * レコードを削除する
+     * @param appId - アプリID
+     * @param recordIds - 削除するレコードID配列
+     * @returns 削除結果
+     */
+    static async deleteRecords(appId: number, recordIds: number[]): Promise<any> {
+        try {
+            Logger.debug(`${recordIds.length}件のレコードを削除しています (AppID: ${appId})`);
+
+            const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
+
+            // バッチ処理で削除
+            for (let i = 0; i < recordIds.length; i += batchSize) {
+                const batch = recordIds.slice(i, i + batchSize);
+
+                await kintone.api(kintone.api.url("/k/v1/records", true), "DELETE", {
+                    app: appId,
+                    ids: batch,
+                });
+
+                Logger.debug(`${batch.length}件のレコードを削除しました`);
+            }
+
+            Logger.success(`合計${recordIds.length}件のレコードを削除しました`);
+
+            // キャッシュをクリア
+            PerformanceUtil.clearCache();
+
+            return { deletedCount: recordIds.length };
+        } catch (error) {
+            Logger.error("レコード削除エラー:", error);
+            throw error;
+        }
+    }
 }
