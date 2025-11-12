@@ -12,6 +12,8 @@ const mockProductHistoryData = [
         profitRate: "20.00%",
         insideOvertime: "2",
         outsideOvertime: "1",
+        insideRegularTime: "8",
+        outsideRegularTime: "4",
     },
     {
         date: "2024-01-01",
@@ -23,6 +25,8 @@ const mockProductHistoryData = [
         profitRate: "20.00%",
         insideOvertime: "1",
         outsideOvertime: "0",
+        insideRegularTime: "8",
+        outsideRegularTime: "4",
     },
     {
         date: "2024-01-02",
@@ -34,6 +38,8 @@ const mockProductHistoryData = [
         profitRate: "25.00%",
         insideOvertime: "1.5",
         outsideOvertime: "0.5",
+        insideRegularTime: "8",
+        outsideRegularTime: "4",
     },
 ];
 
@@ -148,6 +154,8 @@ describe("DataProcessor", () => {
                     profitRate: "16.67%",
                     insideOvertime: "0",
                     outsideOvertime: "0",
+                    insideRegularTime: "8",
+                    outsideRegularTime: "4",
                 },
             ];
 

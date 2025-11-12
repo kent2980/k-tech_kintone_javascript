@@ -48,6 +48,9 @@ export class DomUtil {
         label.textContent = text;
         label.setAttribute("for", forId);
         label.className = "filter-label" + (marginLeft ? " with-margin" : "");
+        if (marginLeft) {
+            label.style.marginLeft = marginLeft;
+        }
         return label;
     }
 

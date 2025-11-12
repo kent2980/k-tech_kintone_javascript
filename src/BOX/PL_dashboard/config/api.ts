@@ -2,15 +2,22 @@
  * API設定
  */
 
+// 環境変数から APP_IDS を取得する関数
+function getAppIds(): Record<string, number> {
+    // Node.js/Jest環境の場合
+    const env = process.env;
+    return {
+        PRODUCTION_REPORT: parseInt(env.VITE_APP_ID_PRODUCTION_REPORT || "22", 10),
+        MASTER_MODEL: parseInt(env.VITE_APP_ID_MASTER_MODEL || "25", 10),
+        PL_DAILY: parseInt(env.VITE_APP_ID_PL_DAILY || "32", 10),
+        PL_MONTHLY: parseInt(env.VITE_APP_ID_PL_MONTHLY || "39", 10),
+        HOLIDAY: parseInt(env.VITE_APP_ID_HOLIDAY || "44", 10),
+    };
+}
+
 export const API_CONFIG = {
-    // アプリID
-    APP_IDS: {
-        PRODUCTION_REPORT: 22, // 生産日報報告書
-        MASTER_MODEL: 25, // マスタ機種一覧
-        PL_DAILY: 32, // PL日次
-        PL_MONTHLY: 39, // PL月次
-        HOLIDAY: 44, // 祝日マスタ
-    },
+    // アプリID（.envから読み込み）
+    APP_IDS: getAppIds(),
 
     // API制限とパフォーマンス設定
     LIMITS: {

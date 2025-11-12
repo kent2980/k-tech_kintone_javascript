@@ -50,6 +50,8 @@ export class DataProcessor {
             profitRate,
             totalInsideOvertime,
             totalOutsideOvertime,
+            totalInsideHolidayOvertime: 0,
+            totalOutsideHolidayOvertime: 0,
         };
     }
 
@@ -202,6 +204,8 @@ export class DataProcessor {
                 profitRate,
                 insideOvertime: record.inside_overtime?.value || "0",
                 outsideOvertime: record.outside_overtime?.value || "0",
+                insideRegularTime: record.inside_time?.value || "0",
+                outsideRegularTime: record.outside_time?.value || "0",
             };
         });
     }
