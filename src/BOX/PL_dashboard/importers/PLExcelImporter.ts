@@ -1,5 +1,5 @@
 import { Logger } from "../utils";
-import { ExcelImporter, TableDataFrame } from "./ExcelImporter";
+import { ExcelImporter, MonthlyDataFrame, TableDataFrame } from "./ExcelImporter";
 
 /**
  * PL管理Excel専用インポーターラッパークラス
@@ -219,6 +219,46 @@ export class PLExcelImporter {
             endRow,
             sheetName
         );
+    }
+
+    /**
+     * 月次データをDataFrame形式で取得
+     */
+    getMonthlyData(
+        sheetName1: string = "生産履歴（Assy）",
+        sheetName2: string = "ＰＬ (日毎) (計画反映版)"
+    ): MonthlyDataFrame {
+        // シートの存在確認
+        if (!this.hasSheet(sheetName1)) {
+            throw new Error(`シート "${sheetName1}" が見つかりません`);
+        }
+        if (!this.hasSheet(sheetName2)) {
+            throw new Error(`シート "${sheetName2}" が見つかりません`);
+        }
+
+        // sheetName1の処理
+
+        /** 社員単価 */
+        const inside_unit: number = this.importer.getCellValueAsNumber("G2", sheetName1);
+        /** 派遣単価 */
+        const outside_unit: number = this.importer.getCellValueAsNumber("I2", sheetName1);
+
+        // sheetName2の処理
+        /** 直行人員単価 */
+        const direct: number = this.importer.getCellValueAsNumber("A28", sheetName2);
+        /** 派遣人員単価 */
+        const dispatch: number = this.importer.getCellValueAsNumber("A30", sheetName2);
+        /** 間接人員単価 */
+        const indirect: number = this.importer.getCellValueAsNumber("A32", sheetName2);
+
+        const monthlyData: MonthlyDataFrame = {
+            inside_unit: inside_unit,
+            outside_unit: outside_unit,
+            direct: direct,
+            dispatch: dispatch,
+            indirect: indirect,
+        };
+        return monthlyData;
     }
 
     // ========================================

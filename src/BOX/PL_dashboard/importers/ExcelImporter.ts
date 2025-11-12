@@ -17,6 +17,23 @@ export interface TableDataFrame<T extends Record<string, any> = Record<string, a
 }
 
 /**
+ * 月次データをDataFrame形式で取得するためのインターフェース
+ * 月次データの名前と値を持つ
+ */
+export interface MonthlyDataFrame extends Record<string, any> {
+    /** 社員単価 */
+    inside_unit: number;
+    /** 派遣単価 */
+    outside_unit: number;
+    /** 直行人員単価 */
+    direct: number;
+    /** 派遣人員単価 */
+    dispatch: number;
+    /** 間接人員単価 */
+    indirect: number;
+}
+
+/**
  * PL管理Excel専用インポーター
  * 表形式ではないExcelファイルから特定のセルを読み込むためのクラス
  */

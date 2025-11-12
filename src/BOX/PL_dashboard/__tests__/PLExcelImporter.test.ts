@@ -413,4 +413,51 @@ describe("PLExcelImporter", () => {
             }
         });
     });
+    describe("月次データ取得", () => {
+        it("月次データを正常に取得できる", async () => {
+            const importer = new PLExcelImporter(excelFile);
+
+            try {
+                await importer.load();
+
+                console.log("\n📊 月次データ取得テスト:");
+
+                const monthlyData = importer.getMonthlyData();
+
+                console.log("  取得された月次データ:");
+                console.log(`    社員単価 (inside_unit): ${monthlyData.inside_unit}`);
+                console.log(`    派遣単価 (outside_unit): ${monthlyData.outside_unit}`);
+                console.log(`    直行人員単価 (direct): ${monthlyData.direct}`);
+                console.log(`    派遣人員単価 (dispatch): ${monthlyData.dispatch}`);
+                console.log(`    間接人員単価 (indirect): ${monthlyData.indirect}`);
+
+                expect(monthlyData).toBeDefined();
+                expect(typeof monthlyData.inside_unit).toBe("number");
+                expect(typeof monthlyData.outside_unit).toBe("number");
+                expect(typeof monthlyData.direct).toBe("number");
+                expect(typeof monthlyData.dispatch).toBe("number");
+                expect(typeof monthlyData.indirect).toBe("number");
+            } finally {
+                importer.dispose();
+            }
+        });
+
+        it("存在しないシート名でエラーになる", async () => {
+            const importer = new PLExcelImporter(excelFile);
+
+            try {
+                await importer.load();
+
+                console.log("\n⚠ 月次データ取得エラーハンドリングテスト:");
+
+                expect(() => {
+                    importer.getMonthlyData("存在しないシート1", "存在しないシート2");
+                }).toThrow();
+
+                console.log("  ✓ 存在しないシート名でエラーをスロー");
+            } finally {
+                importer.dispose();
+            }
+        });
+    });
 });
