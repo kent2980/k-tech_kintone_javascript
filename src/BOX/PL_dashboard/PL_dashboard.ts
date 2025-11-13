@@ -39,6 +39,7 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
     let product_history_data: ProductHistoryData[] = [];
     let plMonthlyData: monthly.SavedFields | null = null;
     let filteredRecords: line_daily.SavedFields[] = [];
+    let lastActiveTabId: string = "production-tab";
 
     // DOM構築関数は PLDashboardDomBuilder クラスに移動しました
 
@@ -235,6 +236,11 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                 // タブコンテナをheaderSpaceに追加
                 headerElement.appendChild(tabContainer);
 
+                // 前回アクティブだったタブを再度アクティブ化
+                if (lastActiveTabId) {
+                    switchTab(lastActiveTabId);
+                }
+
                 const filterTime = PerformanceUtil.endMeasure("filter-change");
                 Logger.success(`フィルター処理完了: ${filterTime.toFixed(2)}ms`);
             } catch (error) {
@@ -242,7 +248,7 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                 alert("データの取得に失敗しました。");
             }
         },
-        500 // 500ms のデバウンス
+        100 // 500ms のデバウンス
     );
 
     /**
@@ -453,6 +459,7 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
      * @param targetTabId - 切り替え先のタブID
      */
     function switchTab(targetTabId: string): void {
+        lastActiveTabId = targetTabId;
         // すべてのタブボタンを非アクティブ化
         const allTabButtons = document.querySelectorAll(".tab-button");
         allTabButtons.forEach((button) => {
