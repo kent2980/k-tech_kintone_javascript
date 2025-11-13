@@ -23,10 +23,11 @@ import {
 
 import { DateUtil, Logger, PerformanceUtil } from "./utils";
 
-import { KintoneApiService } from "./services";
+import { BusinessCalculationService, KintoneApiService } from "./services";
 
 import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } from "./components";
-
+import { ActiveFilterStore } from "./store/ActiveFilterStore";
+import { HolidayStore } from "./store/HolidayStore";
 (function () {
     "use strict";
 
@@ -56,6 +57,85 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         button.style.padding = "6px 12px";
         button.style.cursor = "pointer";
         return button;
+    }
+
+    /**
+     * 読み込みオーバーレイを表示
+     * @param parent - オーバーレイを追加する親要素（通常はヘッダースペース）
+     */
+    function showLoading(parent: HTMLElement): void {
+        try {
+            if (!parent) return;
+            // 親要素を相対配置にしてオーバーレイを絶対配置で被せる
+            const prevPosition = parent.style.position;
+            if (!prevPosition || prevPosition === "") {
+                parent.style.position = "relative";
+            }
+
+            if (document.getElementById("pl-dashboard-loading")) return;
+
+            // keyframes スタイルが未登録なら追加
+            if (!document.getElementById("pl-dashboard-loading-styles")) {
+                const style = document.createElement("style");
+                style.id = "pl-dashboard-loading-styles";
+                style.textContent = `@keyframes pl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
+                document.head.appendChild(style);
+            }
+
+            const overlay = document.createElement("div");
+            overlay.id = "pl-dashboard-loading";
+            overlay.style.position = "absolute";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.display = "flex";
+            overlay.style.alignItems = "center";
+            overlay.style.justifyContent = "center";
+            overlay.style.background = "rgba(255,255,255,0.85)";
+            overlay.style.zIndex = "9999";
+
+            const box = document.createElement("div");
+            box.style.display = "flex";
+            box.style.flexDirection = "column";
+            box.style.alignItems = "center";
+            box.style.gap = "10px";
+
+            const spinner = document.createElement("div");
+            spinner.style.width = "36px";
+            spinner.style.height = "36px";
+            spinner.style.border = "4px solid #ddd";
+            spinner.style.borderTop = "4px solid #1e90ff";
+            spinner.style.borderRadius = "50%";
+            spinner.style.animation = "pl-spin 1s linear infinite";
+
+            const label = document.createElement("div");
+            label.textContent = "読み込み中...";
+            label.style.color = "#333";
+            label.style.fontSize = "14px";
+
+            box.appendChild(spinner);
+            box.appendChild(label);
+            overlay.appendChild(box);
+
+            parent.appendChild(overlay);
+        } catch (e) {
+            // ロード表示は非致命的なので失敗しても無視
+        }
+    }
+
+    /**
+     * 読み込みオーバーレイを非表示
+     */
+    function hideLoading(): void {
+        try {
+            const overlay = document.getElementById("pl-dashboard-loading");
+            if (overlay && overlay.parentElement) {
+                overlay.parentElement.removeChild(overlay);
+            }
+        } catch (e) {
+            // 無視
+        }
     }
 
     /**
@@ -127,10 +207,15 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
             const selectedYear = yearSelect?.value || null;
             const selectedMonth = monthSelect?.value || null;
 
+            // フィルター情報をストアに保存
+            ActiveFilterStore.getInstance().setFilter(Number(selectedYear), Number(selectedMonth));
             try {
                 // フィルター変更時にデータをリセット
                 let RevenueAnalysisList: RevenueAnalysis[] = [];
                 product_history_data = [];
+
+                // 読み込みオーバーレイを表示
+                showLoading(headerElement);
 
                 PerformanceUtil.startMeasure("filter-change");
 
@@ -147,27 +232,114 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                 // 年月の条件でデータを再取得
                 filteredRecords = await fetchProductionReportData(selectedYear, selectedMonth);
 
-                // 既存のタブコンテナがあれば削除
+                // 既存のタブコンテナがあれば再利用し、子要素のみクリアして再構築（画面チラつき回避）
+                let tabContainer: HTMLElement;
+                let tabButtonsContainer: HTMLElement;
+                let tabContentsContainer: HTMLElement;
                 const existingTabContainer = document.getElementById("tab-container");
                 if (existingTabContainer) {
-                    headerElement.removeChild(existingTabContainer);
+                    tabContainer = existingTabContainer as HTMLElement;
+                    tabButtonsContainer = tabContainer.querySelector("#tab-buttons") as HTMLElement;
+                    tabContentsContainer = tabContainer.querySelector(
+                        "#tab-contents"
+                    ) as HTMLElement;
+                    if (tabButtonsContainer) tabButtonsContainer.innerHTML = "";
+                    if (tabContentsContainer) tabContentsContainer.innerHTML = "";
+                } else {
+                    const created = createTabContainer();
+                    tabContainer = created.tabContainer;
+                    tabButtonsContainer = created.tabButtonsContainer;
+                    tabContentsContainer = created.tabContentsContainer;
                 }
 
-                // タブコンテナを作成
-                const { tabContainer, tabButtonsContainer, tabContentsContainer } =
-                    createTabContainer();
-
                 // テーブルを順番に非同期実行
-                const tableContainer = await PerformanceUtil.createElementLazy(() =>
-                    PLDashboardTableBuilder.createProductionPerformanceTable(
-                        filteredRecords,
-                        plMonthlyData,
-                        masterModelData || [],
-                        product_history_data,
-                        DateUtil.getDayOfWeek,
-                        holidayData
-                    )
+                let tableContainer: HTMLElement;
+                // production table: update data only if table exists
+                const existingProductionContainer = document.getElementById(
+                    "production-performance-table"
                 );
+                if (existingProductionContainer) {
+                    // rebuild product_history_data and prepare DataTables row arrays
+                    product_history_data = [];
+                    const prodRows: unknown[] = [];
+                    filteredRecords.forEach((record) => {
+                        const metrics = BusinessCalculationService.calculateBusinessMetrics(
+                            record,
+                            masterModelData || [],
+                            plMonthlyData
+                        );
+
+                        const dateObj = new Date(record.date?.value);
+                        const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(
+                            dateObj.getDate()
+                        ).padStart(2, "0")}(${DateUtil.getDayOfWeek(dateObj)})`;
+
+                        const row = [
+                            formattedDate,
+                            record.line_name?.value || "",
+                            record.model_name?.value || "",
+                            record.actual_number?.value || "0",
+                            metrics.addedValue.addedValue,
+                            record.inside_time?.value || "0",
+                            metrics.cost.insideCost,
+                            record.outside_time?.value || "0",
+                            metrics.cost.outsideCost,
+                            record.inside_overtime?.value || "0",
+                            metrics.cost.insideOvertimeCost,
+                            record.outside_overtime?.value || "0",
+                            metrics.cost.outsideOvertimeCost,
+                            metrics.cost.totalCost,
+                            metrics.profit.grossProfit,
+                            metrics.profit.profitRateString,
+                        ];
+
+                        prodRows.push(row);
+
+                        const historyItem: ProductHistoryData = {
+                            date: record.date?.value || "",
+                            line_name: record.line_name?.value || "",
+                            actual_number: record.actual_number?.value || "0",
+                            addedValue: metrics.addedValue.addedValue,
+                            totalCost: metrics.cost.totalCost,
+                            grossProfit: metrics.profit.grossProfit,
+                            profitRate: metrics.profit.profitRateString,
+                            insideOvertime: record.inside_overtime?.value || "0",
+                            outsideOvertime: record.outside_overtime?.value || "0",
+                            insideRegularTime: record.inside_time?.value || "0",
+                            outsideRegularTime: record.outside_time?.value || "0",
+                        };
+                        product_history_data.push(historyItem);
+                    });
+
+                    // Update DataTables if initialized, otherwise rebuild container
+                    const productionTableElement = document.getElementById("production-table");
+                    if (productionTableElement && (window as any).jQuery) {
+                        PLDashboardTableBuilder.updateTableData("production-table", prodRows);
+                        tableContainer = existingProductionContainer as HTMLElement;
+                    } else {
+                        tableContainer = await PerformanceUtil.createElementLazy(() =>
+                            PLDashboardTableBuilder.createProductionPerformanceTable(
+                                filteredRecords,
+                                plMonthlyData,
+                                masterModelData || [],
+                                product_history_data,
+                                DateUtil.getDayOfWeek,
+                                holidayData
+                            )
+                        );
+                    }
+                } else {
+                    tableContainer = await PerformanceUtil.createElementLazy(() =>
+                        PLDashboardTableBuilder.createProductionPerformanceTable(
+                            filteredRecords,
+                            plMonthlyData,
+                            masterModelData || [],
+                            product_history_data,
+                            DateUtil.getDayOfWeek,
+                            holidayData
+                        )
+                    );
+                }
                 const profitTableContainer = await PerformanceUtil.createElementLazy(() =>
                     PLDashboardTableBuilder.createProfitCalculationTable(
                         dailyReportData,
@@ -181,19 +353,72 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                         holidayData
                     )
                 );
-                const summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
-                    PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
-                        RevenueAnalysisList,
-                        holidayData
-                    )
+                let summaryTableContainer: HTMLElement;
+                const existingSummaryContainer = document.getElementById(
+                    "revenue-analysis-summary-table"
                 );
-                const mixedChartContainer = await PerformanceUtil.createElementLazy(() =>
-                    PLDashboardGraphBuilder.createMixedChartContainer(
+                if (existingSummaryContainer) {
+                    // prepare summary rows from RevenueAnalysisList
+                    const summaryRows: unknown[] = [];
+                    RevenueAnalysisList.forEach((item) => {
+                        summaryRows.push([
+                            // formattedDate
+                            `${String(new Date(item.date).getMonth() + 1).padStart(2, "0")}/${String(
+                                new Date(item.date).getDate()
+                            ).padStart(2, "0")}(${DateUtil.getDayOfWeek(new Date(item.date))})`,
+                            item.addedValue,
+                            item.expenses,
+                            item.grossProfit,
+                            item.profitRate,
+                            item.CumulativeAddedValue,
+                            item.CumulativeExpenses,
+                            item.CumulativeGrossProfit,
+                            item.CumulativeProfitRate,
+                        ]);
+                    });
+
+                    const summaryTableElement = document.getElementById("revenue-summary-table");
+                    if (summaryTableElement && (window as any).jQuery) {
+                        PLDashboardTableBuilder.updateTableData(
+                            "revenue-summary-table",
+                            summaryRows
+                        );
+                        summaryTableContainer = existingSummaryContainer as HTMLElement;
+                    } else {
+                        summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
+                            PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                                RevenueAnalysisList,
+                                holidayData
+                            )
+                        );
+                    }
+                } else {
+                    summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
+                        PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                            RevenueAnalysisList,
+                            holidayData
+                        )
+                    );
+                }
+                let mixedChartContainer: HTMLElement;
+                const existingCanvas = document.getElementById("mixed-chart");
+                if (existingCanvas) {
+                    // update chart data only
+                    PLDashboardGraphBuilder.updateMixedChart(
                         "mixed-chart",
                         RevenueAnalysisList,
                         holidayData
-                    )
-                );
+                    );
+                    mixedChartContainer = existingCanvas.parentElement as HTMLElement;
+                } else {
+                    mixedChartContainer = await PerformanceUtil.createElementLazy(() =>
+                        PLDashboardGraphBuilder.createMixedChartContainer(
+                            "mixed-chart",
+                            RevenueAnalysisList,
+                            holidayData
+                        )
+                    );
+                }
 
                 // タブボタンを作成
                 const tab1Button = createTabButton("production-tab", "生産履歴（Assy）", true);
@@ -242,8 +467,11 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                 }
 
                 const filterTime = PerformanceUtil.endMeasure("filter-change");
+                // 読み込みオーバーレイを非表示
+                hideLoading();
                 Logger.success(`フィルター処理完了: ${filterTime.toFixed(2)}ms`);
             } catch (error) {
+                hideLoading();
                 Logger.error("フィルタリング処理でエラー:", error);
                 alert("データの取得に失敗しました。");
             }
@@ -518,6 +746,8 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         Logger.debug("祝日データ確認:", holidayData);
         if (!holidayData || holidayData.length === 0) {
             holidayData = await fetchHolidayData();
+            // 祝日データをストアにセット
+            HolidayStore.getInstance().setHolidayData(holidayData);
         }
 
         // マスタ機種一覧データを取得（初回のみ）

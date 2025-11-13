@@ -12,6 +12,8 @@ import {
     ProfitCalculationService,
     RevenueAnalysisCalculationService,
 } from "../services";
+import { ActiveFilterStore } from "../store/ActiveFilterStore";
+import { HolidayStore } from "../store/HolidayStore";
 import {
     DataTablesApi,
     DataTablesOptions,
@@ -793,6 +795,7 @@ export class PLDashboardTableBuilder {
                     // 色分けラベルを追加
                     setTimeout(() => {
                         PLDashboardTableBuilder.addColorLegendToDataTable(tableId);
+                        PLDashboardTableBuilder.addCompanyOperatingDaysLabel(tableId);
                     }, 100);
                 },
             };
@@ -1072,6 +1075,7 @@ export class PLDashboardTableBuilder {
                 // 新しい色分けラベルを作成
                 const colorLegend = this.createColorLegend();
                 colorLegend.setAttribute("data-table", tableId);
+                colorLegend.className = "color-legend";
 
                 // dt-top-controlsに追加
                 targetElement.appendChild(colorLegend);
@@ -1083,6 +1087,55 @@ export class PLDashboardTableBuilder {
         } catch (error) {
             console.error(`色分けラベル追加でエラーが発生しました:`, error);
             Logger.debug(`色分けラベル追加でエラーが発生しました: ${error}`);
+        }
+    }
+
+    /**
+     * 会社営業日数ラベルを作成する
+     * @param tableId - テーブルのID
+     */
+    static addCompanyOperatingDaysLabel(tableId: string): void {
+        try {
+            const targetElement = document.querySelector(`#${tableId}_wrapper .dt-top-controls`);
+
+            if (targetElement) {
+                // 既存の凡例があれば削除
+                const existingLabel =
+                    targetElement.querySelector(".company-operating-days-label") ||
+                    document.querySelector(
+                        `.company-operating-days-label[data-table="${tableId}"]`
+                    );
+                if (existingLabel) {
+                    existingLabel.remove();
+                }
+
+                // 休日リストをストアから取得
+                const yearMonth: Record<string, any> = ActiveFilterStore.getInstance().getFilter();
+                const holidayList = HolidayStore.getInstance().getSelectHolidayDates(
+                    yearMonth.year,
+                    yearMonth.month
+                );
+
+                // 営業日数を計算
+                const totalDaysInMonth = new Date(yearMonth.year, yearMonth.month, 0).getDate();
+                const operatingDays = totalDaysInMonth - holidayList.length;
+
+                // 新しい営業日数ラベルを作成
+                const operatingDaysLabel = document.createElement("div");
+                operatingDaysLabel.className = "company-operating-days-label color-legend";
+                operatingDaysLabel.setAttribute("data-table", tableId);
+                operatingDaysLabel.textContent = `稼働日数: ${operatingDays}日`; // ここで実際の営業日数を設定
+
+                // dt-top-controlsに追加
+                targetElement.appendChild(operatingDaysLabel);
+
+                Logger.debug(`営業日数ラベルが ${tableId} に追加されました`);
+            } else {
+                Logger.debug(`${tableId} に適切な追加先が見つかりませんでした`);
+            }
+        } catch (error) {
+            console.error(`営業日数ラベル追加でエラーが発生しました:`, error);
+            Logger.debug(`営業日数ラベル追加でエラーが発生しました: ${error}`);
         }
     }
 

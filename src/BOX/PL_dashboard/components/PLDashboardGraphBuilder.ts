@@ -5,7 +5,8 @@ import { RevenueAnalysis } from "../types";
 import { DateUtil } from "../utils";
 import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
 export class PLDashboardGraphBuilder {
-    private chart: Chart | null = null;
+    // store chart instances by canvas id so we can update data without recreating DOM
+    private static charts: Map<string, Chart> = new Map();
 
     /**
      * 折れ線と棒グラフの複合グラフを作成したコンテナを作成
@@ -39,7 +40,7 @@ export class PLDashboardGraphBuilder {
                 Number(item.CumulativeProfitRate)
             );
 
-            new Chart(ctx, {
+            const chart = new Chart(ctx, {
                 type: "bar",
                 data: {
                     labels: labels,
@@ -174,6 +175,8 @@ export class PLDashboardGraphBuilder {
                 },
                 plugins: [ChartDataLabels],
             });
+            // store chart instance
+            PLDashboardGraphBuilder.charts.set(canvasId, chart);
         }
 
         // グラフコンテナを返す
@@ -181,12 +184,43 @@ export class PLDashboardGraphBuilder {
     }
 
     /**
+     * 既存のチャートを更新（データのみ）
+     */
+    static updateMixedChart(
+        canvasId: string,
+        RevenueAnalysisList: RevenueAnalysis[],
+        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
+    ): void {
+        const chart = PLDashboardGraphBuilder.charts.get(canvasId);
+        if (!chart) return;
+
+        const labels = RevenueAnalysisList.map((item) => {
+            const dateObj = new Date(item.date);
+            const monthDay = `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(
+                dateObj.getDate()
+            ).padStart(2, "0")}`;
+            const dayOfWeek = `(${DateUtil.getDayOfWeek(dateObj)})`;
+            return [monthDay, dayOfWeek];
+        });
+
+        const addedValueData = RevenueAnalysisList.map((item) => item.CumulativeAddedValue);
+        const expensesData = RevenueAnalysisList.map((item) => item.CumulativeExpenses);
+        const profitRateData = RevenueAnalysisList.map((item) => Number(item.CumulativeProfitRate));
+
+        chart.data.labels = labels as any;
+        if (chart.data.datasets && chart.data.datasets.length >= 3) {
+            chart.data.datasets[0].data = addedValueData as any;
+            chart.data.datasets[1].data = expensesData as any;
+            chart.data.datasets[2].data = profitRateData as any;
+        }
+
+        chart.update();
+    }
+
+    /**
      * グラフを破棄
      */
     destroy(): void {
-        if (this.chart) {
-            this.chart.destroy();
-            this.chart = null;
-        }
+        // no-op for static usage
     }
 }
