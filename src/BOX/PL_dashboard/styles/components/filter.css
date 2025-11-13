@@ -131,6 +131,11 @@ select.filter-select:focus {
     gap: 20px;
 }
 
+#header-spacer {
+    display: flex;
+    gap: 15px;
+}
+
 .header-filter-container {
     margin: 0;
 }

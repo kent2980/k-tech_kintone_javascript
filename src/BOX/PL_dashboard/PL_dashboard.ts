@@ -152,50 +152,45 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                 const { tabContainer, tabButtonsContainer, tabContentsContainer } =
                     createTabContainer();
 
-                // 非同期でテーブルを作成（UIブロッキングを回避）
-                const [
-                    tableContainer,
-                    profitTableContainer,
-                    summaryTableContainer,
-                    mixedChartContainer,
-                ] = await Promise.all([
-                    PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createProductionPerformanceTable(
-                            filteredRecords,
-                            plMonthlyData,
-                            masterModelData || [],
-                            product_history_data,
-                            DateUtil.getDayOfWeek,
-                            holidayData
-                        )
-                    ),
-                    PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createProfitCalculationTable(
-                            dailyReportData,
-                            filteredRecords,
-                            plMonthlyData,
-                            getDateList,
-                            getTotalsByDate,
-                            getRecordsByDate,
-                            DateUtil.getDayOfWeek,
-                            RevenueAnalysisList,
-                            holidayData
-                        )
-                    ),
-                    PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
-                            RevenueAnalysisList,
-                            holidayData
-                        )
-                    ),
-                    PerformanceUtil.createElementLazy(() =>
-                        PLDashboardGraphBuilder.createMixedChartContainer(
-                            "mixed-chart",
-                            RevenueAnalysisList,
-                            holidayData
-                        )
-                    ),
-                ]);
+                // テーブルを順番に非同期実行
+                const tableContainer = await PerformanceUtil.createElementLazy(() =>
+                    PLDashboardTableBuilder.createProductionPerformanceTable(
+                        filteredRecords,
+                        plMonthlyData,
+                        masterModelData || [],
+                        product_history_data,
+                        DateUtil.getDayOfWeek,
+                        holidayData
+                    )
+                );
+                const profitTableContainer = await PerformanceUtil.createElementLazy(() =>
+                    PLDashboardTableBuilder.createProfitCalculationTable(
+                        dailyReportData,
+                        filteredRecords,
+                        plMonthlyData,
+                        getDateList,
+                        getTotalsByDate,
+                        getRecordsByDate,
+                        DateUtil.getDayOfWeek,
+                        RevenueAnalysisList,
+                        holidayData
+                    )
+                );
+                const summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
+                    PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                        RevenueAnalysisList,
+                        holidayData
+                    )
+                );
+                const mixedChartContainer = await PerformanceUtil.createElementLazy(() =>
+                    PLDashboardGraphBuilder.createMixedChartContainer(
+                        "mixed-chart",
+                        RevenueAnalysisList,
+                        holidayData
+                    )
+                );
+
+                console.log(`収益データ:`, RevenueAnalysisList);
 
                 // タブボタンを作成
                 const tab1Button = createTabButton("production-tab", "生産履歴（Assy）", true);

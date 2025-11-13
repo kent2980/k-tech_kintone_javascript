@@ -6,6 +6,7 @@ import { DateUtil, FieldsUtil, Logger, PerformanceUtil } from "../utils";
 /// <reference path="../fields/daily_fields.d.ts" />
 /// <reference path="../fields/line_daily_fields.d.ts" />
 /// <reference path="../fields/model_master_fields.d.ts" />
+/// <reference path="../fields/holiday_fields.d.ts" />
 
 /**
  * kintone API関連の処理を担当するサービスクラス
@@ -269,22 +270,51 @@ export class KintoneApiService {
      * PL月次データを登録する
      * @param record - 登録するレコード
      * @returns 登録されたレコードID
+     * @example
+     * ```typescript
+     * const record = {
+     *   year_month: { type: "SINGLE_LINE_TEXT", value: "2024_06" },
+     *   dispatch: { type: "NUMBER", value: "5" },
+     *   indirect: { type: "NUMBER", value: "3" },
+     *   year: { type: "NUMBER", value: "2024" },
+     *   direct: { type: "NUMBER", value: "10" },
+     *   inside_unit: { type: "NUMBER", value: "2000" },
+     *   month: { type: "DROP_DOWN", value: "June" },
+     *   outside_unit: { type: "NUMBER", value: "1800" }
+     * };
+     * savePLMonthlyData(record).then((id) => {
+     *   console.log("登録されたレコードID:", id);
+     * });
+     * ```
      */
     static async savePLMonthlyData(record: Record<string, any>): Promise<number> {
         try {
-            Logger.debug("PL月次データを登録しています...");
-            const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
-                app: APP_IDS.PL_MONTHLY,
-                records: [{ fields: record }],
-            });
+            // 重複チェック
+            const duplicates = await this.checkDuplicateRecords(
+                APP_IDS.PL_MONTHLY,
+                record,
+                "year_month"
+            );
+            if (!duplicates || duplicates.length === 0) {
+                // 登録処理開始
+                Logger.debug("PL月次データを登録しています...");
+                const response = await kintone.api(kintone.api.url("/k/v1/record", true), "POST", {
+                    app: APP_IDS.PL_MONTHLY,
+                    record: JSON.parse(JSON.stringify(record)),
+                });
 
-            const recordId = response.records[0].id;
-            Logger.success(`PL月次データを登録しました (ID: ${recordId})`);
+                const recordId = response.id;
+                Logger.success(`PL月次データを登録しました (ID: ${recordId})`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+                // キャッシュをクリア
+                PerformanceUtil.clearCache();
 
-            return recordId;
+                return recordId;
+            } else {
+                Logger.warn("PL月次データの重複が検出され、登録をスキップしました:", duplicates);
+                console.log(duplicates);
+                return 0;
+            }
         } catch (error) {
             Logger.error("PL月次データ登録エラー:", error);
             throw error;
@@ -295,36 +325,120 @@ export class KintoneApiService {
      * PL日次データを登録する
      * @param records - 登録するレコード配列
      * @returns 登録されたレコードID配列
+     * @example
+     * ```typescript
+     * const records = [
+     *   {
+     *     date: { type: "DATE", value: "2024-06-01" },
+     *     indirect_material_costs: { type: "NUMBER", value: "20000" },
+     *     inside_overtime_cost: { type: "NUMBER", value: "4000" },
+     *     outside_overtime_cost: { type: "NUMBER", value: "2500" },
+     *     other_added_value: { type: "NUMBER", value: "50000" },
+     *     other_indirect_material_costs: { type: "SINGLE_LINE_TEXT", value: "5000" },
+     *     inside_holiday_expenses: { type: "NUMBER", value: "1000" },
+     *     outside_holiday_expenses: { type: "NUMBER", value: "500" },
+     *     direct_personnel: { type: "NUMBER", value: "10" },
+     *     temporary_employees: { type: "NUMBER", value: "2" },
+     *     labor_costs: { type: "NUMBER", value: "100000" },
+     *     indirect_overtime: { type: "NUMBER", value: "8" },
+     *     total_sub_cost: { type: "NUMBER", value: "15000" },
+     *     indirect_holiday_work: { type: "NUMBER", value: "4" },
+     *     indirect_personnel: { type: "NUMBER", value: "5" },
+     *     night_shift_allowance: { type: "NUMBER", value: "3000" }
+     *   }
+     * ];
+     * savePLDailyData(records).then((ids) => {
+     *   console.log("登録されたレコードID:", ids);
+     * });
+     * ```
      */
     static async savePLDailyData(records: Record<string, any>[]): Promise<number[]> {
         try {
-            Logger.debug(`${records.length}件のPL日次データを登録しています...`);
+            // まずバッチ内で同一の日付が重複していないかチェックして、あれば除去する
+            let uploadRecords = records;
+            try {
+                const dateValues = records.map((r) => {
+                    const v = r && r.date;
+                    return typeof v === "object" && v && v.value !== undefined ? v.value : v;
+                });
 
-            const recordIds: number[] = [];
+                const seen = new Set<string>();
+                const duplicatesInBatch: string[] = [];
+                const uniqueRecords: Record<string, any>[] = [];
+
+                for (let idx = 0; idx < dateValues.length; idx++) {
+                    const d = dateValues[idx];
+                    if (d === undefined || d === null) {
+                        // 日付がない場合はそのまま含める
+                        uniqueRecords.push(records[idx]);
+                        continue;
+                    }
+
+                    if (seen.has(String(d))) {
+                        duplicatesInBatch.push(String(d));
+                    } else {
+                        seen.add(String(d));
+                        uniqueRecords.push(records[idx]);
+                    }
+                }
+
+                if (duplicatesInBatch.length > 0) {
+                    console.log(
+                        `バッチ内で重複する日付が見つかりました (${[...new Set(duplicatesInBatch)].join(", ")}))。重複を除いて登録を続行します。`
+                    );
+                    uploadRecords = uniqueRecords;
+                }
+            } catch (e) {
+                // 日付抽出で予期せぬ形式が来た場合はそのまま進める（既存の重複チェックでガード）
+                console.log("バッチ内重複チェック中にエラーが発生しました。スキップします。", e);
+                uploadRecords = records;
+            }
+
+            // 重複チェック（サーバ側に既存データがあるか確認）
+            const duplicatesInfo = await this.checkBatchDuplicateRecords(
+                APP_IDS.PL_DAILY,
+                uploadRecords,
+                "date"
+            );
+
+            // 実際に重複しているレコードがあるか確認
+            const hasDuplicates = duplicatesInfo.some((info) => info.isDuplicate);
+
+            if (hasDuplicates) {
+                console.log(
+                    "PL日次データの重複が検出され、登録をスキップしました:",
+                    duplicatesInfo.filter((info) => info.isDuplicate)
+                );
+                return [];
+            }
+            // 登録処理開始
+            console.log("PL日次データ登録処理開始");
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチ処理で登録
             for (let i = 0; i < records.length; i += batchSize) {
                 const batch = records.slice(i, i + batchSize);
-                const batchRecords = batch.map((record) => ({ fields: record }));
 
-                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.PL_DAILY,
-                    records: batchRecords,
+                    records: batch,
                 });
 
-                recordIds.push(...response.records.map((r: any) => r.id));
-                Logger.debug(`${batchRecords.length}件のPL日次データを登録しました`);
+                console.log(`${batch.length}件のPL日次データを登録しました`);
             }
-
-            Logger.success(`合計${recordIds.length}件のPL日次データを登録しました`);
 
             // キャッシュをクリア
             PerformanceUtil.clearCache();
-
-            return recordIds;
+            return records.map((_, index) => index + 1);
         } catch (error) {
-            Logger.error("PL日次データ登録エラー:", error);
+            console.log("PL日次データ登録エラー:", error);
+            if (error instanceof Error) {
+                console.log("エラーメッセージ:", error.message);
+            }
+            // APIエラーの詳細を出力
+            if (error && typeof error === "object") {
+                console.log("エラーの詳細:", JSON.stringify(error, null, 2));
+            }
             throw error;
         }
     }
@@ -333,36 +447,75 @@ export class KintoneApiService {
      * 生産日報データを登録する
      * @param records - 登録するレコード配列
      * @returns 登録されたレコードID配列
+     * @example
+     * ```typescript
+     * const records = [
+     *   {
+     *     date: { type: "DATE", value: "2024-06-01" },
+     *     line_name: { type: "SINGLE_LINE_TEXT", value: "Line A" },
+     *     model_name: { type: "SINGLE_LINE_TEXT", value: "Model X" },
+     *     model_code: { type: "SINGLE_LINE_TEXT", value: "BKC001" },
+     *     user_name: { type: "SINGLE_LINE_TEXT", value: "John Doe" },
+     *     actual_number: { type: "NUMBER", value: "100" },
+     *     target_number: { type: "NUMBER", value: "120" },
+     *     production_number: { type: "NUMBER", value: "105" },
+     *     inside_time: { type: "NUMBER", value: "200" },
+     *     outside_time: { type: "NUMBER", value: "50" },
+     *     inside_overtime: { type: "NUMBER", value: "10" },
+     *     outside_overtime: { type: "NUMBER", value: "5" },
+     *     added_value: { type: "NUMBER", value: "5000" },
+     *     man_hours_text: { type: "SINGLE_LINE_TEXT", value: "250 hours" },
+     *     deflist_text: { type: "SINGLE_LINE_TEXT", value: "2 defects" },
+     *     chg_o_text: { type: "SINGLE_LINE_TEXT", value: "Changeover completed" }
+     *   }
+     * ];
+     * saveProductionReportData(records).then((ids) => {
+     *   console.log("登録されたレコードID:", ids);
+     * });
+     * ```
      */
     static async saveProductionReportData(records: Record<string, any>[]): Promise<number[]> {
         try {
             Logger.debug(`${records.length}件の生産日報データを登録しています...`);
+            // 重複チェック
+            // const duplicatesInfo = await this.checkBatchDuplicateRecords(
+            //     APP_IDS.PRODUCTION_REPORT,
+            //     records,
+            //     ["date", "line_name", "model_name"]
+            // );
 
+            // // 実際に重複しているレコードがあるか確認
+            // const hasDuplicates = duplicatesInfo.some((info) => info.isDuplicate);
+
+            // if (hasDuplicates) {
+            //     Logger.warn(
+            //         "生産日報データの重複が検出され、登録をスキップしました:",
+            //         duplicatesInfo.filter((info) => info.isDuplicate)
+            //     );
+            //     console.log(duplicatesInfo.filter((info) => info.isDuplicate));
+            //     return [];
+            // }
             const recordIds: number[] = [];
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチ処理で登録
             for (let i = 0; i < records.length; i += batchSize) {
                 const batch = records.slice(i, i + batchSize);
-                const batchRecords = batch.map((record) => ({ fields: record }));
 
-                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.PRODUCTION_REPORT,
-                    records: batchRecords,
+                    records: batch,
                 });
-
-                recordIds.push(...response.records.map((r: any) => r.id));
-                Logger.debug(`${batchRecords.length}件の生産日報データを登録しました`);
+                console.log(`${batch.length}件の生産日報データを登録しました`);
             }
-
-            Logger.success(`合計${recordIds.length}件の生産日報データを登録しました`);
+            console.log(`合計${recordIds.length}件の生産日報データを登録しました`);
 
             // キャッシュをクリア
             PerformanceUtil.clearCache();
 
             return recordIds;
         } catch (error) {
-            Logger.error("生産日報データ登録エラー:", error);
+            console.error("生産日報データ登録エラー:", error);
             throw error;
         }
     }
@@ -371,6 +524,23 @@ export class KintoneApiService {
      * マスタ機種データを登録する
      * @param records - 登録するレコード配列
      * @returns 登録されたレコードID配列
+     * @example
+     * ```typescript
+     * const records = [
+     *   {
+     *     model_code: { type: "SINGLE_LINE_TEXT", value: "BKC001" },
+     *     model_name: { type: "SINGLE_LINE_TEXT", value: "Model X" },
+     *     line_name: { type: "SINGLE_LINE_TEXT", value: "Line A" },
+     *     customer: { type: "SINGLE_LINE_TEXT", value: "Customer A" },
+     *     number_of_people: { type: "NUMBER", value: "5" },
+     *     time: { type: "NUMBER", value: "2.5" },
+     *     added_value: { type: "NUMBER", value: "5000" }
+     *   }
+     * ];
+     * saveMasterModelData(records).then((ids) => {
+     *   console.log("登録されたレコードID:", ids);
+     * });
+     * ```
      */
     static async saveMasterModelData(records: Record<string, any>[]): Promise<number[]> {
         try {
@@ -382,7 +552,9 @@ export class KintoneApiService {
             // バッチ処理で登録
             for (let i = 0; i < records.length; i += batchSize) {
                 const batch = records.slice(i, i + batchSize);
-                const batchRecords = batch.map((record) => ({ fields: record }));
+                const batchRecords = batch.map((record) => ({
+                    fields: JSON.parse(JSON.stringify(record)),
+                }));
 
                 const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.MASTER_MODEL,
@@ -409,6 +581,22 @@ export class KintoneApiService {
      * 祝日データを登録する
      * @param records - 登録するレコード配列
      * @returns 登録されたレコードID配列
+     * @example
+     * ```typescript
+     * const records = [
+     *   {
+     *     date: { type: "DATE", value: "2024-01-01" },
+     *     holiday_type: { type: "DROP_DOWN", value: "New Year's Day" }
+     *   },
+     *   {
+     *     date: { type: "DATE", value: "2024-12-25" },
+     *     holiday_type: { type: "DROP_DOWN", value: "Christmas" }
+     *   }
+     * ];
+     * saveHolidayData(records).then((ids) => {
+     *   console.log("登録されたレコードID:", ids);
+     * });
+     * ```
      */
     static async saveHolidayData(records: Record<string, any>[]): Promise<number[]> {
         try {
@@ -420,7 +608,9 @@ export class KintoneApiService {
             // バッチ処理で登録
             for (let i = 0; i < records.length; i += batchSize) {
                 const batch = records.slice(i, i + batchSize);
-                const batchRecords = batch.map((record) => ({ fields: record }));
+                const batchRecords = batch.map((record) => ({
+                    fields: JSON.parse(JSON.stringify(record)),
+                }));
 
                 const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.HOLIDAY,
@@ -552,5 +742,165 @@ export class KintoneApiService {
             Logger.error("レコード削除エラー:", error);
             throw error;
         }
+    }
+
+    // ========================================
+    // 重複確認メソッド
+    // ========================================
+
+    /**
+     * 指定フィールドの値が既存レコードと重複しているか確認する
+     * @param appId - アプリID
+     * @param record - 確認するレコードデータ
+     * @param fieldNames - 確認対象フィールド名（単数 or 複数）
+     * @returns 重複レコード情報。重複がない場合はnull
+     * @example
+     * ```typescript
+     * // 単一フィールドで確認
+     * const duplicate = await KintoneApiService.checkDuplicateRecords(
+     *   APP_IDS.PL_MONTHLY,
+     *   { year_month: { type: "SINGLE_LINE_TEXT", value: "2024_06" } },
+     *   "year_month"
+     * );
+     *
+     * // 複数フィールドで確認（AND条件）
+     * const duplicates = await KintoneApiService.checkDuplicateRecords(
+     *   APP_IDS.PRODUCTION_REPORT,
+     *   {
+     *     date: { type: "DATE", value: "2024-06-01" },
+     *     line_name: { type: "SINGLE_LINE_TEXT", value: "Line A" },
+     *     model_code: { type: "SINGLE_LINE_TEXT", value: "BKC001" }
+     *   },
+     *   ["date", "line_name", "model_code"]
+     * );
+     * ```
+     */
+    static async checkDuplicateRecords(
+        appId: number,
+        record: Record<string, any>,
+        fieldNames: string | string[]
+    ): Promise<any[] | null> {
+        try {
+            // fieldNamesを配列に統一
+            const fieldsToCheck = Array.isArray(fieldNames) ? fieldNames : [fieldNames];
+
+            Logger.debug(
+                `重複確認を開始します (AppID: ${appId}, フィールド: ${fieldsToCheck.join(", ")})`
+            );
+
+            // クエリ条件を構築
+            const queryConditions = fieldsToCheck
+                .map((fieldName) => {
+                    const fieldValue = record[fieldName];
+                    if (!fieldValue) {
+                        console.log(`フィールド ${fieldName} が見つかりません`);
+                        return null;
+                    }
+
+                    // kintoneフィールドフォーマットから値を抽出
+                    // { value: "..." } または直接値の形式に対応
+                    const value =
+                        typeof fieldValue === "object" && fieldValue.value !== undefined
+                            ? fieldValue.value
+                            : fieldValue;
+
+                    // 値のタイプに応じてクエリを構築
+                    if (typeof value === "string") {
+                        return `${fieldName} = "${value.replace(/"/g, '\\"')}"`;
+                    } else if (typeof value === "number") {
+                        return `${fieldName} = ${value}`;
+                    } else {
+                        console.log(`${fieldName} の値が文字列または数値ではありません: ${value}`);
+                        return null;
+                    }
+                })
+                .filter((condition): condition is string => condition !== null);
+
+            if (queryConditions.length === 0) {
+                Logger.warn("重複確認に有効なフィールド値がありません");
+                return null;
+            }
+
+            // AND条件で結合
+            const query = queryConditions.join(" and ");
+
+            PerformanceUtil.startMeasure(`check-duplicates-${appId}`);
+
+            const response = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", {
+                app: appId,
+                query: query,
+            });
+
+            const checkTime = PerformanceUtil.endMeasure(`check-duplicates-${appId}`);
+            Logger.debug(`重複確認完了: ${checkTime.toFixed(2)}ms`);
+
+            const duplicateRecords = response.records;
+
+            if (duplicateRecords.length > 0) {
+                Logger.warn(
+                    `重複レコードが見つかりました: ${duplicateRecords.length}件 (AppID: ${appId})`
+                );
+                return duplicateRecords;
+            }
+
+            Logger.debug(`重複レコードなし (AppID: ${appId})`);
+            return null;
+        } catch (error) {
+            Logger.error("重複確認エラー:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * 複数のレコードについて一括で重複確認を実行
+     * @param appId - アプリID
+     * @param records - 確認するレコード配列
+     * @param fieldNames - 確認対象フィールド名（単数 or 複数）
+     * @returns 重複情報を含む結果配列 { record, isDuplicate, duplicates }
+     * @example
+     * ```typescript
+     * const results = await KintoneApiService.checkBatchDuplicateRecords(
+     *   APP_IDS.PL_DAILY,
+     *   [
+     *     { date: { type: "DATE", value: "2024-06-01" }, ... },
+     *     { date: { type: "DATE", value: "2024-06-02" }, ... }
+     *   ],
+     *   "date"
+     * );
+     *
+     * results.forEach((result) => {
+     *   if (result.isDuplicate) {
+     *     console.log(`重複: ${result.duplicates.length}件`, result.duplicates);
+     *   }
+     * });
+     * ```
+     */
+    static async checkBatchDuplicateRecords(
+        appId: number,
+        records: Record<string, any>[],
+        fieldNames: string | string[]
+    ): Promise<
+        Array<{
+            record: Record<string, any>;
+            isDuplicate: boolean;
+            duplicates: any[] | null;
+        }>
+    > {
+        console.log(`一括重複確認を開始します (件数: ${records.length}, AppID: ${appId})`);
+
+        const results = [];
+
+        for (const record of records) {
+            const duplicates = await this.checkDuplicateRecords(appId, record, fieldNames);
+            results.push({
+                record,
+                isDuplicate: duplicates !== null && duplicates.length > 0,
+                duplicates: duplicates,
+            });
+        }
+
+        console.log(`一括重複確認完了 (重複有: ${results.filter((r) => r.isDuplicate).length}件)`);
+
+        return results;
     }
 }

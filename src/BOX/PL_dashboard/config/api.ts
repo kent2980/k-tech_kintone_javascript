@@ -21,7 +21,7 @@ export const API_CONFIG = {
 
     // API制限とパフォーマンス設定
     LIMITS: {
-        RECORDS_PER_REQUEST: 500,
+        RECORDS_PER_REQUEST: 100,
         MAX_RETRIES: 3,
         RETRY_DELAY_BASE: 1000, // 1秒（指数バックオフのベース）
         TIMEOUT: 30000, // 30秒
