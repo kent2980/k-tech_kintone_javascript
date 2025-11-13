@@ -1,0 +1,19 @@
+{
+    "title": "生産日報報告書(BOX)",
+    "app": "22",
+    "scope": "ALL",
+    "desktop": {
+        "js": [
+            "javascript/日付をユーザーが指定してレコードを絞り込むボタン.js",
+            "javascript/ファイルに書き出すボタンを作成.js",
+            "javascript/レコード編集ボタン.js",
+            "javascript/テーブルシリアライズ.js",
+            "javascript/生産日報報告書.js"
+        ],
+        "css": ["css/レコード編集ボタン.css", "css/生産日報報告書.css"]
+    },
+    "mobile": {
+        "js": [],
+        "css": []
+    }
+}

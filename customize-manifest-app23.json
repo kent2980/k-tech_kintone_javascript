@@ -1,0 +1,16 @@
+{
+    "title": "ユーザーマスタ",
+    "app": "23",
+    "scope": "ALL",
+    "desktop": {
+        "js": [
+            "javascript/ファイルに書き出すボタンを作成.js",
+            "javascript/全レコード削除ボタンとファイルから読み込むボタン.js"
+        ],
+        "css": []
+    },
+    "mobile": {
+        "js": [],
+        "css": []
+    }
+}

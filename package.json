@@ -10,6 +10,7 @@
         "build:desktop": "cross-env BUILD_TARGET=desktop vite build",
         "build:mobile": "cross-env BUILD_TARGET=mobile vite build",
         "watch": "vite build --watch",
+        "upload": "sh -c 'for f in customize-manifest-app*.json; do echo \"Uploading $f\"; dotenv kintone-customize-uploader \"$f\" || exit $?; done'",
         "upload:app43": "dotenv kintone-customize-uploader customize-manifest-app43.json",
         "deploy": "npm run build && npm run upload",
         "deploy:app43": "npm run build && npm run upload:app43",
