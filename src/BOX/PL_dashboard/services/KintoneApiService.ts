@@ -270,15 +270,44 @@ export class KintoneApiService {
      */
     private static async executeBatchedRequests<T>(
         tasks: Array<() => Promise<T>>,
-        concurrency: number = 3
+        concurrency: number = 3,
+        meta?: { appId?: number; action?: string }
     ): Promise<T[]> {
         const results: T[] = [];
+        const total = tasks.length;
+        let completed = 0;
+
+        // dispatch start event
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(
+                new CustomEvent("uploadStart", {
+                    detail: { appId: meta?.appId, action: meta?.action, totalTasks: total },
+                })
+            );
+        }
 
         for (let i = 0; i < tasks.length; i += concurrency) {
             const chunk = tasks.slice(i, i + concurrency);
             const promises = chunk.map((t) => this.withRetry(() => t()));
             const res = await Promise.all(promises);
             results.push(...res);
+
+            completed += chunk.length;
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                    new CustomEvent("uploadProgress", {
+                        detail: { appId: meta?.appId, action: meta?.action, completed, total },
+                    })
+                );
+            }
+        }
+
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(
+                new CustomEvent("uploadComplete", {
+                    detail: { appId: meta?.appId, action: meta?.action, totalTasks: total },
+                })
+            );
         }
 
         return results;
@@ -454,7 +483,10 @@ export class KintoneApiService {
                 return res;
             });
 
-            await this.executeBatchedRequests(tasks, 3);
+            await this.executeBatchedRequests(tasks, 3, {
+                appId: APP_IDS.PL_DAILY,
+                action: "savePLDailyData",
+            });
 
             // キャッシュをクリア
             PerformanceUtil.clearCache();
@@ -542,7 +574,10 @@ export class KintoneApiService {
                 return res;
             });
 
-            const responses = await this.executeBatchedRequests(tasks, 3);
+            const responses = await this.executeBatchedRequests(tasks, 3, {
+                appId: APP_IDS.PRODUCTION_REPORT,
+                action: "saveProductionReportData",
+            });
             // kintone のレスポンスから id を収集できる場合は収集
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
@@ -608,7 +643,10 @@ export class KintoneApiService {
                 return res;
             });
 
-            const responses = await this.executeBatchedRequests(tasks, 3);
+            const responses = await this.executeBatchedRequests(tasks, 3, {
+                appId: APP_IDS.MASTER_MODEL,
+                action: "saveMasterModelData",
+            });
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
                     recordIds.push(...r.records.map((rec: any) => rec.id));
@@ -673,7 +711,10 @@ export class KintoneApiService {
                 return res;
             });
 
-            const responses = await this.executeBatchedRequests(tasks, 3);
+            const responses = await this.executeBatchedRequests(tasks, 3, {
+                appId: APP_IDS.HOLIDAY,
+                action: "saveHolidayData",
+            });
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
                     recordIds.push(...r.records.map((rec: any) => rec.id));
@@ -757,7 +798,10 @@ export class KintoneApiService {
                 return res;
             });
 
-            const responses = await this.executeBatchedRequests(tasks, 3);
+            const responses = await this.executeBatchedRequests(tasks, 3, {
+                appId: appId,
+                action: "updateRecords",
+            });
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
                     updateData.push(...r.records);
@@ -803,7 +847,7 @@ export class KintoneApiService {
                 return res;
             });
 
-            await this.executeBatchedRequests(tasks, 3);
+            await this.executeBatchedRequests(tasks, 3, { appId: appId, action: "deleteRecords" });
 
             Logger.success(`合計${recordIds.length}件のレコードを削除しました`);
 

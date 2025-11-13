@@ -392,6 +392,95 @@ export class PLExcelImporter {
         return item;
     }
 
+    /**
+     * 読み込んだExcelが期待するフォーマットか検証する
+     * @param opts - シート名や検証オプションを上書き可能
+     * @returns { ok: boolean, messages: string[] }
+     */
+    validateFormat(opts?: {
+        productionSheet?: string;
+        expenseSheet?: string;
+        monthlySheet1?: string;
+        monthlySheet2?: string;
+    }): { ok: boolean; messages: string[] } {
+        this.checkLoaded();
+        const messages: string[] = [];
+
+        const prodSheet = opts?.productionSheet || "生産履歴（Assy）";
+        const expenseSheet = opts?.expenseSheet || "ＰＬ (日毎) (計画反映版)";
+        const monthlySheet1 = opts?.monthlySheet1 || "生産履歴（Assy）";
+        const monthlySheet2 = opts?.monthlySheet2 || "ＰＬ (日毎) (計画反映版)";
+
+        // シート存在チェック
+        if (!this.hasSheet(prodSheet)) {
+            messages.push(`シート "${prodSheet}" が見つかりません`);
+        }
+        if (!this.hasSheet(expenseSheet)) {
+            messages.push(`シート "${expenseSheet}" が見つかりません`);
+        }
+        if (!this.hasSheet(monthlySheet1)) {
+            messages.push(`シート "${monthlySheet1}" が見つかりません`);
+        }
+        if (!this.hasSheet(monthlySheet2)) {
+            messages.push(`シート "${monthlySheet2}" が見つかりません`);
+        }
+
+        // 以降のチェックはシートがある場合のみ実行
+        try {
+            if (this.hasSheet(prodSheet)) {
+                const df = this.getTableDataAsDataFrame("A", "P", 3, 4, prodSheet);
+                const keys = Object.keys(df.records[0] || {});
+                const need = ["日付", "ライン", "付加価値", "機種名", "台数"];
+                const ok = need.some((n) => keys.includes(n));
+                if (!ok) {
+                    messages.push(
+                        `生産実績シート(${prodSheet})に必要な列が見つかりません。期待列例: ${need.join(", ")}`
+                    );
+                }
+            }
+        } catch (e) {
+            messages.push(`生産実績シート(${prodSheet}) の解析に失敗しました: ${String(e)}`);
+        }
+
+        try {
+            if (this.hasSheet(expenseSheet)) {
+                const df = this.getTableDataAsDataFrameTransposed(
+                    "B",
+                    "G",
+                    "AK",
+                    26,
+                    66,
+                    expenseSheet
+                );
+                const keys = df.columns || [];
+                const need = ["日付", "残業経費(社員)", "付加価値", "直行人員経費"];
+                const ok = need.some((n) => keys.includes(n));
+                if (!ok) {
+                    messages.push(
+                        `経費計算シート(${expenseSheet})に必要な行/列が見つかりません。期待項目例: ${need.join(", ")}`
+                    );
+                }
+            }
+        } catch (e) {
+            messages.push(`経費計算シート(${expenseSheet}) の解析に失敗しました: ${String(e)}`);
+        }
+
+        try {
+            if (this.hasSheet(monthlySheet2)) {
+                const day = this.getCellValueAsDate("G26", monthlySheet2);
+                if (!day) {
+                    messages.push(
+                        `月次シート(${monthlySheet2})の基準日(G26)が取得できませんでした`
+                    );
+                }
+            }
+        } catch (e) {
+            messages.push(`月次シート(${monthlySheet2}) の解析に失敗しました: ${String(e)}`);
+        }
+
+        return { ok: messages.length === 0, messages };
+    }
+
     // ========================================
     // Private utilities
     // ========================================

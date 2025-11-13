@@ -249,3 +249,52 @@ span.gaia-argoui-app-breadcrumb-item {
 ol.gaia-argoui-breadcrumb-appbreadcrumbpath.gaia-argoui-app-breadcrumb-path {
     height: 30px;
 }
+
+/* Upload progress overlay */
+#upload-progress-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.upload-progress-box {
+    background: #ffffff;
+    padding: 18px 22px;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    width: 360px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.upload-progress-bar-container {
+    height: 14px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    transition: width 0.3s ease;
+}
+
+.upload-progress-text {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+.upload-progress-box #upload-progress-title {
+    font-weight: 600;
+}

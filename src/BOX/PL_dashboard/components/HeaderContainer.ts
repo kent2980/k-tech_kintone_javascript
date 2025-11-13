@@ -54,45 +54,145 @@ export class HeaderContainer {
         button.id = "load-past-data-button";
         button.className = "header-load-past-data-button";
 
-        // クリックイベントリスナーを追加
-        button.addEventListener("click", () => {
-            const event = new CustomEvent("loadPastData");
-            window.dispatchEvent(event);
-            console.log("過去データ読み込みイベントが発火しました。");
+        // クリックイベントリスナーを追加（可読性と効率を改善）
+        const LOAD_EVENT = "loadPastData";
+        const FILE_EVENT = "excelFileSelected";
 
-            // エクセルファイルを選択して読み込む処理をここに追加
+        // progress overlay helpers
+        const ensureOverlay = () => {
+            const el = document.getElementById("upload-progress-overlay");
+            if (el) return el as HTMLDivElement;
+            const overlay = document.createElement("div");
+            overlay.id = "upload-progress-overlay";
+            overlay.innerHTML = `
+                <div class="upload-progress-box">
+                    <div id="upload-progress-title">アップロード中...</div>
+                    <div class="upload-progress-bar-container">
+                        <div id="upload-progress-bar" class="upload-progress-bar"></div>
+                    </div>
+                    <div id="upload-progress-text" class="upload-progress-text">0 / 0</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            return overlay;
+        };
+
+        const showOverlay = (total: number) => {
+            const o = ensureOverlay();
+            o.style.display = "flex";
+            const bar = document.getElementById("upload-progress-bar") as HTMLDivElement;
+            const text = document.getElementById("upload-progress-text");
+            if (bar) bar.style.width = "0%";
+            if (text) text.textContent = `0 / ${total}`;
+        };
+
+        const updateOverlay = (completed: number, total: number) => {
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const bar = document.getElementById("upload-progress-bar") as HTMLDivElement;
+            const text = document.getElementById("upload-progress-text");
+            if (bar) bar.style.width = `${pct}%`;
+            if (text) text.textContent = `${completed} / ${total}`;
+        };
+
+        const hideOverlay = () => {
+            const o = document.getElementById("upload-progress-overlay");
+            if (o) o.style.display = "none";
+        };
+
+        button.addEventListener("click", async () => {
+            if (button.disabled) return; // 二重クリック防止
+            button.disabled = true;
+            button.classList.add("loading");
+
+            // 読み込み開始イベントを通知
+            window.dispatchEvent(new CustomEvent(LOAD_EVENT));
+
+            // 一時的なファイル入力要素を作成し、1回だけ処理する
             const input = document.createElement("input");
             input.type = "file";
-            input.accept = ".xlsx, .xls, .xlsm";
-            input.onchange = (e: Event) => {
-                const target = e.target as HTMLInputElement;
-                if (target.files && target.files.length > 0) {
-                    const file = target.files[0];
-                    const loadEvent = new CustomEvent("excelFileSelected", {
-                        detail: { file: file },
-                    });
-                    window.dispatchEvent(loadEvent);
-                    console.log("エクセルファイル選択イベントが発火しました。");
-                    const importer = new PLExcelImporter(file);
-                    importer
-                        .load()
-                        .then(() => {
-                            console.log("エクセルファイルの読み込みが完了しました。");
-                            const monthData = importer.getMonthlyData();
-                            const productData = importer.getProductionData();
-                            const expenceData = importer.getExpenseCalculationData();
-                            console.log("月次データ:", monthData);
-                            console.log("生産実績データ:", productData);
-                            console.log("損益データ:", expenceData);
-                            // KintoneApiService.savePLMonthlyData(monthData);
-                            // KintoneApiService.savePLDailyData(expenceData);
-                            KintoneApiService.saveProductionReportData(productData);
-                        })
-                        .catch((error) => {
-                            console.error("エクセルファイルの読み込みに失敗しました。", error);
-                        });
-                }
+            input.accept = ".xlsx,.xls,.xlsm";
+
+            const cleanup = () => {
+                input.remove();
             };
+
+            input.addEventListener(
+                "change",
+                async () => {
+                    const file = input.files?.[0];
+                    if (!file) {
+                        button.disabled = false;
+                        button.classList.remove("loading");
+                        cleanup();
+                        return;
+                    }
+
+                    // ファイル選択イベントを通知
+                    window.dispatchEvent(new CustomEvent(FILE_EVENT, { detail: { file } }));
+
+                    try {
+                        const importer = new PLExcelImporter(file);
+                        await importer.load();
+                        const validate = importer.validateFormat();
+                        if (!validate.ok) {
+                            alert("選択されたファイルの形式が正しくありません。");
+                            throw new Error("Invalid file format");
+                        }
+                        const monthData = importer.getMonthlyData();
+                        const productData = importer.getProductionData();
+                        const expenseData = importer.getExpenseCalculationData();
+
+                        // progress event handlers
+                        const onStart = (e: any) => {
+                            const total = e?.detail?.totalTasks || 0;
+                            showOverlay(total);
+                        };
+                        const onProgress = (e: any) => {
+                            const completed = e?.detail?.completed || 0;
+                            const total = e?.detail?.total || 0;
+                            updateOverlay(completed, total);
+                        };
+                        const onComplete = () => {
+                            updateOverlay(1, 1); // ensure full
+                            hideOverlay();
+                        };
+                        const onError = () => {
+                            hideOverlay();
+                        };
+
+                        window.addEventListener("uploadStart", onStart as EventListener);
+                        window.addEventListener("uploadProgress", onProgress as EventListener);
+                        window.addEventListener("uploadComplete", onComplete as EventListener);
+                        window.addEventListener("uploadError", onError as EventListener);
+
+                        // キントーンへ並列保存（効率向上）
+                        await Promise.all([
+                            KintoneApiService.savePLMonthlyData(monthData),
+                            KintoneApiService.savePLDailyData(expenseData),
+                            KintoneApiService.saveProductionReportData(productData),
+                        ]);
+
+                        // cleanup listeners
+                        window.removeEventListener("uploadStart", onStart as EventListener);
+                        window.removeEventListener("uploadProgress", onProgress as EventListener);
+                        window.removeEventListener("uploadComplete", onComplete as EventListener);
+                        window.removeEventListener("uploadError", onError as EventListener);
+
+                        hideOverlay();
+                        // 必要ならここで保存完了後の処理を追加
+                    } catch (error) {
+                        console.error("過去データの読み込み／保存に失敗しました。", error);
+                        hideOverlay();
+                    } finally {
+                        button.disabled = false;
+                        button.classList.remove("loading");
+                        cleanup();
+                    }
+                },
+                { once: true }
+            );
+
+            // ファイル選択ダイアログを開く
             input.click();
         });
 
