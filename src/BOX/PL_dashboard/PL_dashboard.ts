@@ -34,12 +34,11 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
 
     // グローバル変数
     let masterModelData: model_master.SavedFields[] | null = null;
+    let holidayData: holiday.SavedFields[] = [];
     let dailyReportData: daily.SavedFields[] = [];
     let product_history_data: ProductHistoryData[] = [];
     let plMonthlyData: monthly.SavedFields | null = null;
-    let filteredRecords: line_daily.SavedFields[] = []; // line_dailyが見つからないのでdailyを使用
-    let holidayData: holiday.SavedFields[] = [];
-    let RevenueAnalysisList: RevenueAnalysis[] = [];
+    let filteredRecords: line_daily.SavedFields[] = [];
 
     // DOM構築関数は PLDashboardDomBuilder クラスに移動しました
 
@@ -128,6 +127,10 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
             const selectedMonth = monthSelect?.value || null;
 
             try {
+                // フィルター変更時にデータをリセット
+                let RevenueAnalysisList: RevenueAnalysis[] = [];
+                product_history_data = [];
+
                 PerformanceUtil.startMeasure("filter-change");
 
                 // 既存のキャッシュをクリア（フィルター変更時）
@@ -139,6 +142,7 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                     // 日次データを取得
                     dailyReportData = await fetchPLDailyData(selectedYear, selectedMonth);
                 }
+
                 // 年月の条件でデータを再取得
                 filteredRecords = await fetchProductionReportData(selectedYear, selectedMonth);
 
@@ -189,8 +193,6 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
                         holidayData
                     )
                 );
-
-                console.log(`収益データ:`, RevenueAnalysisList);
 
                 // タブボタンを作成
                 const tab1Button = createTabButton("production-tab", "生産履歴（Assy）", true);
@@ -268,7 +270,7 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         const details: string[] = [];
 
         const holidayTypeCode = getHolidayTypeCode(date);
-
+        console.log(product_history_data.length);
         product_history_data?.forEach((item, index) => {
             if (item.date === date) {
                 // 各種合計値を加算
@@ -306,7 +308,6 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         totalGrossProfit /= 1000;
 
         const profitRate = totalCost > 0 ? ((totalGrossProfit / totalCost) * 100).toFixed(2) : 0;
-
         return {
             date,
             totalActualNumber,
@@ -511,7 +512,6 @@ import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } fro
         if (!holidayData || holidayData.length === 0) {
             holidayData = await fetchHolidayData();
         }
-        console.log("取得した祝日データ:", holidayData);
 
         // マスタ機種一覧データを取得（初回のみ）
         Logger.debug("マスタデータ確認:", masterModelData);

@@ -367,9 +367,6 @@ export class PLDashboardTableBuilder {
         setTimeout(() => {
             this.enhanceProductionTable("production-table");
         }, 100);
-        product_history_data.forEach((item) => {
-            console.log(`${item.date}`);
-        });
         return container;
     }
 
@@ -398,6 +395,10 @@ export class PLDashboardTableBuilder {
         holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): HTMLDivElement {
         const columns = [...TABLE_COLUMNS.PROFIT_CALCULATION];
+        // 収益分析リストを毎回クリア（重複防止）
+        if (RevenueAnalysisList && Array.isArray(RevenueAnalysisList)) {
+            RevenueAnalysisList.length = 0;
+        }
 
         // コンテナ要素の作成
         const container = document.createElement("div");
@@ -451,7 +452,6 @@ export class PLDashboardTableBuilder {
         // 累積データ管理オブジェクトを作成
         const cumulativeDataManager =
             RevenueAnalysisCalculationService.createCumulativeDataManager();
-
         dateList.forEach((date) => {
             const totals = getTotalsByDate(date);
             const row = document.createElement("tr");
@@ -787,8 +787,6 @@ export class PLDashboardTableBuilder {
                 ...options,
                 // initCompleteコールバックでDataTables初期化完了後に色分けラベルを追加
                 initComplete: function (settings: any, json: any) {
-                    console.log(`DataTables初期化完了: ${tableId}`);
-
                     // カスタムスタイルを適用
                     PLDashboardTableBuilder.applyCustomTableStyles(tableId);
 
@@ -1024,15 +1022,12 @@ export class PLDashboardTableBuilder {
      */
     static addColorLegendToDataTable(tableId: string): void {
         try {
-            console.log(`色分けラベル追加処理開始: ${tableId}`);
-
             // DataTablesのdt-top-controlsクラスを持つ要素を探す（優先順位順）
             let targetElement = null;
 
             // 優先1: dt-top-controls要素を直接探す
             const dtTopControls = document.querySelector(`#${tableId}_wrapper .dt-top-controls`);
             if (dtTopControls) {
-                console.log(`dt-top-controls要素が見つかりました: ${tableId}`);
                 targetElement = dtTopControls;
             } else {
                 // 優先2: DataTablesのwrapper内でdt-top-controlsを探す
@@ -1051,25 +1046,18 @@ export class PLDashboardTableBuilder {
                         } else {
                             wrapperElement.appendChild(topControls);
                         }
-                        console.log(`dt-top-controls要素を新規作成: ${tableId}`);
                     }
                     targetElement = topControls;
-                    console.log(`dt-top-controls要素を使用: ${tableId}`);
                 } else {
                     // 優先3: DataTablesのfilter要素
                     const filterElement = document.querySelector(`#${tableId}_filter`);
                     if (filterElement) {
                         targetElement = filterElement;
-                        console.log(`Filter要素をフォールバックとして使用: ${tableId}`);
                     }
                 }
 
                 // 利用可能な要素を確認
                 const allElements = document.querySelectorAll(`[id*="${tableId}"]`);
-                console.log(
-                    `${tableId}関連の要素:`,
-                    Array.from(allElements).map((el) => el.id)
-                );
             }
 
             if (targetElement) {
@@ -1078,22 +1066,18 @@ export class PLDashboardTableBuilder {
                     targetElement.querySelector(".color-legend") ||
                     document.querySelector(`.color-legend[data-table="${tableId}"]`);
                 if (existingLegend) {
-                    console.log(`既存の凡例を削除: ${tableId}`);
                     existingLegend.remove();
                 }
 
                 // 新しい色分けラベルを作成
                 const colorLegend = this.createColorLegend();
                 colorLegend.setAttribute("data-table", tableId);
-                console.log(`作成した色分けラベル:`, colorLegend);
 
                 // dt-top-controlsに追加
                 targetElement.appendChild(colorLegend);
 
-                console.log(`色分けラベルが ${tableId} のdt-top-controlsに追加されました`);
                 Logger.debug(`色分けラベルが ${tableId} に追加されました`);
             } else {
-                console.log(`${tableId} に適切な追加先が見つかりませんでした`);
                 Logger.debug(`${tableId} に適切な追加先が見つかりませんでした`);
             }
         } catch (error) {
