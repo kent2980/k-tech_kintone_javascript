@@ -262,6 +262,28 @@ export class KintoneApiService {
         throw lastError!;
     }
 
+    /**
+     * 与えられた API 呼び出し関数群を並列で実行（同時実行数制限付き）
+     * 各呼び出しは `withRetry` でラップされます。
+     * @param tasks - 実行する API 呼び出し関数の配列
+     * @param concurrency - 同時実行数
+     */
+    private static async executeBatchedRequests<T>(
+        tasks: Array<() => Promise<T>>,
+        concurrency: number = 3
+    ): Promise<T[]> {
+        const results: T[] = [];
+
+        for (let i = 0; i < tasks.length; i += concurrency) {
+            const chunk = tasks.slice(i, i + concurrency);
+            const promises = chunk.map((t) => this.withRetry(() => t()));
+            const res = await Promise.all(promises);
+            results.push(...res);
+        }
+
+        return results;
+    }
+
     // ========================================
     // レコード登録・更新メソッド
     // ========================================
@@ -415,17 +437,24 @@ export class KintoneApiService {
             console.log("PL日次データ登録処理開始");
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
-            // バッチ処理で登録
+            // バッチに分割して並列で登録（同時実行数は制限）
+            const batches: Record<string, any>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
-                const batch = records.slice(i, i + batchSize);
+                batches.push(records.slice(i, i + batchSize));
+            }
 
-                await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+            const uploadResults: any[] = [];
+            const tasks = batches.map((batch) => async () => {
+                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.PL_DAILY,
                     records: batch,
                 });
+                Logger.debug(`${batch.length}件のPL日次データを登録しました`);
+                uploadResults.push(res);
+                return res;
+            });
 
-                console.log(`${batch.length}件のPL日次データを登録しました`);
-            }
+            await this.executeBatchedRequests(tasks, 3);
 
             // キャッシュをクリア
             PerformanceUtil.clearCache();
@@ -478,37 +507,49 @@ export class KintoneApiService {
         try {
             Logger.debug(`${records.length}件の生産日報データを登録しています...`);
             // 重複チェック
-            // const duplicatesInfo = await this.checkBatchDuplicateRecords(
-            //     APP_IDS.PRODUCTION_REPORT,
-            //     records,
-            //     ["date", "line_name", "model_name"]
-            // );
+            const duplicatesInfo = await this.checkBatchDuplicateRecords(
+                APP_IDS.PRODUCTION_REPORT,
+                records,
+                ["date", "line_name", "model_name"]
+            );
 
-            // // 実際に重複しているレコードがあるか確認
-            // const hasDuplicates = duplicatesInfo.some((info) => info.isDuplicate);
+            // 実際に重複しているレコードがあるか確認
+            const hasDuplicates = duplicatesInfo.some((info) => info.isDuplicate);
 
-            // if (hasDuplicates) {
-            //     Logger.warn(
-            //         "生産日報データの重複が検出され、登録をスキップしました:",
-            //         duplicatesInfo.filter((info) => info.isDuplicate)
-            //     );
-            //     console.log(duplicatesInfo.filter((info) => info.isDuplicate));
-            //     return [];
-            // }
+            if (hasDuplicates) {
+                Logger.warn(
+                    "生産日報データの重複が検出され、登録をスキップしました:",
+                    duplicatesInfo.filter((info) => info.isDuplicate)
+                );
+                console.log(duplicatesInfo.filter((info) => info.isDuplicate));
+                return [];
+            }
             const recordIds: number[] = [];
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
-            // バッチ処理で登録
+            // バッチに分割して並列で登録
+            const batches: Record<string, any>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
-                const batch = records.slice(i, i + batchSize);
+                batches.push(records.slice(i, i + batchSize));
+            }
 
-                await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+            const tasks = batches.map((batch) => async () => {
+                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.PRODUCTION_REPORT,
                     records: batch,
                 });
-                console.log(`${batch.length}件の生産日報データを登録しました`);
+                Logger.debug(`${batch.length}件の生産日報データを登録しました`);
+                return res;
+            });
+
+            const responses = await this.executeBatchedRequests(tasks, 3);
+            // kintone のレスポンスから id を収集できる場合は収集
+            for (const r of responses) {
+                if (r && Array.isArray(r.records)) {
+                    recordIds.push(...r.records.map((rec: any) => rec.id));
+                }
             }
-            console.log(`合計${recordIds.length}件の生産日報データを登録しました`);
+            Logger.success(`合計${recordIds.length}件の生産日報データを登録しました`);
 
             // キャッシュをクリア
             PerformanceUtil.clearCache();
@@ -549,20 +590,29 @@ export class KintoneApiService {
             const recordIds: number[] = [];
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
-            // バッチ処理で登録
+            // バッチに分割して並列で登録
+            const batches: Record<string, any>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
-                const batch = records.slice(i, i + batchSize);
+                batches.push(records.slice(i, i + batchSize));
+            }
+
+            const tasks = batches.map((batch) => async () => {
                 const batchRecords = batch.map((record) => ({
                     fields: JSON.parse(JSON.stringify(record)),
                 }));
-
-                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.MASTER_MODEL,
                     records: batchRecords,
                 });
-
-                recordIds.push(...response.records.map((r: any) => r.id));
                 Logger.debug(`${batchRecords.length}件のマスタ機種データを登録しました`);
+                return res;
+            });
+
+            const responses = await this.executeBatchedRequests(tasks, 3);
+            for (const r of responses) {
+                if (r && Array.isArray(r.records)) {
+                    recordIds.push(...r.records.map((rec: any) => rec.id));
+                }
             }
 
             Logger.success(`合計${recordIds.length}件のマスタ機種データを登録しました`);
@@ -605,20 +655,29 @@ export class KintoneApiService {
             const recordIds: number[] = [];
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
-            // バッチ処理で登録
+            // バッチに分割して並列で登録
+            const batches: Record<string, any>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
-                const batch = records.slice(i, i + batchSize);
+                batches.push(records.slice(i, i + batchSize));
+            }
+
+            const tasks = batches.map((batch) => async () => {
                 const batchRecords = batch.map((record) => ({
                     fields: JSON.parse(JSON.stringify(record)),
                 }));
-
-                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.HOLIDAY,
                     records: batchRecords,
                 });
-
-                recordIds.push(...response.records.map((r: any) => r.id));
                 Logger.debug(`${batchRecords.length}件の祝日データを登録しました`);
+                return res;
+            });
+
+            const responses = await this.executeBatchedRequests(tasks, 3);
+            for (const r of responses) {
+                if (r && Array.isArray(r.records)) {
+                    recordIds.push(...r.records.map((rec: any) => rec.id));
+                }
             }
 
             Logger.success(`合計${recordIds.length}件の祝日データを登録しました`);
@@ -679,21 +738,30 @@ export class KintoneApiService {
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
             const updateData = [];
 
-            // バッチ処理で更新
+            // バッチに分割して並列で更新
+            const batches: Record<string, any>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
-                const batch = records.slice(i, i + batchSize);
+                batches.push(records.slice(i, i + batchSize));
+            }
+
+            const tasks = batches.map((batch) => async () => {
                 const batchRecords = batch.map((record) => ({
                     id: record.id,
                     record: record.data || record,
                 }));
-
-                const response = await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", {
+                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", {
                     app: appId,
                     records: batchRecords,
                 });
-
-                updateData.push(...response.records);
                 Logger.debug(`${batchRecords.length}件のレコードを更新しました`);
+                return res;
+            });
+
+            const responses = await this.executeBatchedRequests(tasks, 3);
+            for (const r of responses) {
+                if (r && Array.isArray(r.records)) {
+                    updateData.push(...r.records);
+                }
             }
 
             Logger.success(`合計${updateData.length}件のレコードを更新しました`);
@@ -720,17 +788,22 @@ export class KintoneApiService {
 
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
-            // バッチ処理で削除
+            // バッチに分割して並列で削除
+            const batches: number[][] = [];
             for (let i = 0; i < recordIds.length; i += batchSize) {
-                const batch = recordIds.slice(i, i + batchSize);
+                batches.push(recordIds.slice(i, i + batchSize));
+            }
 
-                await kintone.api(kintone.api.url("/k/v1/records", true), "DELETE", {
+            const tasks = batches.map((batch) => async () => {
+                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "DELETE", {
                     app: appId,
                     ids: batch,
                 });
-
                 Logger.debug(`${batch.length}件のレコードを削除しました`);
-            }
+                return res;
+            });
+
+            await this.executeBatchedRequests(tasks, 3);
 
             Logger.success(`合計${recordIds.length}件のレコードを削除しました`);
 
@@ -886,20 +959,138 @@ export class KintoneApiService {
             duplicates: any[] | null;
         }>
     > {
-        console.log(`一括重複確認を開始します (件数: ${records.length}, AppID: ${appId})`);
+        Logger.debug(`一括重複確認を開始します (件数: ${records.length}, AppID: ${appId})`);
 
-        const results = [];
+        const results: Array<{
+            record: Record<string, any>;
+            isDuplicate: boolean;
+            duplicates: any[] | null;
+        }> = [];
 
-        for (const record of records) {
-            const duplicates = await this.checkDuplicateRecords(appId, record, fieldNames);
-            results.push({
-                record,
-                isDuplicate: duplicates !== null && duplicates.length > 0,
-                duplicates: duplicates,
-            });
+        // 正規化されたフィールド配列
+        const fieldsArray = Array.isArray(fieldNames) ? fieldNames : [fieldNames];
+
+        // 値抽出ユーティリティ
+        const extractValue = (fieldValue: any) =>
+            typeof fieldValue === "object" && fieldValue && fieldValue.value !== undefined
+                ? fieldValue.value
+                : fieldValue;
+
+        // 単一フィールドの場合は in 演算子でまとめて検索（高速）
+        if (fieldsArray.length === 1) {
+            const field = fieldsArray[0];
+            const chunkSize = 100; // クエリ長やAPI制限を考慮して分割
+
+            for (let i = 0; i < records.length; i += chunkSize) {
+                const chunk = records.slice(i, i + chunkSize);
+
+                const values = chunk
+                    .map((rec) => extractValue(rec[field]))
+                    .filter((v) => v !== undefined && v !== null);
+
+                if (values.length === 0) {
+                    // チャンク内に有効な値がなければ全件を非重複として扱う
+                    chunk.forEach((rec) =>
+                        results.push({ record: rec, isDuplicate: false, duplicates: null })
+                    );
+                    continue;
+                }
+
+                const formattedValues = values
+                    .map((v) =>
+                        typeof v === "string" ? `"${String(v).replace(/"/g, '\\"')}"` : String(v)
+                    )
+                    .join(",");
+
+                const query = `${field} in (${formattedValues})`;
+
+                // マッチする既存レコードを一括取得
+                const existing = await this.fetchAllRecords<any>(appId, fieldsArray, query);
+
+                const existingSet = new Set(existing.map((r: any) => extractValue(r[field])));
+
+                for (const rec of chunk) {
+                    const v = extractValue(rec[field]);
+                    const isDup = v !== undefined && existingSet.has(v);
+                    const duplicates = isDup
+                        ? existing.filter((r: any) => extractValue(r[field]) === v)
+                        : null;
+                    results.push({ record: rec, isDuplicate: isDup, duplicates });
+                }
+            }
+        } else {
+            // 複数フィールド（複合キー）: 各レコードごとの AND 条件を OR で繋いで一括検索
+            const chunkSize = 30; // 複合条件はクエリ長になりやすいため小さめ
+
+            for (let i = 0; i < records.length; i += chunkSize) {
+                const chunk = records.slice(i, i + chunkSize);
+
+                const orClauses: string[] = [];
+
+                for (const rec of chunk) {
+                    const andParts: string[] = [];
+                    let skip = false;
+                    for (const f of fieldsArray) {
+                        const val = extractValue(rec[f]);
+                        if (val === undefined || val === null) {
+                            skip = true;
+                            break;
+                        }
+                        if (typeof val === "string") {
+                            andParts.push(`${f} = "${String(val).replace(/"/g, '\\"')}"`);
+                        } else {
+                            andParts.push(`${f} = ${String(val)}`);
+                        }
+                    }
+                    if (!skip && andParts.length > 0) {
+                        orClauses.push(`(${andParts.join(" and ")})`);
+                    }
+                }
+
+                if (orClauses.length === 0) {
+                    chunk.forEach((rec) =>
+                        results.push({ record: rec, isDuplicate: false, duplicates: null })
+                    );
+                    continue;
+                }
+
+                const query = orClauses.join(" or ");
+
+                const existing = await this.fetchAllRecords<any>(appId, fieldsArray, query);
+
+                // 既存レコードを複合キーでマッピング
+                const keyOf = (obj: any) =>
+                    fieldsArray.map((f) => String(extractValue(obj[f]) ?? "")).join("|::|");
+
+                const existingMap = new Map<string, any[]>();
+                for (const e of existing) {
+                    const k = keyOf(e);
+                    const arr = existingMap.get(k) || [];
+                    arr.push(e);
+                    existingMap.set(k, arr);
+                }
+
+                for (const rec of chunk) {
+                    const missing = fieldsArray.some(
+                        (f) => extractValue(rec[f]) === undefined || extractValue(rec[f]) === null
+                    );
+                    if (missing) {
+                        results.push({ record: rec, isDuplicate: false, duplicates: null });
+                        continue;
+                    }
+
+                    const key = keyOf(rec);
+                    const duplicates = existingMap.get(key) || null;
+                    results.push({
+                        record: rec,
+                        isDuplicate: !!(duplicates && duplicates.length > 0),
+                        duplicates,
+                    });
+                }
+            }
         }
 
-        console.log(`一括重複確認完了 (重複有: ${results.filter((r) => r.isDuplicate).length}件)`);
+        Logger.debug(`一括重複確認完了 (重複有: ${results.filter((r) => r.isDuplicate).length}件)`);
 
         return results;
     }
