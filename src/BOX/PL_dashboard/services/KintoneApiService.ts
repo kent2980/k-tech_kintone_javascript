@@ -1040,13 +1040,29 @@ export class KintoneApiService {
                     continue;
                 }
 
-                const formattedValues = values
-                    .map((v) =>
-                        typeof v === "string" ? `"${String(v).replace(/"/g, '\\"')}"` : String(v)
-                    )
-                    .join(",");
+                // date フィールドは in 演算子を使えないため OR 条件を作る
+                const useInOperator = field !== "date";
 
-                const query = `${field} in (${formattedValues})`;
+                let query: string;
+                if (useInOperator) {
+                    const formattedValues = values
+                        .map((v) =>
+                            typeof v === "string"
+                                ? `"${String(v).replace(/"/g, '\\"')}"`
+                                : String(v)
+                        )
+                        .join(",");
+                    query = `${field} in (${formattedValues})`;
+                } else {
+                    const orClauses = values
+                        .map((v) =>
+                            typeof v === "string"
+                                ? `${field} = "${String(v).replace(/"/g, '\\"')}"`
+                                : `${field} = ${String(v)}`
+                        )
+                        .join(" or ");
+                    query = `(${orClauses})`;
+                }
 
                 // マッチする既存レコードを一括取得
                 const existing = await this.fetchAllRecords<any>(appId, fieldsArray, query);

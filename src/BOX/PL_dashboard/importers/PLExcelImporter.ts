@@ -378,6 +378,12 @@ export class PLExcelImporter {
         const dispatch: number = this.importer.getCellValueAsNumber("A30", sheetName2);
         /** 間接人員単価 */
         const indirect: number = this.importer.getCellValueAsNumber("A32", sheetName2);
+        /** 直行人員数 */
+        const direct_number: number = this.importer.getCellValueAsNumber("C28", sheetName2);
+        /** 派遣人員数 */
+        const dispatch_number: number = this.importer.getCellValueAsNumber("C30", sheetName2);
+        /** 間接人員数 */
+        const indirect_number: number = this.importer.getCellValueAsNumber("C32", sheetName2);
 
         const item = {
             year: { value: day ? day.getFullYear().toString() : "" },
@@ -388,6 +394,9 @@ export class PLExcelImporter {
             direct: { value: direct.toString() },
             dispatch: { value: dispatch.toString() },
             indirect: { value: indirect.toString() },
+            direct_number: { value: direct_number.toString() },
+            dispatch_number: { value: dispatch_number.toString() },
+            indirect_number: { value: indirect_number.toString() },
         };
         return item;
     }
@@ -433,12 +442,16 @@ export class PLExcelImporter {
                 const need = ["日付", "ライン", "付加価値", "機種名", "台数"];
                 const ok = need.some((n) => keys.includes(n));
                 if (!ok) {
+                    console.log(
+                        `生産実績シート(${prodSheet})に必要な列が見つかりません。期待列例: ${need.join(", ")}`
+                    );
                     messages.push(
                         `生産実績シート(${prodSheet})に必要な列が見つかりません。期待列例: ${need.join(", ")}`
                     );
                 }
             }
         } catch (e) {
+            console.log(`生産実績シート(${prodSheet}) の解析に失敗しました: ${String(e)}`);
             messages.push(`生産実績シート(${prodSheet}) の解析に失敗しました: ${String(e)}`);
         }
 
@@ -453,15 +466,19 @@ export class PLExcelImporter {
                     expenseSheet
                 );
                 const keys = df.columns || [];
-                const need = ["日付", "残業経費(社員)", "付加価値", "直行人員経費"];
+                const need = ["実績", "直行残業(ｈ)", "間接材料費", "夜勤手当"];
                 const ok = need.some((n) => keys.includes(n));
                 if (!ok) {
+                    console.log(
+                        `経費計算シート(${expenseSheet})に必要な行/列が見つかりません。期待項目例: ${need.join(", ")}⇒実際の項目: ${keys}`
+                    );
                     messages.push(
                         `経費計算シート(${expenseSheet})に必要な行/列が見つかりません。期待項目例: ${need.join(", ")}`
                     );
                 }
             }
         } catch (e) {
+            console.log(`経費計算シート(${expenseSheet}) の解析に失敗しました: ${String(e)}`);
             messages.push(`経費計算シート(${expenseSheet}) の解析に失敗しました: ${String(e)}`);
         }
 
@@ -469,12 +486,14 @@ export class PLExcelImporter {
             if (this.hasSheet(monthlySheet2)) {
                 const day = this.getCellValueAsDate("G26", monthlySheet2);
                 if (!day) {
+                    console.log(`月次シート(${monthlySheet2})の基準日(G26)が取得できませんでした`);
                     messages.push(
                         `月次シート(${monthlySheet2})の基準日(G26)が取得できませんでした`
                     );
                 }
             }
         } catch (e) {
+            console.log(`月次シート(${monthlySheet2}) の解析に失敗しました: ${String(e)}`);
             messages.push(`月次シート(${monthlySheet2}) の解析に失敗しました: ${String(e)}`);
         }
 

@@ -51,7 +51,7 @@ export class ProfitCalculationService {
      * @returns 直行経費
      */
     static calculateDirectCost(directUnitPrice: number, directPersonnel: number): number {
-        return Math.round(directUnitPrice * directPersonnel);
+        return Math.round(((directUnitPrice * 8) / 1000) * directPersonnel);
     }
 
     /**
@@ -61,7 +61,7 @@ export class ProfitCalculationService {
      * @returns 派遣経費
      */
     static calculateDispatchCost(dispatchUnitPrice: number, temporaryEmployees: number): number {
-        return Math.round(dispatchUnitPrice * temporaryEmployees);
+        return Math.round(((dispatchUnitPrice * 8) / 1000) * temporaryEmployees);
     }
 
     /**
@@ -71,7 +71,7 @@ export class ProfitCalculationService {
      * @returns 間接経費
      */
     static calculateIndirectCost(indirectUnitPrice: number, indirectPersonnel: number): number {
-        return Math.round(indirectUnitPrice * indirectPersonnel);
+        return Math.round(((indirectUnitPrice * 8) / 1000) * indirectPersonnel);
     }
 
     /**
@@ -199,15 +199,18 @@ export class ProfitCalculationService {
 
         // 総人員/製造経費 計
         const totalPersonnelExpenses =
-            directOvertimeAndHoliday.totalCost +
-            indirectOvertimeAndHoliday.totalCost +
-            laborCosts +
-            indirectMaterialCosts +
-            otherIndirectMaterialCosts +
-            nightShiftAllowance +
-            totalSubCost +
-            insideOvertimeCost +
-            outsideOvertimeCostValue;
+            directCost + // 直行経費
+            dispatchCost + // 派遣経費
+            indirectCost + // 間接経費
+            directOvertimeAndHoliday.totalCost + // 直行残業&休出経費
+            indirectOvertimeAndHoliday.totalCost + // 間接残業&休出経費
+            laborCosts + //      その他経費
+            indirectMaterialCosts + // 間接材料費
+            otherIndirectMaterialCosts + // その他間接材料費
+            nightShiftAllowance + // 夜勤手当
+            totalSubCost + // 総副資材費
+            insideOvertimeCost + // 直行残業経費
+            outsideOvertimeCostValue; // 派遣残業経費
 
         return {
             directCost,

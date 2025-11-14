@@ -1,21 +1,27 @@
 declare namespace monthly {
     interface Fields {
-        /** 年月 - Year and month (YYYY-MM) */
+        /** 年月 */
         year_month: kintone.fieldTypes.SingleLineText;
-        /** 派遣人員 - Dispatch personnel count */
+        /** 派遣人員 */
         dispatch: kintone.fieldTypes.Number;
-        /** 間接人員 - Indirect personnel count */
+        /** 間接人員 */
         indirect: kintone.fieldTypes.Number;
-        /** 年 - Year (YYYY) */
+        /** 派遣人員数 */
+        dispatch_number: kintone.fieldTypes.Number;
+        /** 年 */
         year: kintone.fieldTypes.Number;
-        /** 直行人員 - Direct personnel count */
+        /** 直行人員 */
         direct: kintone.fieldTypes.Number;
-        /** 社員単価 - Inside employee unit cost (円/h) */
+        /** 社員単価 */
         inside_unit: kintone.fieldTypes.Number;
-        /** 月 - Month dropdown selection */
+        /** 月 */
         month: kintone.fieldTypes.DropDown;
-        /** 派遣社員単価 - Outside contractor unit cost (円/h) */
+        /** 間接人員数 */
+        indirect_number: kintone.fieldTypes.Number;
+        /** 派遣社員単価 */
         outside_unit: kintone.fieldTypes.Number;
+        /** 直行人員数 */
+        direct_number: kintone.fieldTypes.Number;
     }
     interface SavedFields extends Fields {
         $id: kintone.fieldTypes.Id;
