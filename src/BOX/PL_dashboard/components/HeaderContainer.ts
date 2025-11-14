@@ -169,11 +169,40 @@ export class HeaderContainer {
                         window.addEventListener("uploadError", onError as EventListener);
 
                         // キントーンへ並列保存（効率向上）
-                        await Promise.all([
-                            KintoneApiService.savePLMonthlyData(monthData),
-                            KintoneApiService.savePLDailyData(expenseData),
-                            KintoneApiService.saveProductionReportData(productData),
-                        ]);
+                        const [monthlyResult, dailyResult, productionResult] =
+                            await Promise.allSettled([
+                                KintoneApiService.savePLMonthlyData(monthData),
+                                KintoneApiService.savePLDailyData(expenseData),
+                                KintoneApiService.saveProductionReportData(productData),
+                            ]);
+                        // 結果メッセージを作成(各メソッドの登録件数を含める)
+                        const formatResult = (name: string, res: PromiseSettledResult<any>) => {
+                            if (res.status === "fulfilled") {
+                                const v = res.value;
+                                let count: number | null = null;
+                                if (v && Array.isArray(v.records)) {
+                                    count = v.records.length;
+                                } else if (v && typeof v.count === "number") {
+                                    count = v.count;
+                                } else if (typeof v === "number") {
+                                    count = v;
+                                }
+                                return `${name}: 成功（${count !== null ? `${count} 件` : "1 件"}）`;
+                            } else {
+                                const reason = (res as PromiseRejectedResult).reason;
+                                const msg =
+                                    reason && reason.message
+                                        ? reason.message
+                                        : String(reason || "不明なエラー");
+                                return `${name}: 失敗（${msg}）`;
+                            }
+                        };
+
+                        const resultMsg = [
+                            formatResult("月次データ", monthlyResult),
+                            formatResult("日次データ", dailyResult),
+                            formatResult("生産日報データ", productionResult),
+                        ].join("、");
 
                         // cleanup listeners
                         window.removeEventListener("uploadStart", onStart as EventListener);
@@ -188,9 +217,7 @@ export class HeaderContainer {
 
                         // 成功メッセージ（中央表示）
                         HeaderContainer.hideDataUploadingOverlay();
-                        HeaderContainer.showCenteredAlert(
-                            "過去データの読み込みと保存が完了しました。"
-                        );
+                        HeaderContainer.showCenteredAlert(resultMsg);
                     } catch (error) {
                         console.error("過去データの読み込み／保存に失敗しました。", error);
                         // オーバーレイ非表示

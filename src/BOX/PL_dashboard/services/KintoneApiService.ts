@@ -1,5 +1,5 @@
 import { API_LIMITS, APP_IDS } from "../config";
-import { FilterConfig } from "../types";
+import { FilterConfig, KintoneSaveResult, KintoneSaveResults } from "../types";
 import { DateUtil, FieldsUtil, Logger, PerformanceUtil } from "../utils";
 
 /// <reference path="../fields/month_fields.d.ts" />
@@ -320,7 +320,8 @@ export class KintoneApiService {
     /**
      * PL月次データを登録する
      * @param record - 登録するレコード
-     * @returns 登録されたレコードID
+     * @returns KintoneSaveResult 登録されたレコードIDとリビジョン
+     * @throws error 重複レコードが見つかった場合のエラー
      * @example
      * ```typescript
      * const record = {
@@ -338,7 +339,7 @@ export class KintoneApiService {
      * });
      * ```
      */
-    static async savePLMonthlyData(record: Record<string, any>): Promise<number> {
+    static async savePLMonthlyData(record: Record<string, any>): Promise<KintoneSaveResult> {
         try {
             // 重複チェック
             const duplicates = await this.checkDuplicateRecords(
@@ -349,22 +350,23 @@ export class KintoneApiService {
             if (!duplicates || duplicates.length === 0) {
                 // 登録処理開始
                 Logger.debug("PL月次データを登録しています...");
-                const response = await kintone.api(kintone.api.url("/k/v1/record", true), "POST", {
+                const res = await kintone.api(kintone.api.url("/k/v1/record", true), "POST", {
                     app: APP_IDS.PL_MONTHLY,
                     record: JSON.parse(JSON.stringify(record)),
                 });
 
-                const recordId = response.id;
-                Logger.success(`PL月次データを登録しました (ID: ${recordId})`);
-
                 // キャッシュをクリア
                 PerformanceUtil.clearCache();
 
-                return recordId;
+                const saveResult: KintoneSaveResult = {
+                    id: res.id,
+                    revision: res.revision,
+                };
+
+                return saveResult;
             } else {
                 Logger.warn("PL月次データの重複が検出され、登録をスキップしました:", duplicates);
-                console.log(duplicates);
-                return 0;
+                throw new Error("重複レコードが見つかりました。登録はスキップされました。");
             }
         } catch (error) {
             Logger.error("PL月次データ登録エラー:", error);
@@ -375,7 +377,8 @@ export class KintoneApiService {
     /**
      * PL日次データを登録する
      * @param records - 登録するレコード配列
-     * @returns 登録されたレコードID配列
+     * @returns KintoneSaveResults 登録されたレコードID配列
+     * @throws error 重複レコードが見つかった場合のエラー
      * @example
      * ```typescript
      * const records = [
@@ -403,7 +406,7 @@ export class KintoneApiService {
      * });
      * ```
      */
-    static async savePLDailyData(records: Record<string, any>[]): Promise<number[]> {
+    static async savePLDailyData(records: Record<string, any>[]): Promise<KintoneSaveResults> {
         try {
             // まずバッチ内で同一の日付が重複していないかチェックして、あれば除去する
             let uploadRecords = records;
@@ -460,7 +463,7 @@ export class KintoneApiService {
                     "PL日次データの重複が検出され、登録をスキップしました:",
                     duplicatesInfo.filter((info) => info.isDuplicate)
                 );
-                return [];
+                throw new Error("重複レコードが見つかりました。登録はスキップされました。");
             }
             // 登録処理開始
             console.log("PL日次データ登録処理開始");
@@ -490,7 +493,21 @@ export class KintoneApiService {
 
             // キャッシュをクリア
             PerformanceUtil.clearCache();
-            return records.map((_, index) => index + 1);
+
+            // uploadResults からsaveResultsを構築
+            const saveResults: KintoneSaveResults = {
+                records: [],
+            };
+            for (const res of uploadResults) {
+                if (res && Array.isArray(res.records)) {
+                    saveResults.records.push({
+                        id: res.records[0].id,
+                        revision: res.records[0].revision,
+                    });
+                }
+            }
+
+            return saveResults;
         } catch (error) {
             console.log("PL日次データ登録エラー:", error);
             if (error instanceof Error) {
@@ -507,7 +524,8 @@ export class KintoneApiService {
     /**
      * 生産日報データを登録する
      * @param records - 登録するレコード配列
-     * @returns 登録されたレコードID配列
+     * @returns KintoneSaveResults 登録されたレコードID配列
+     * @throws error 重複レコードが見つかった場合のエラー
      * @example
      * ```typescript
      * const records = [
@@ -535,7 +553,9 @@ export class KintoneApiService {
      * });
      * ```
      */
-    static async saveProductionReportData(records: Record<string, any>[]): Promise<number[]> {
+    static async saveProductionReportData(
+        records: Record<string, any>[]
+    ): Promise<KintoneSaveResults> {
         try {
             Logger.debug(`${records.length}件の生産日報データを登録しています...`);
             // 重複チェック
@@ -554,7 +574,7 @@ export class KintoneApiService {
                     duplicatesInfo.filter((info) => info.isDuplicate)
                 );
                 console.log(duplicatesInfo.filter((info) => info.isDuplicate));
-                return [];
+                throw new Error("重複レコードが見つかりました。登録はスキップされました。");
             }
             const recordIds: number[] = [];
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
@@ -589,7 +609,23 @@ export class KintoneApiService {
             // キャッシュをクリア
             PerformanceUtil.clearCache();
 
-            return recordIds;
+            const saveResults: KintoneSaveResults = {
+                records: [],
+            };
+
+            // responses からsaveResultsを構築
+            for (const res of responses) {
+                if (res && Array.isArray(res.records)) {
+                    for (const rec of res.records) {
+                        saveResults.records.push({
+                            id: rec.id,
+                            revision: rec.revision,
+                        });
+                    }
+                }
+            }
+
+            return saveResults;
         } catch (error) {
             console.error("生産日報データ登録エラー:", error);
             throw error;
@@ -599,7 +635,8 @@ export class KintoneApiService {
     /**
      * マスタ機種データを登録する
      * @param records - 登録するレコード配列
-     * @returns 登録されたレコードID配列
+     * @returns KintoneSaveResults 登録されたレコードID配列
+     * @throws error 重複レコードが見つかった場合のエラー
      * @example
      * ```typescript
      * const records = [
@@ -618,7 +655,7 @@ export class KintoneApiService {
      * });
      * ```
      */
-    static async saveMasterModelData(records: Record<string, any>[]): Promise<number[]> {
+    static async saveMasterModelData(records: Record<string, any>[]): Promise<KintoneSaveResults> {
         try {
             Logger.debug(`${records.length}件のマスタ機種データを登録しています...`);
 
@@ -658,7 +695,23 @@ export class KintoneApiService {
             // キャッシュをクリア
             PerformanceUtil.clearCache();
 
-            return recordIds;
+            const saveResults: KintoneSaveResults = {
+                records: [],
+            };
+
+            // responses からsaveResultsを構築
+            for (const res of responses) {
+                if (res && Array.isArray(res.records)) {
+                    for (const rec of res.records) {
+                        saveResults.records.push({
+                            id: rec.id,
+                            revision: rec.revision,
+                        });
+                    }
+                }
+            }
+
+            return saveResults;
         } catch (error) {
             Logger.error("マスタ機種データ登録エラー:", error);
             throw error;
@@ -668,7 +721,8 @@ export class KintoneApiService {
     /**
      * 祝日データを登録する
      * @param records - 登録するレコード配列
-     * @returns 登録されたレコードID配列
+     * @returns KintoneSaveResults 登録されたレコードID配列
+     * @throws error 重複レコードが見つかった場合のエラー
      * @example
      * ```typescript
      * const records = [
@@ -686,7 +740,7 @@ export class KintoneApiService {
      * });
      * ```
      */
-    static async saveHolidayData(records: Record<string, any>[]): Promise<number[]> {
+    static async saveHolidayData(records: Record<string, any>[]): Promise<KintoneSaveResults> {
         try {
             Logger.debug(`${records.length}件の祝日データを登録しています...`);
 
@@ -726,7 +780,23 @@ export class KintoneApiService {
             // キャッシュをクリア
             PerformanceUtil.clearCache();
 
-            return recordIds;
+            const saveResults: KintoneSaveResults = {
+                records: [],
+            };
+
+            // responses からsaveResultsを構築
+            for (const res of responses) {
+                if (res && Array.isArray(res.records)) {
+                    for (const rec of res.records) {
+                        saveResults.records.push({
+                            id: rec.id,
+                            revision: rec.revision,
+                        });
+                    }
+                }
+            }
+
+            return saveResults;
         } catch (error) {
             Logger.error("祝日データ登録エラー:", error);
             throw error;

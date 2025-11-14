@@ -235,5 +235,6 @@ export interface HookResult<T> {
 // 追加の型定義モジュールのエクスポート
 // =======================================================================
 export * from "./dataTables";
+export * from "./kintoneApi";
 export * from "./mobile";
 export * from "./table";
