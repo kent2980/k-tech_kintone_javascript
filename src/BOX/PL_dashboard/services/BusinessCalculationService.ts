@@ -6,6 +6,7 @@
 /// <reference path="../fields/line_daily_fields.d.ts" />
 /// <reference path="../fields/model_master_fields.d.ts" />
 /// <reference path="../fields/month_fields.d.ts" />
+import { MasterModelStore } from "../store";
 import { Logger } from "../utils/Logger";
 
 /**
@@ -200,15 +201,16 @@ export class BusinessCalculationService {
     /**
      * 完全な経営指標を計算する（オールインワンメソッド）
      * @param record - 日次レコード
-     * @param masterModelData - マスタ機種データ
      * @param plMonthlyData - 月次データ（単価情報）
      * @returns 完全な経営指標計算結果
      */
     static calculateBusinessMetrics(
         record: line_daily.SavedFields,
-        masterModelData: model_master.SavedFields[],
         plMonthlyData: monthly.SavedFields | null
     ): BusinessMetrics {
+        // マスタ機種データを取得
+        const masterModelData = MasterModelStore.getInstance().getMasterData();
+
         // 単価情報を取得
         const insideUnit = plMonthlyData ? Number(plMonthlyData.inside_unit?.value || 0) : 0;
         const outsideUnit = plMonthlyData ? Number(plMonthlyData.outside_unit?.value || 0) : 0;

@@ -238,7 +238,6 @@ export class PLDashboardTableBuilder {
     static createProductionPerformanceTable(
         records: line_daily.SavedFields[],
         plMonthlyData: monthly.SavedFields | null,
-        masterModelData: model_master.SavedFields[],
         product_history_data: ProductHistoryData[],
         getDayOfWeek: (date: Date) => string
     ): HTMLDivElement {
@@ -275,7 +274,6 @@ export class PLDashboardTableBuilder {
             // 経営指標を計算（新しいBusinessCalculationServiceを使用）
             const metrics = BusinessCalculationService.calculateBusinessMetrics(
                 record,
-                masterModelData,
                 plMonthlyData
             );
 

@@ -26,14 +26,13 @@ import { DateUtil, Logger, PerformanceUtil } from "./utils";
 import { BusinessCalculationService, KintoneApiService } from "./services";
 
 import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } from "./components";
-import { ActiveFilterStore, HolidayStore } from "./store";
+import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 (function () {
     "use strict";
 
     // 型定義は types/index.ts から import済み
 
     // グローバル変数
-    let masterModelData: model_master.SavedFields[] | null = null;
     let dailyReportData: daily.SavedFields[] = [];
     let product_history_data: ProductHistoryData[] = [];
     let plMonthlyData: monthly.SavedFields | null = null;
@@ -263,7 +262,6 @@ import { ActiveFilterStore, HolidayStore } from "./store";
                     filteredRecords.forEach((record) => {
                         const metrics = BusinessCalculationService.calculateBusinessMetrics(
                             record,
-                            masterModelData || [],
                             plMonthlyData
                         );
 
@@ -319,7 +317,6 @@ import { ActiveFilterStore, HolidayStore } from "./store";
                             PLDashboardTableBuilder.createProductionPerformanceTable(
                                 filteredRecords,
                                 plMonthlyData,
-                                masterModelData || [],
                                 product_history_data,
                                 DateUtil.getDayOfWeek
                             )
@@ -330,7 +327,6 @@ import { ActiveFilterStore, HolidayStore } from "./store";
                         PLDashboardTableBuilder.createProductionPerformanceTable(
                             filteredRecords,
                             plMonthlyData,
-                            masterModelData || [],
                             product_history_data,
                             DateUtil.getDayOfWeek
                         )
@@ -742,6 +738,8 @@ import { ActiveFilterStore, HolidayStore } from "./store";
         }
 
         // マスタ機種一覧データを取得（初回のみ）
+        const masterModelStore = MasterModelStore.getInstance();
+        let masterModelData = masterModelStore.getMasterData();
         Logger.debug("マスタデータ確認:", masterModelData);
         if (!masterModelData) {
             masterModelData = await fetchMasterModelData();
