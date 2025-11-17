@@ -12,8 +12,7 @@ import {
     ProfitCalculationService,
     RevenueAnalysisCalculationService,
 } from "../services";
-import { ActiveFilterStore } from "../store/ActiveFilterStore";
-import { HolidayStore } from "../store/HolidayStore";
+import { ActiveFilterStore, HolidayStore } from "../store";
 import {
     DataTablesApi,
     DataTablesOptions,
@@ -241,8 +240,7 @@ export class PLDashboardTableBuilder {
         plMonthlyData: monthly.SavedFields | null,
         masterModelData: model_master.SavedFields[],
         product_history_data: ProductHistoryData[],
-        getDayOfWeek: (date: Date) => string,
-        holidayData: holiday.SavedFields[] = []
+        getDayOfWeek: (date: Date) => string
     ): HTMLDivElement {
         // コンテナ要素を作成
         const container = document.createElement("div");
@@ -257,9 +255,9 @@ export class PLDashboardTableBuilder {
             return container;
         }
 
-        // 月次データから社員単価と派遣単価を取得
-        const inside_unit = plMonthlyData ? Number(plMonthlyData.inside_unit?.value || 0) : 0;
-        const outside_unit = plMonthlyData ? Number(plMonthlyData.outside_unit?.value || 0) : 0;
+        // 会社休日マスタデータを取得
+        const holidayStore = HolidayStore.getInstance();
+        const holidayData = holidayStore.getHolidayData();
 
         // テーブルカラム
         const columns = [...TABLE_COLUMNS.PRODUCTION];
@@ -393,8 +391,7 @@ export class PLDashboardTableBuilder {
         getTotalsByDate: (date: string) => TotalsByDate,
         getRecordsByDate: (date: string) => daily.SavedFields[],
         getDayOfWeek: (date: Date) => string,
-        RevenueAnalysisList: RevenueAnalysis[],
-        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
+        RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
         const columns = [...TABLE_COLUMNS.PROFIT_CALCULATION];
         // 収益分析リストを毎回クリア（重複防止）
@@ -420,6 +417,10 @@ export class PLDashboardTableBuilder {
             container.appendChild(noDataMessage);
             return container;
         }
+
+        // 会社休日マスタデータを取得
+        const holidayStore = HolidayStore.getInstance();
+        const holidayData = holidayStore.getHolidayData();
 
         // 日付リストを取得
         const dateList = getDateList();
@@ -594,8 +595,7 @@ export class PLDashboardTableBuilder {
      * @returns 収益分析サマリテーブルのコンテナ要素
      */
     static createRevenueAnalysisSummaryTable(
-        RevenueAnalysisList: RevenueAnalysis[],
-        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
+        RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
         // カラムを設定
         const columns = [...TABLE_COLUMNS.REVENUE_ANALYSIS];
@@ -613,6 +613,11 @@ export class PLDashboardTableBuilder {
         table.appendChild(thead);
         // ボディ行の作成
         const tbody = this.createTableBody();
+
+        // 会社休日マスタデータを取得
+        const holidayStore = HolidayStore.getInstance();
+        const holidayData = holidayStore.getHolidayData();
+
         RevenueAnalysisList.forEach((item) => {
             const row = document.createElement("tr");
             row.className = "recordlist-row-gaia recordlist-row-gaia-hover-highlight";

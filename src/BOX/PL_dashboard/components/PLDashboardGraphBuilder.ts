@@ -1,6 +1,7 @@
 import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
+import { HolidayStore } from "../store";
 import { RevenueAnalysis } from "../types";
 import { DateUtil } from "../utils";
 import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
@@ -13,8 +14,7 @@ export class PLDashboardGraphBuilder {
      */
     static createMixedChartContainer(
         canvasId: string,
-        RevenueAnalysisList: RevenueAnalysis[],
-        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
+        RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
         const container = document.createElement("div");
         container.style.width = "100%";
@@ -26,6 +26,11 @@ export class PLDashboardGraphBuilder {
         canvas.id = canvasId;
         container.appendChild(canvas);
         const ctx = canvas.getContext("2d");
+
+        // 祝日データを取得
+        const holidayStore = HolidayStore.getInstance();
+        const holidayData = holidayStore.getHolidayData();
+
         if (ctx) {
             const labels = RevenueAnalysisList.map((item) => {
                 // YYYY-MM-DD形式を配列で改行表示（MM/DD と (曜日) を別々の行に）
@@ -186,11 +191,7 @@ export class PLDashboardGraphBuilder {
     /**
      * 既存のチャートを更新（データのみ）
      */
-    static updateMixedChart(
-        canvasId: string,
-        RevenueAnalysisList: RevenueAnalysis[],
-        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
-    ): void {
+    static updateMixedChart(canvasId: string, RevenueAnalysisList: RevenueAnalysis[]): void {
         const chart = PLDashboardGraphBuilder.charts.get(canvasId);
         if (!chart) return;
 

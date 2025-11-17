@@ -26,8 +26,7 @@ import { DateUtil, Logger, PerformanceUtil } from "./utils";
 import { BusinessCalculationService, KintoneApiService } from "./services";
 
 import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } from "./components";
-import { ActiveFilterStore } from "./store/ActiveFilterStore";
-import { HolidayStore } from "./store/HolidayStore";
+import { ActiveFilterStore, HolidayStore } from "./store";
 (function () {
     "use strict";
 
@@ -35,7 +34,6 @@ import { HolidayStore } from "./store/HolidayStore";
 
     // グローバル変数
     let masterModelData: model_master.SavedFields[] | null = null;
-    let holidayData: holiday.SavedFields[] = [];
     let dailyReportData: daily.SavedFields[] = [];
     let product_history_data: ProductHistoryData[] = [];
     let plMonthlyData: monthly.SavedFields | null = null;
@@ -323,8 +321,7 @@ import { HolidayStore } from "./store/HolidayStore";
                                 plMonthlyData,
                                 masterModelData || [],
                                 product_history_data,
-                                DateUtil.getDayOfWeek,
-                                holidayData
+                                DateUtil.getDayOfWeek
                             )
                         );
                     }
@@ -335,8 +332,7 @@ import { HolidayStore } from "./store/HolidayStore";
                             plMonthlyData,
                             masterModelData || [],
                             product_history_data,
-                            DateUtil.getDayOfWeek,
-                            holidayData
+                            DateUtil.getDayOfWeek
                         )
                     );
                 }
@@ -349,8 +345,7 @@ import { HolidayStore } from "./store/HolidayStore";
                         getTotalsByDate,
                         getRecordsByDate,
                         DateUtil.getDayOfWeek,
-                        RevenueAnalysisList,
-                        holidayData
+                        RevenueAnalysisList
                     )
                 );
                 let summaryTableContainer: HTMLElement;
@@ -387,16 +382,14 @@ import { HolidayStore } from "./store/HolidayStore";
                     } else {
                         summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
                             PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
-                                RevenueAnalysisList,
-                                holidayData
+                                RevenueAnalysisList
                             )
                         );
                     }
                 } else {
                     summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
                         PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
-                            RevenueAnalysisList,
-                            holidayData
+                            RevenueAnalysisList
                         )
                     );
                 }
@@ -404,18 +397,13 @@ import { HolidayStore } from "./store/HolidayStore";
                 const existingCanvas = document.getElementById("mixed-chart");
                 if (existingCanvas) {
                     // update chart data only
-                    PLDashboardGraphBuilder.updateMixedChart(
-                        "mixed-chart",
-                        RevenueAnalysisList,
-                        holidayData
-                    );
+                    PLDashboardGraphBuilder.updateMixedChart("mixed-chart", RevenueAnalysisList);
                     mixedChartContainer = existingCanvas.parentElement as HTMLElement;
                 } else {
                     mixedChartContainer = await PerformanceUtil.createElementLazy(() =>
                         PLDashboardGraphBuilder.createMixedChartContainer(
                             "mixed-chart",
-                            RevenueAnalysisList,
-                            holidayData
+                            RevenueAnalysisList
                         )
                     );
                 }
@@ -562,6 +550,8 @@ import { HolidayStore } from "./store/HolidayStore";
      * @returns 休日タイプに応じたコードの数値
      */
     function getHolidayTypeCode(date: string): number {
+        const holidayStore = HolidayStore.getInstance();
+        const holidayData = holidayStore.getHolidayData();
         const holidayRecord = holidayData.find((item) => item.date?.value === date);
         if (!holidayRecord) {
             return 0; // 平日
@@ -743,7 +733,8 @@ import { HolidayStore } from "./store/HolidayStore";
         }
 
         // 祝日データを取得（初回のみ）
-        Logger.debug("祝日データ確認:", holidayData);
+        const holidayStore = HolidayStore.getInstance();
+        let holidayData = holidayStore.getHolidayData();
         if (!holidayData || holidayData.length === 0) {
             holidayData = await fetchHolidayData();
             // 祝日データをストアにセット
