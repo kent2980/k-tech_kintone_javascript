@@ -168,43 +168,13 @@ export class HeaderContainer {
                         window.addEventListener("uploadComplete", onComplete as EventListener);
                         window.addEventListener("uploadError", onError as EventListener);
 
-                        // キントーンへ並列保存（効率向上）
-                        const [monthlyResult, dailyResult, productionResult] =
-                            await Promise.allSettled([
-                                KintoneApiService.savePLMonthlyData(monthData),
-                                KintoneApiService.savePLDailyData(expenseData),
-                                KintoneApiService.saveProductionReportData(productData),
-                            ]);
-                        // 結果メッセージを作成(各メソッドの登録件数を含める)
-                        const formatResult = (name: string, res: PromiseSettledResult<any>) => {
-                            if (res.status === "fulfilled") {
-                                const v = res.value;
-                                let count: number | null = null;
-                                if (v && Array.isArray(v.records)) {
-                                    count = v.records.length;
-                                } else if (v && typeof v.count === "number") {
-                                    count = v.count;
-                                } else if (typeof v === "number") {
-                                    count = v;
-                                }
-                                return `${name}: 成功（${count !== null ? `${count} 件` : "1 件"}）`;
-                            } else {
-                                const reason = (res as PromiseRejectedResult).reason;
-                                const msg =
-                                    reason && reason.message
-                                        ? reason.message
-                                        : String(reason || "不明なエラー");
-                                return `${name}: 失敗（${msg}）`;
-                            }
-                        };
+                        await Promise.all([
+                            KintoneApiService.savePLMonthlyData(monthData),
+                            KintoneApiService.savePLDailyData(expenseData),
+                            KintoneApiService.saveProductionReportData(productData),
+                        ]);
 
-                        const resultMsg = [
-                            formatResult("月次データ", monthlyResult),
-                            formatResult("日次データ", dailyResult),
-                            formatResult("生産日報データ", productionResult),
-                        ].join("、");
-
-                        // cleanup listeners
+                        // イベントリスナーを削除
                         window.removeEventListener("uploadStart", onStart as EventListener);
                         window.removeEventListener("uploadProgress", onProgress as EventListener);
                         window.removeEventListener("uploadComplete", onComplete as EventListener);
@@ -212,23 +182,23 @@ export class HeaderContainer {
 
                         // オーバーレイ非表示
                         HeaderContainer.hideDataUploadingOverlay();
-                        // 必要ならここで保存完了後の処理を追加
-                        // 中央表示のモーダルアラートを作成して表示するヘルパー
 
                         // 成功メッセージ（中央表示）
                         HeaderContainer.hideDataUploadingOverlay();
+                        const resultMsg = `${monthData.year.value}年${monthData.month.value}月のデータ登録が完了しました。`;
                         HeaderContainer.showCenteredAlert(resultMsg);
                     } catch (error) {
-                        console.error("過去データの読み込み／保存に失敗しました。", error);
+                        console.error("過去データの登録が失敗しました。", error);
                         // オーバーレイ非表示
                         HeaderContainer.hideDataUploadingOverlay();
                         // エラーメッセージ（中央表示）
-                        HeaderContainer.showCenteredAlert(
-                            "過去データの読み込み／保存に失敗しました。"
-                        );
+                        HeaderContainer.showCenteredAlert("過去データの登録が失敗しました。");
                     } finally {
+                        // ボタンの状態をリセット
                         button.disabled = false;
+                        // ローディングクラスを削除
                         button.classList.remove("loading");
+                        // 一時的なファイル入力要素を削除
                         cleanup();
                     }
                 },
