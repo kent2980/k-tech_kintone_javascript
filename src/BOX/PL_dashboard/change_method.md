@@ -1,98 +1,149 @@
-/// <reference path="../../../../kintone.d.ts" />
-/// <reference path="../../../../globals.d.ts" />
-/// <reference path="../fields/daily_fields.d.ts" />
-/// <reference path="../fields/line_daily_fields.d.ts" />
-/// <reference path="../fields/month_fields.d.ts" />
-/// <reference path="../fields/model_master_fields.d.ts" />
+# PLDashboardTableBuilderの変更前後の比較
 
-import { TABLE_COLUMNS } from "../config";
-import {
-    BusinessCalculationHelperService,
-    BusinessCalculationService,
-    ProfitCalculationService,
-    RevenueAnalysisCalculationService,
-} from "../services";
-import { ActiveFilterStore, HolidayStore } from "../store";
-import {
-    DataTablesApi,
-    DataTablesOptions,
-    ProductHistoryData,
-    RevenueAnalysis,
-    TableBuilderConfig,
-    TableOptions,
-    TableRowData,
-    TotalsByDate,
-} from "../types";
-import { DateUtil, Logger } from "../utils";
+現在の静的メソッドのみのクラス [6-cite-0](#6-cite-0) から、インスタンス化可能なクラスへの変更における、変数とメソッドの変更を以下の図と表で示します `<cite/>`。
 
-// jQueryを最初にインポート（DataTablesが依存するため）
-import $ from "jquery";
+## クラス構造の変更図
 
-// jQueryをグローバルに設定
-(window as unknown as { $: typeof $; jQuery: typeof $ }).$ = $;
-(window as unknown as { $: typeof $; jQuery: typeof $ }).jQuery = $;
+```mermaid
+graph TB
+    subgraph "変更前: 静的クラス"
+        A1["PLDashboardTableBuilder<br/>(静的クラス)"]
+        A2["静的メソッドのみ"]
+        A3["状態なし"]
+        A4["グローバル依存"]
+    
+        A1 --> A2
+        A1 --> A3
+        A1 --> A4
+    end
+  
+    subgraph "変更後: インスタンス化可能クラス"
+        B1["PLDashboardTableBuilder<br/>(インスタンスクラス)"]
+        B2["インスタンス変数<br/>(状態管理)"]
+        B3["インスタンスメソッド"]
+        B4["依存性注入"]
+        B5["ファクトリーパターン"]
+    
+        B1 --> B2
+        B1 --> B3
+        B1 --> B4
+        B1 --> B5
+    
+        B2 --> B2A["dataTableInstance"]
+        B2 --> B2B["tableId"]
+        B2 --> B2C["tableElement"]
+        B2 --> B2D["config"]
+        B2 --> B2E["columns"]
+        B2 --> B2F["data"]
+        B2 --> B2G["holidayColorCache"]
+    end
+  
+    A1 -.変更.-> B1
+```
 
-// DataTables関連のimport（jQueryの後に）
-import "datatables.net";
-import "datatables.net-buttons";
-import "datatables.net-buttons-dt";
-import "datatables.net-dt/css/dataTables.dataTables.min.css";
+## 変数の変更一覧
 
-// ボタン機能に必要な追加ライブラリ
-import "datatables.net-buttons/js/buttons.html5.min.js";
-import "datatables.net-buttons/js/buttons.print.min.js";
+| 項目                 | 変更前 | 変更後                                                      | 説明                                     |
+| -------------------- | ------ | ----------------------------------------------------------- | ---------------------------------------- |
+| **クラス変数** | なし   | `private dataTableInstance: DataTablesApi \| null`         | DataTablesインスタンスを保持 `<cite/>` |
+|                      | なし   | `private tableId: string`                                 | テーブルIDを保持 `<cite/>`             |
+|                      | なし   | `private tableElement: HTMLTableElement \| null`           | テーブル要素を保持 `<cite/>`           |
+|                      | なし   | `private config: TableBuilderConfig`                      | テーブル設定を保持 `<cite/>`           |
+|                      | なし   | `private columns: string[]`                               | カラム定義を保持 `<cite/>`             |
+|                      | なし   | `private data: TableRowData[]`                            | テーブルデータを保持 `<cite/>`         |
+|                      | なし   | `private holidayColorCache: Map<string, string>`          | 休日色キャッシュを保持 `<cite/>`       |
+|                      | なし   | `private calculationService: IBusinessCalculationService` | 計算サービス(DI)`<cite/>`              |
+|                      | なし   | `private holidayStore: IHolidayStore`                     | 休日ストア(DI)`<cite/>`                |
 
-/**
- * PLダッシュボード用のテーブル構築ユーティリティクラス
- */
+## メソッドの変更一覧
+
+### 基本DOM操作メソッド
+
+| メソッド名                    | 変更前                                                                    | 変更後                                  | 変更内容                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| `createTable()`             | `static createTable(id: string, className?: string)` [6-cite-1](#6-cite-1) | `createTable(className?: string)`     | 静的→インスタンスメソッド化``idはコンストラクタで設定 `<cite/>`          |
+| `createStickyTableHeader()` | `static createStickyTableHeader(columns: string[])` [6-cite-2](#6-cite-2)  | `createStickyTableHeader()`           | 静的→インスタンスメソッド化``columnsはインスタンス変数から取得 `<cite/>` |
+| `createTableBody()`         | `static createTableBody(className?: string)` [6-cite-3](#6-cite-3)         | `createTableBody()`                   | 静的→インスタンスメソッド化 `<cite/>`                                    |
+| `createTableCell()`         | `static createTableCell(content, isNumeric)` [6-cite-4](#6-cite-4)         | `createTableCell(content, isNumeric)` | 静的→インスタンスメソッド化 `<cite/>`                                    |
+| `createTableRow()`          | `static createTableRow(cells, className?)` [6-cite-5](#6-cite-5)           | `createTableRow(cells, className?)`   | 静的→インスタンスメソッド化 `<cite/>`                                    |
+
+### データフォーマットメソッド
+
+| メソッド名             | 変更前                                                               | 変更後                                     | 変更内容                                 |
+| ---------------------- | -------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- |
+| `formatNumber()`     | `static formatNumber(value, decimals)` [6-cite-6](#6-cite-6)          | `formatNumber(value, decimals)`          | 静的→インスタンスメソッド化 `<cite/>` |
+| `formatPercentage()` | `static formatPercentage(value)` [6-cite-7](#6-cite-7)                | `formatPercentage(value)`                | 静的→インスタンスメソッド化 `<cite/>` |
+| `calculateProfit()`  | `static calculateProfit(addedValue, totalCost)` [6-cite-8](#6-cite-8) | `calculateProfit(addedValue, totalCost)` | 静的→インスタンスメソッド化 `<cite/>` |
+
+### テーブル作成メソッド
+
+| メソッド名                              | 変更前                                                                                                                       | 変更後                                                 | 変更内容                                                                                             |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `createCompleteTable()`               | `static createCompleteTable(id, columns, data, options)` [6-cite-9](#6-cite-9)                                                | `build(): HTMLDivElement`                            | 大幅変更 ``インスタンス変数を使用``メソッドチェーン対応 `<cite/>`                                  |
+| `createProductionPerformanceTable()`  | `static createProductionPerformanceTable(records, plMonthlyData, product_history_data, getDayOfWeek)` [6-cite-10](#6-cite-10) | `buildProductionTable(): HTMLDivElement`             | 静的→インスタンスメソッド化 ``データはsetData()で事前設定``後方互換用の静的ラッパー残存 `<cite/>` |
+| `createProfitCalculationTable()`      | `static createProfitCalculationTable(dailyReportData, filteredRecords, ...)` [6-cite-11](#6-cite-11)                          | `buildProfitCalculationTable(): HTMLDivElement`      | 静的→インスタンスメソッド化``データはsetData()で事前設定 `<cite/>`                                |
+| `createRevenueAnalysisSummaryTable()` | `static createRevenueAnalysisSummaryTable(RevenueAnalysisList)` [6-cite-12](#6-cite-12)                                       | `buildRevenueAnalysisSummaryTable(): HTMLDivElement` | 静的→インスタンスメソッド化 `<cite/>`                                                             |
+
+### DataTables関連メソッド
+
+| メソッド名                          | 変更前                                                                       | 変更後                              | 変更内容                                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `enhanceTableWithDataTables()`    | `static enhanceTableWithDataTables(tableId, options)` [6-cite-13](#6-cite-13) | `enhanceWithDataTables(options?)` | 静的→インスタンスメソッド化 ``tableIdはインスタンス変数から取得``インスタンスをキャッシュ `<cite/>` |
+| `enhanceProductionTable()`        | `static enhanceProductionTable(tableId)` [6-cite-14](#6-cite-14)              | 削除                                | enhanceWithDataTables()に統合 `<cite/>`                                                              |
+| `enhanceProfitCalculationTable()` | `static enhanceProfitCalculationTable(tableId)` [6-cite-15](#6-cite-15)       | 削除                                | enhanceWithDataTables()に統合 `<cite/>`                                                              |
+| `enhanceRevenueSummaryTable()`    | `static enhanceRevenueSummaryTable(tableId)` [6-cite-16](#6-cite-16)          | 削除                                | enhanceWithDataTables()に統合 `<cite/>`                                                              |
+| `destroyDataTable()`              | `static destroyDataTable(tableId)` [6-cite-17](#6-cite-17)                    | `destroy()`                       | 静的→インスタンスメソッド化 `<cite/>`                                                               |
+| `updateTableData()`               | `static updateTableData(tableId, newData)` [6-cite-18](#6-cite-18)            | `updateData(newData)`             | 静的→インスタンスメソッド化``インスタンスのDataTablesを使用 `<cite/>`                               |
+| `isDataTablesAvailable()`         | `static isDataTablesAvailable()` [6-cite-19](#6-cite-19)                      | `private isDataTablesAvailable()` | 静的→プライベートインスタンスメソッド化 `<cite/>`                                                   |
+
+### 休日・スタイル関連メソッド
+
+| メソッド名                         | 変更前                                                                    | 変更後                           | 変更内容                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| `getDateBackgroundColor()`       | `static getDateBackgroundColor(date, holidayData)` [6-cite-20](#6-cite-20) | `getDateBackgroundColor(date)` | 静的→インスタンスメソッド化``holidayDataはholidayStoreから取得 `<cite/>` |
+| `createColorLegend()`            | `static createColorLegend()` [6-cite-21](#6-cite-21)                       | `createColorLegend()`          | 静的→インスタンスメソッド化 `<cite/>`                                    |
+| `addColorLegendToDataTable()`    | `static addColorLegendToDataTable(tableId)` [6-cite-22](#6-cite-22)        | `addColorLegend()`             | 静的→インスタンスメソッド化``tableIdはインスタンス変数から取得 `<cite/>` |
+| `addCompanyOperatingDaysLabel()` | `static addCompanyOperatingDaysLabel(tableId)` [6-cite-23](#6-cite-23)     | `addOperatingDaysLabel()`      | 静的→インスタンスメソッド化 `<cite/>`                                    |
+| `applyCustomTableStyles()`       | `static applyCustomTableStyles(tableId)` [6-cite-24](#6-cite-24)           | `applyCustomStyles()`          | 静的→インスタンスメソッド化 `<cite/>`                                    |
+
+### 新規追加メソッド
+
+| メソッド名                                                          | 説明                                                   |
+| ------------------------------------------------------------------- | ------------------------------------------------------ |
+| `constructor(tableId, calculationService, holidayStore, config?)` | コンストラクタ``依存性注入とデフォルト設定 `<cite/>` |
+| `setColumns(columns: string[]): this`                             | カラム設定``メソッドチェーン対応 `<cite/>`           |
+| `setData(data: TableRowData[]): this`                             | データ設定``メソッドチェーン対応 `<cite/>`           |
+
+Wiki pages you might want to explore:
+
+- [UI Components (kent2980/k-tech_kintone_javascript)](/wiki/kent2980/k-tech_kintone_javascript#3)
+
+### Citations
+
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L50-50)
+
+```typescript
 export class PLDashboardTableBuilder {
-    private dataTableInstances: Map<string, DataTablesApi> = new Map();
-    private tableId: string;
-    private tableElement: HTMLTableElement | null = null;
-    private config: TableBuilderConfig;
-    private columns: string[] = [];
-    private rowsData: TableRowData[] = [];
-    private calculationService: any = null;
-    private holidayStore: any = null;
+```
 
-    constructor(
-        tableId: string,
-        config?: Partial<TableBuilderConfig>,
-        calculationService?: any,
-        holidayStore?: any
-    ) {
-        this.tableId = tableId;
-        this.config = {
-            stickyHeader: true,
-            enableDataTables: true,
-            holidayColoring: true,
-            ...config,
-        };
-        this.calculationService = calculationService || null;
-        this.holidayStore = holidayStore || null;
-    }
-    /**
-     * テーブル要素を作成
-     * @param id - テーブルのID（省略時はインスタンスの `tableId` を使用）
-     * @param className - テーブルのクラス名
-     * @returns テーブル要素
-     */
-    private createTable(
-        id?: string,
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L57-65)
+
+```typescript
+    static createTable(
+        id: string,
         className: string = "recordlist-gaia recordlist-consistent-column-width-gaia"
     ): HTMLTableElement {
         const table = document.createElement("table");
-        table.id = id || this.tableId;
+        table.id = id;
         table.className = `pl-table-base ${className}`;
         return table;
     }
+```
 
-    /**
-     * 固定ヘッダーを持つテーブルヘッダーを作成
-     * @param columns - カラム名の配列
-     * @returns テーブルヘッダー要素
-     */
-    private createStickyTableHeader(columns: string[]): HTMLTableSectionElement {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L72-87)
+
+```typescript
+    static createStickyTableHeader(columns: string[]): HTMLTableSectionElement {
         const thead = document.createElement("thead");
         thead.className = "pl-table-thead-sticky";
 
@@ -108,25 +159,22 @@ export class PLDashboardTableBuilder {
         thead.appendChild(headerRow);
         return thead;
     }
+```
 
-    /**
-     * テーブルボディを作成
-     * @param className - ボディのクラス名
-     * @returns テーブルボディ要素
-     */
-    private createTableBody(className: string = "recordlist-body-gaia"): HTMLTableSectionElement {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L94-98)
+
+```typescript
+    static createTableBody(className: string = "recordlist-body-gaia"): HTMLTableSectionElement {
         const tbody = document.createElement("tbody");
         tbody.className = className;
         return tbody;
     }
+```
 
-    /**
-     * テーブルセルを作成
-     * @param content - セルの内容
-     * @param isNumeric - 数値セルかどうか（右寄せにする）
-     * @returns テーブルセル要素
-     */
-    private createTableCell(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L106-116)
+
+```typescript
+    static createTableCell(
         content: string | number,
         isNumeric: boolean = false
     ): HTMLTableCellElement {
@@ -137,14 +185,12 @@ export class PLDashboardTableBuilder {
             : "pl-table-td-standard recordlist-cell-gaia";
         return td;
     }
+```
 
-    /**
-     * テーブル行を作成
-     * @param cells - セルの配列
-     * @param className - 行のクラス名
-     * @returns テーブル行要素
-     */
-    private createTableRow(cells: HTMLTableCellElement[], className?: string): HTMLTableRowElement {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L124-135)
+
+```typescript
+    static createTableRow(cells: HTMLTableCellElement[], className?: string): HTMLTableRowElement {
         const row = document.createElement("tr");
         if (className) {
             row.className = className;
@@ -156,38 +202,33 @@ export class PLDashboardTableBuilder {
 
         return row;
     }
+```
 
-    /**
-     * 数値をフォーマットして表示用文字列に変換
-     * @param value - 数値
-     * @param decimals - 小数点以下の桁数（デフォルト: 0）
-     * @returns フォーマットされた文字列
-     */
-    private formatNumber(value: number, decimals: number = 0): string {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L143-149)
+
+```typescript
+    static formatNumber(value: number, decimals: number = 0): string {
         if (isNaN(value)) return "0";
         return value.toLocaleString("ja-JP", {
             minimumFractionDigits: decimals,
             maximumFractionDigits: decimals,
         });
     }
+```
 
-    /**
-     * パーセンテージをフォーマット
-     * @param value - パーセンテージ値（0-100）
-     * @returns フォーマットされた文字列
-     */
-    private formatPercentage(value: number): string {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L156-159)
+
+```typescript
+    static formatPercentage(value: number): string {
         if (isNaN(value)) return "0%";
         return `${value.toFixed(1)}%`;
     }
+```
 
-    /**
-     * 損益計算用のヘルパーメソッド
-     * @param addedValue - 付加価値
-     * @param totalCost - 総コスト
-     * @returns 利益情報オブジェクト
-     */
-    private calculateProfit(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L167-181)
+
+```typescript
+    static calculateProfit(
         addedValue: number,
         totalCost: number
     ): {
@@ -202,16 +243,12 @@ export class PLDashboardTableBuilder {
             profitRate,
         };
     }
+```
 
-    /**
-     * 完全なテーブルを作成するヘルパーメソッド
-     * @param id - テーブルのID
-     * @param columns - カラム名の配列
-     * @param data - テーブルデータ
-     * @param options - オプション設定
-     * @returns 完全なテーブル要素
-     */
-    private createCompleteTable(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L191-227)
+
+```typescript
+    static createCompleteTable(
         id: string,
         columns: string[],
         data: TableRowData,
@@ -248,17 +285,12 @@ export class PLDashboardTableBuilder {
 
         return table;
     }
+```
 
-    /**
-     * 生産実績テーブルを作成
-     * @param records - 日次データのレコード配列
-     * @param plMonthlyData - 月次データ
-     * @param masterModelData - マスタ機種データ
-     * @param product_history_data - 製品履歴データ（参照渡し）
-     * @param getDayOfWeek - 曜日取得関数
-     * @returns 生産実績テーブルのコンテナ要素
-     */
-    public createProductionPerformanceTable(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L238-369)
+
+```typescript
+    static createProductionPerformanceTable(
         records: line_daily.SavedFields[],
         plMonthlyData: monthly.SavedFields | null,
         product_history_data: ProductHistoryData[],
@@ -285,7 +317,7 @@ export class PLDashboardTableBuilder {
         const columns = [...TABLE_COLUMNS.PRODUCTION];
 
         // テーブル要素の作成
-        const table = this.createTable();
+        const table = this.createTable("production-table");
 
         // ヘッダー行の作成
         const thead = this.createStickyTableHeader(columns);
@@ -386,25 +418,16 @@ export class PLDashboardTableBuilder {
 
         // DataTables機能を非同期で適用
         setTimeout(() => {
-            this.enhanceProductionTable(this.tableId);
+            this.enhanceProductionTable("production-table");
         }, 100);
         return container;
     }
+```
 
-    /**
-     * 損益計算テーブルを作成
-     * @param dailyReportData - 日報データ
-     * @param filteredRecords - フィルタリングされたレコード
-     * @param plMonthlyData - 月次データ
-     * @param getDateList - 日付リスト取得関数
-     * @param getTotalsByDate - 日付別集計取得関数
-     * @param getRecordsByDate - 日付別レコード取得関数
-     * @param getDayOfWeek - 曜日取得関数
-     * @param RevenueAnalysisList - 収益分析リスト
-     * @param holidayData - 会社休日マスタデータ
-     * @returns 損益計算テーブルのコンテナ要素
-     */
-    public createProfitCalculationTable(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L384-587)
+
+```typescript
+    static createProfitCalculationTable(
         dailyReportData: daily.SavedFields[],
         filteredRecords: line_daily.SavedFields[],
         plMonthlyData: monthly.SavedFields | null,
@@ -608,14 +631,12 @@ export class PLDashboardTableBuilder {
 
         return container;
     }
+```
 
-    /**
-     * 収益分析サマリテーブルを作成する
-     * @param RevenueAnalysisList - 収益分析データ
-     * @param holidayData - 会社休日マスタデータ
-     * @returns 収益分析サマリテーブルのコンテナ要素
-     */
-    public createRevenueAnalysisSummaryTable(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L595-680)
+
+```typescript
+    static createRevenueAnalysisSummaryTable(
         RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
         // カラムを設定
@@ -701,12 +722,12 @@ export class PLDashboardTableBuilder {
 
         return container;
     }
-    /**
-     * 収益分析サマリテーブル専用のDataTables設定
-     * @param tableId - テーブルのID
-     * @returns DataTables APIインスタンス
-     */
-    private enhanceRevenueSummaryTable(tableId: string): DataTablesApi | null {
+```
+
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L686-725)
+
+```typescript
+    static enhanceRevenueSummaryTable(tableId: string): DataTablesApi | null {
         const summaryTableOptions: DataTablesOptions = {
             paging: true, // ページングを有効化
             searching: true, // 検索を有効化
@@ -746,14 +767,12 @@ export class PLDashboardTableBuilder {
 
         return this.enhanceTableWithDataTables(tableId, summaryTableOptions);
     }
+```
 
-    /**
-     * テーブルにDataTables機能を適用
-     * @param tableId - テーブルのID
-     * @param options - DataTablesのオプション
-     * @returns DataTables APIインスタンス（利用可能な場合）
-     */
-    private enhanceTableWithDataTables(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L733-815)
+
+```typescript
+    static enhanceTableWithDataTables(
         tableId: string,
         options: Partial<DataTablesOptions> = {}
     ): DataTablesApi | null {
@@ -810,37 +829,24 @@ export class PLDashboardTableBuilder {
             };
 
             // オプションをマージして、initCompleteコールバックを追加
-            const self = this;
             const finalOptions = {
                 ...defaultOptions,
                 ...options,
                 // initCompleteコールバックでDataTables初期化完了後に色分けラベルを追加
                 initComplete: function (settings: any, json: any) {
-                    // カスタムスタイルを適用（クラスメソッドを参照するため self を使う）
-                    try {
-                        self.applyCustomTableStyles(tableId);
-                        // 色分けラベルを追加
-                        setTimeout(() => {
-                            self.addColorLegendToDataTable(tableId);
-                            self.addCompanyOperatingDaysLabel(tableId);
-                        }, 100);
-                    } catch (e) {
-                        Logger.debug(`initComplete 内での処理に失敗しました: ${e}`);
-                    }
+                    // カスタムスタイルを適用
+                    PLDashboardTableBuilder.applyCustomTableStyles(tableId);
+
+                    // 色分けラベルを追加
+                    setTimeout(() => {
+                        PLDashboardTableBuilder.addColorLegendToDataTable(tableId);
+                        PLDashboardTableBuilder.addCompanyOperatingDaysLabel(tableId);
+                    }, 100);
                 },
             };
 
             // DataTablesを適用
-            const dataTable = $(`#${tableId}`).DataTable(finalOptions) as DataTablesApi;
-
-            // 作成した DataTable インスタンスをキャッシュ
-            try {
-                if (dataTable) {
-                    this.dataTableInstances.set(tableId, dataTable as DataTablesApi);
-                }
-            } catch (e) {
-                Logger.debug(`DataTable インスタンスの登録に失敗しました: ${e}`);
-            }
+            const dataTable = $(`#${tableId}`).DataTable(finalOptions);
 
             Logger.debug(`DataTables が ${tableId} に適用されました`);
             return dataTable;
@@ -849,13 +855,12 @@ export class PLDashboardTableBuilder {
             return null;
         }
     }
+```
 
-    /**
-     * 生産実績テーブル専用のDataTables設定
-     * @param tableId - テーブルのID
-     * @returns DataTables APIインスタンス
-     */
-    private enhanceProductionTable(tableId: string): DataTablesApi | null {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L822-842)
+
+```typescript
+    static enhanceProductionTable(tableId: string): DataTablesApi | null {
         const productionTableOptions: Partial<DataTablesOptions> = {
             order: [[0, "desc"]] as [number, "asc" | "desc"][], // 日付の降順でソート
             columnDefs: [
@@ -876,13 +881,12 @@ export class PLDashboardTableBuilder {
 
         return this.enhanceTableWithDataTables(tableId, productionTableOptions);
     }
+```
 
-    /**
-     * 損益計算テーブル専用のDataTables設定
-     * @param tableId - テーブルのID
-     * @returns DataTables APIインスタンス
-     */
-    private enhanceProfitCalculationTable(tableId: string): DataTablesApi | null {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L849-872)
+
+```typescript
+    static enhanceProfitCalculationTable(tableId: string): DataTablesApi | null {
         const calculationTableOptions: Partial<DataTablesOptions> = {
             order: [[0, "asc"]] as [number, "asc" | "desc"][], // 日付の昇順でソート
             scrollX: false,
@@ -906,12 +910,12 @@ export class PLDashboardTableBuilder {
 
         return this.enhanceTableWithDataTables(tableId, calculationTableOptions);
     }
+```
 
-    /**
-     * DataTablesの破棄
-     * @param tableId - テーブルのID
-     */
-    private destroyDataTable(tableId: string): void {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L878-890)
+
+```typescript
+    static destroyDataTable(tableId: string): void {
         try {
             if (this.isDataTablesAvailable()) {
                 const table = $(`#${tableId}`);
@@ -924,13 +928,12 @@ export class PLDashboardTableBuilder {
             Logger.debug(`DataTable破棄でエラーが発生しました: ${error}`);
         }
     }
+```
 
-    /**
-     * テーブルデータの動的更新
-     * @param tableId - テーブルのID
-     * @param newData - 新しいデータ
-     */
-    public updateTableData(tableId: string, newData: unknown[]): void {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L897-912)
+
+```typescript
+    static updateTableData(tableId: string, newData: unknown[]): void {
         try {
             if (this.isDataTablesAvailable()) {
                 const table = $(`#${tableId}`);
@@ -946,33 +949,12 @@ export class PLDashboardTableBuilder {
             Logger.debug(`テーブルデータ更新でエラーが発生しました: ${error}`);
         }
     }
+```
 
-    /**
-     * インスタンスのテーブルデータを更新する（this.tableId を使用）
-     * @param newData - 新しいデータ配列
-     */
-    public updateData(newData: unknown[]): void {
-        try {
-            if (this.isDataTablesAvailable()) {
-                const table = $(`#${this.tableId}`);
-                if (table.length && $.fn.DataTable.isDataTable(table)) {
-                    const dataTable = table.DataTable();
-                    dataTable.clear();
-                    dataTable.rows.add(newData);
-                    dataTable.draw();
-                    Logger.debug(`テーブル ${this.tableId} のデータを更新しました`);
-                }
-            }
-        } catch (error) {
-            Logger.debug(`テーブルデータ更新でエラーが発生しました: ${error}`);
-        }
-    }
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L918-937)
 
-    /**
-     * DataTablesライブラリの利用可能チェック
-     * @returns boolean - 利用可能かどうか
-     */
-    private isDataTablesAvailable(): boolean {
+```typescript
+    static isDataTablesAvailable(): boolean {
         try {
             // jQueryとDataTablesの確認
             if (typeof $ === "undefined") {
@@ -992,13 +974,12 @@ export class PLDashboardTableBuilder {
             return false;
         }
     }
+```
 
-    /**
-     * カスタムテーブルスタイルを適用
-     * DataTablesのテーブルラッパーに必要なCSSクラスを追加
-     * @param tableId - テーブルのID
-     */
-    private applyCustomTableStyles(tableId: string): void {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L944-957)
+
+```typescript
+    static applyCustomTableStyles(tableId: string): void {
         try {
             // DataTablesのwrapperにカスタムクラスを追加
             const wrapper = document.querySelector(`#${tableId}_wrapper`);
@@ -1012,14 +993,12 @@ export class PLDashboardTableBuilder {
             Logger.debug(`カスタムスタイル適用でエラーが発生しました: ${error}`);
         }
     }
+```
 
-    /**
-     * 日付に応じた背景色を取得する
-     * @param date - 日付文字列（YYYY-MM-DD形式）
-     * @param holidayData - 会社休日マスタデータ
-     * @returns 背景色の文字列、通常日の場合は空文字
-     */
-    private getDateBackgroundColor(
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L965-990)
+
+```typescript
+    static getDateBackgroundColor(
         date: string,
         holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): string {
@@ -1045,53 +1024,12 @@ export class PLDashboardTableBuilder {
         // 通常日は背景色なし
         return "";
     }
+```
 
-    /**
-     * 互換用: 静的に日付の背景色を取得するメソッド
-     * 他モジュール（GraphBuilder など）が静的呼び出しを行っているため用意しています。
-     * @param date - 日付文字列（YYYY-MM-DD形式）
-     * @param holidayData - 会社休日マスタデータ（未指定時は HolidayStore から取得）
-     * @returns 背景色の文字列
-     */
-    public static getDateBackgroundColor(
-        date: string,
-        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] | null = null
-    ): string {
-        try {
-            const holidays =
-                holidayData && Array.isArray(holidayData)
-                    ? holidayData
-                    : HolidayStore.getInstance().getHolidayData();
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L996-1023)
 
-            const dateObj = new Date(date);
-            const dayOfWeek = dateObj.getDay();
-
-            const holidayRecord = holidays.find((h) => h.date?.value === date);
-            if (holidayRecord) {
-                const holidayType = holidayRecord.holiday_type?.value;
-                switch (holidayType) {
-                    case "法定休日":
-                        return "#e6f3ff";
-                    case "所定休日":
-                        return "#ffe6e6";
-                    case "一斉有給":
-                        return "#fffacd";
-                    default:
-                        return "#ffe6e6";
-                }
-            }
-
-            return "";
-        } catch (e) {
-            return "";
-        }
-    }
-
-    /**
-     * 色分けラベルを作成する
-     * @returns 色分けラベルのHTML要素
-     */
-    private createColorLegend(): HTMLDivElement {
+```typescript
+    static createColorLegend(): HTMLDivElement {
         const legend = document.createElement("div");
         legend.className = "color-legend";
 
@@ -1119,12 +1057,12 @@ export class PLDashboardTableBuilder {
 
         return legend;
     }
+```
 
-    /**
-     * DataTablesの検索バーの右に色分けラベルを追加する
-     * @param tableId - テーブルのID
-     */
-    private addColorLegendToDataTable(tableId: string): void {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L1029-1094)
+
+```typescript
+    static addColorLegendToDataTable(tableId: string): void {
         try {
             // DataTablesのdt-top-controlsクラスを持つ要素を探す（優先順位順）
             let targetElement = null;
@@ -1190,12 +1128,12 @@ export class PLDashboardTableBuilder {
             Logger.debug(`色分けラベル追加でエラーが発生しました: ${error}`);
         }
     }
+```
 
-    /**
-     * 会社営業日数ラベルを作成する
-     * @param tableId - テーブルのID
-     */
-    private addCompanyOperatingDaysLabel(tableId: string): void {
+**File:** src/BOX/PL_dashboard/components/PLDashboardTableBuilder.ts (L1100-1143)
+
+```typescript
+    static addCompanyOperatingDaysLabel(tableId: string): void {
         try {
             const targetElement = document.querySelector(`#${tableId}_wrapper .dt-top-controls`);
 
@@ -1239,49 +1177,4 @@ export class PLDashboardTableBuilder {
             Logger.debug(`営業日数ラベル追加でエラーが発生しました: ${error}`);
         }
     }
-
-    /**
-     * デバッグ用のログ出力
-     * @param message - ログメッセージ
-     * @param data - ログデータ
-     */
-    private debugLog(message: string, data?: unknown): void {
-        Logger.debug(`[TableBuilder] ${message}`, data);
-    }
-
-    /**
-     * インスタンスの DataTable API を取得
-     * @returns DataTablesApi | null
-     */
-    public getDataTableInstance(): DataTablesApi | null {
-        try {
-            const inst = this.dataTableInstances.get(this.tableId) || null;
-            return inst as DataTablesApi | null;
-        } catch (e) {
-            Logger.debug(`getDataTableInstance エラー: ${e}`);
-            return null;
-        }
-    }
-
-    /**
-     * インスタンスの DataTables を破棄してキャッシュをクリア
-     */
-    public destroy(): void {
-        try {
-            this.destroyDataTable(this.tableId);
-            if (this.dataTableInstances.has(this.tableId)) {
-                this.dataTableInstances.delete(this.tableId);
-            }
-        } catch (e) {
-            Logger.debug(`destroy エラー: ${e}`);
-        }
-    }
-
-    /**
-     * インスタンスのテーブルに DataTables 機能を適用（tableId はインスタンスの値を使用）
-     * @param options - DataTables オプション
-     */
-    public enhanceWithDataTables(options: Partial<DataTablesOptions> = {}): DataTablesApi | null {
-        return this.enhanceTableWithDataTables(this.tableId, options);
-    }
-}
+```
