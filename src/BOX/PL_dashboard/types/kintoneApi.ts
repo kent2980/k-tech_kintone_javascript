@@ -14,5 +14,4 @@ export interface KintoneSaveResult {
 
 export interface KintoneDuplicateResult {
     ok: boolean;
-    error: Error;
 }

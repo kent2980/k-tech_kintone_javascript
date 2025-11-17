@@ -1,5 +1,5 @@
 import { API_LIMITS, APP_IDS } from "../config";
-import { kintoneApiDuplicateError, kintoneApiFatalRegisterError } from "../error/kintoneApiError";
+import { kintoneApiFatalRegisterError } from "../error/kintoneApiError";
 import {
     FilterConfig,
     KintoneDuplicateResult,
@@ -362,9 +362,6 @@ export class KintoneApiService {
                 Logger.warn("PL月次データの重複が検出され、登録をスキップしました:", duplicates);
                 return {
                     ok: false,
-                    error: new kintoneApiDuplicateError(
-                        "重複レコードが見つかりました。登録はスキップされました。"
-                    ),
                 };
             }
         } catch (error) {
@@ -443,9 +440,6 @@ export class KintoneApiService {
                 );
                 return {
                     ok: false,
-                    error: new kintoneApiDuplicateError(
-                        "重複レコードが見つかりました。登録はスキップされました。"
-                    ),
                 };
             }
             // 登録処理開始
@@ -530,9 +524,6 @@ export class KintoneApiService {
                 console.log(duplicatesInfo.filter((info) => info.isDuplicate));
                 return {
                     ok: false,
-                    error: new kintoneApiDuplicateError(
-                        "重複レコードが見つかりました。登録はスキップされました。"
-                    ),
                 };
             }
             const recordIds: number[] = [];
