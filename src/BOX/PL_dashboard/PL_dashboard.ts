@@ -26,6 +26,7 @@ import { DateUtil, Logger, PerformanceUtil } from "./utils";
 import { BusinessCalculationService, KintoneApiService } from "./services";
 
 import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } from "./components";
+import { TableBuilderFactory } from "./components/TableBuilderFactory";
 import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 (function () {
     "use strict";
@@ -38,6 +39,15 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
     let plMonthlyData: monthly.SavedFields | null = null;
     let filteredRecords: line_daily.SavedFields[] = [];
     let lastActiveTabId: string = "production-tab";
+
+    // TableBuilderFactory を使用してテーブルビルダーを作成
+    const productionTableBuilder =
+        TableBuilderFactory.createProductionTableBuilder("production-table");
+    const profitCalculationTableBuilder = TableBuilderFactory.createProfitCalculationTableBuilder(
+        "profit-calculation-table"
+    );
+    const revenueAnalysisTableBuilder =
+        TableBuilderFactory.createRevenueAnalysisTableBuilder("revenue-analysis-table");
 
     // DOM構築関数は PLDashboardDomBuilder クラスに移動しました
 
@@ -192,7 +202,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         return await KintoneApiService.fetchHolidayData();
     }
 
-    /**
+    /*
      * フィルター変更時の処理（デバウンス処理付き）
      */
     const debouncedHandleFilterChange = PerformanceUtil.debounce(
@@ -256,20 +266,25 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                     "production-performance-table"
                 );
                 if (existingProductionContainer) {
-                    // rebuild product_history_data and prepare DataTables row arrays
+                    // 再利用のため、product_history_dataを再構築
                     product_history_data = [];
+                    // テーブルデータを再構築
                     const prodRows: unknown[] = [];
+
+                    // TableBuilderFactoryを使用してテーブルビルダーを取得
                     filteredRecords.forEach((record) => {
+                        // 各種指標を計算
                         const metrics = BusinessCalculationService.calculateBusinessMetrics(
                             record,
                             plMonthlyData
                         );
-
+                        // 日付をフォーマット
                         const dateObj = new Date(record.date?.value);
+                        // YYYY/MM/DD(曜日)形式に変換
                         const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(
                             dateObj.getDate()
                         ).padStart(2, "0")}(${DateUtil.getDayOfWeek(dateObj)})`;
-
+                        // 行データを配列にまとめる
                         const row = [
                             formattedDate,
                             record.line_name?.value || "",
@@ -288,9 +303,9 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                             metrics.profit.grossProfit,
                             metrics.profit.profitRateString,
                         ];
-
+                        // 行データをprodRowsに追加
                         prodRows.push(row);
-
+                        // product_history_dataにも追加
                         const historyItem: ProductHistoryData = {
                             date: record.date?.value || "",
                             line_name: record.line_name?.value || "",
@@ -307,7 +322,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                         product_history_data.push(historyItem);
                     });
 
-                    // Update DataTables if initialized, otherwise rebuild container
+                    //
                     const productionTableElement = document.getElementById("production-table");
                     if (productionTableElement && (window as any).jQuery) {
                         PLDashboardTableBuilder.updateTableData("production-table", prodRows);
@@ -324,12 +339,9 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                     }
                 } else {
                     tableContainer = await PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createProductionPerformanceTable(
-                            filteredRecords,
-                            plMonthlyData,
-                            product_history_data,
-                            DateUtil.getDayOfWeek
-                        )
+                        TableBuilderFactory.createProductionTableBuilder("production-table", {
+                            holidayColoring: true,
+                        })
                     );
                 }
                 const profitTableContainer = await PerformanceUtil.createElementLazy(() =>

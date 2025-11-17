@@ -18,7 +18,6 @@ import {
     DataTablesOptions,
     ProductHistoryData,
     RevenueAnalysis,
-    TableBuilderConfig,
     TableOptions,
     TableRowData,
     TotalsByDate,
@@ -42,31 +41,20 @@ import "datatables.net-dt/css/dataTables.dataTables.min.css";
 import "datatables.net-buttons/js/buttons.html5.min.js";
 import "datatables.net-buttons/js/buttons.print.min.js";
 
+// DataTables型定義
+/// <reference types="datatables.net" />
+
 /**
  * PLダッシュボード用のテーブル構築ユーティリティクラス
  */
 export class PLDashboardTableBuilder {
-    private dataTableInstance: DataTablesApi | null = null;
-    private tableId: string;
-    private tableElement: HTMLTableElement | null = null;
-    private config: TableBuilderConfig;
-
-    constructor(tableId: string, config?: Partial<TableBuilderConfig>) {
-        this.tableId = tableId;
-        this.config = {
-            stickyHeader: true,
-            enableDataTables: true,
-            holidayColoring: true,
-            ...config,
-        };
-    }
     /**
      * テーブル要素を作成
      * @param id - テーブルのID
      * @param className - テーブルのクラス名
      * @returns テーブル要素
      */
-    private createTable(
+    static createTable(
         id: string,
         className: string = "recordlist-gaia recordlist-consistent-column-width-gaia"
     ): HTMLTableElement {
@@ -81,7 +69,7 @@ export class PLDashboardTableBuilder {
      * @param columns - カラム名の配列
      * @returns テーブルヘッダー要素
      */
-    private createStickyTableHeader(columns: string[]): HTMLTableSectionElement {
+    static createStickyTableHeader(columns: string[]): HTMLTableSectionElement {
         const thead = document.createElement("thead");
         thead.className = "pl-table-thead-sticky";
 
@@ -103,7 +91,7 @@ export class PLDashboardTableBuilder {
      * @param className - ボディのクラス名
      * @returns テーブルボディ要素
      */
-    private createTableBody(className: string = "recordlist-body-gaia"): HTMLTableSectionElement {
+    static createTableBody(className: string = "recordlist-body-gaia"): HTMLTableSectionElement {
         const tbody = document.createElement("tbody");
         tbody.className = className;
         return tbody;
@@ -115,7 +103,7 @@ export class PLDashboardTableBuilder {
      * @param isNumeric - 数値セルかどうか（右寄せにする）
      * @returns テーブルセル要素
      */
-    private createTableCell(
+    static createTableCell(
         content: string | number,
         isNumeric: boolean = false
     ): HTMLTableCellElement {
@@ -133,7 +121,7 @@ export class PLDashboardTableBuilder {
      * @param className - 行のクラス名
      * @returns テーブル行要素
      */
-    private createTableRow(cells: HTMLTableCellElement[], className?: string): HTMLTableRowElement {
+    static createTableRow(cells: HTMLTableCellElement[], className?: string): HTMLTableRowElement {
         const row = document.createElement("tr");
         if (className) {
             row.className = className;
@@ -152,7 +140,7 @@ export class PLDashboardTableBuilder {
      * @param decimals - 小数点以下の桁数（デフォルト: 0）
      * @returns フォーマットされた文字列
      */
-    private formatNumber(value: number, decimals: number = 0): string {
+    static formatNumber(value: number, decimals: number = 0): string {
         if (isNaN(value)) return "0";
         return value.toLocaleString("ja-JP", {
             minimumFractionDigits: decimals,
@@ -165,7 +153,7 @@ export class PLDashboardTableBuilder {
      * @param value - パーセンテージ値（0-100）
      * @returns フォーマットされた文字列
      */
-    private formatPercentage(value: number): string {
+    static formatPercentage(value: number): string {
         if (isNaN(value)) return "0%";
         return `${value.toFixed(1)}%`;
     }
@@ -176,7 +164,7 @@ export class PLDashboardTableBuilder {
      * @param totalCost - 総コスト
      * @returns 利益情報オブジェクト
      */
-    private calculateProfit(
+    static calculateProfit(
         addedValue: number,
         totalCost: number
     ): {
@@ -200,7 +188,7 @@ export class PLDashboardTableBuilder {
      * @param options - オプション設定
      * @returns 完全なテーブル要素
      */
-    private createCompleteTable(
+    static createCompleteTable(
         id: string,
         columns: string[],
         data: TableRowData,
@@ -247,7 +235,7 @@ export class PLDashboardTableBuilder {
      * @param getDayOfWeek - 曜日取得関数
      * @returns 生産実績テーブルのコンテナ要素
      */
-    public createProductionPerformanceTable(
+    static createProductionPerformanceTable(
         records: line_daily.SavedFields[],
         plMonthlyData: monthly.SavedFields | null,
         product_history_data: ProductHistoryData[],
@@ -393,7 +381,7 @@ export class PLDashboardTableBuilder {
      * @param holidayData - 会社休日マスタデータ
      * @returns 損益計算テーブルのコンテナ要素
      */
-    public createProfitCalculationTable(
+    static createProfitCalculationTable(
         dailyReportData: daily.SavedFields[],
         filteredRecords: line_daily.SavedFields[],
         plMonthlyData: monthly.SavedFields | null,
@@ -604,7 +592,7 @@ export class PLDashboardTableBuilder {
      * @param holidayData - 会社休日マスタデータ
      * @returns 収益分析サマリテーブルのコンテナ要素
      */
-    public createRevenueAnalysisSummaryTable(
+    static createRevenueAnalysisSummaryTable(
         RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
         // カラムを設定
@@ -695,7 +683,7 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @returns DataTables APIインスタンス
      */
-    private enhanceRevenueSummaryTable(tableId: string): DataTablesApi | null {
+    static enhanceRevenueSummaryTable(tableId: string): DataTablesApi | null {
         const summaryTableOptions: DataTablesOptions = {
             paging: true, // ページングを有効化
             searching: true, // 検索を有効化
@@ -742,7 +730,7 @@ export class PLDashboardTableBuilder {
      * @param options - DataTablesのオプション
      * @returns DataTables APIインスタンス（利用可能な場合）
      */
-    private enhanceTableWithDataTables(
+    static enhanceTableWithDataTables(
         tableId: string,
         options: Partial<DataTablesOptions> = {}
     ): DataTablesApi | null {
@@ -805,12 +793,12 @@ export class PLDashboardTableBuilder {
                 // initCompleteコールバックでDataTables初期化完了後に色分けラベルを追加
                 initComplete: function (settings: any, json: any) {
                     // カスタムスタイルを適用
-                    this.applyCustomTableStyles(tableId);
+                    PLDashboardTableBuilder.applyCustomTableStyles(tableId);
 
                     // 色分けラベルを追加
                     setTimeout(() => {
-                        this.addColorLegendToDataTable(tableId);
-                        this.addCompanyOperatingDaysLabel(tableId);
+                        PLDashboardTableBuilder.addColorLegendToDataTable(tableId);
+                        PLDashboardTableBuilder.addCompanyOperatingDaysLabel(tableId);
                     }, 100);
                 },
             };
@@ -831,7 +819,7 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @returns DataTables APIインスタンス
      */
-    private enhanceProductionTable(tableId: string): DataTablesApi | null {
+    static enhanceProductionTable(tableId: string): DataTablesApi | null {
         const productionTableOptions: Partial<DataTablesOptions> = {
             order: [[0, "desc"]] as [number, "asc" | "desc"][], // 日付の降順でソート
             columnDefs: [
@@ -858,7 +846,7 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @returns DataTables APIインスタンス
      */
-    private enhanceProfitCalculationTable(tableId: string): DataTablesApi | null {
+    static enhanceProfitCalculationTable(tableId: string): DataTablesApi | null {
         const calculationTableOptions: Partial<DataTablesOptions> = {
             order: [[0, "asc"]] as [number, "asc" | "desc"][], // 日付の昇順でソート
             scrollX: false,
@@ -887,7 +875,7 @@ export class PLDashboardTableBuilder {
      * DataTablesの破棄
      * @param tableId - テーブルのID
      */
-    private destroyDataTable(tableId: string): void {
+    static destroyDataTable(tableId: string): void {
         try {
             if (this.isDataTablesAvailable()) {
                 const table = $(`#${tableId}`);
@@ -906,7 +894,7 @@ export class PLDashboardTableBuilder {
      * @param tableId - テーブルのID
      * @param newData - 新しいデータ
      */
-    public updateTableData(tableId: string, newData: unknown[]): void {
+    static updateTableData(tableId: string, newData: unknown[]): void {
         try {
             if (this.isDataTablesAvailable()) {
                 const table = $(`#${tableId}`);
@@ -927,7 +915,7 @@ export class PLDashboardTableBuilder {
      * DataTablesライブラリの利用可能チェック
      * @returns boolean - 利用可能かどうか
      */
-    private isDataTablesAvailable(): boolean {
+    static isDataTablesAvailable(): boolean {
         try {
             // jQueryとDataTablesの確認
             if (typeof $ === "undefined") {
@@ -953,7 +941,7 @@ export class PLDashboardTableBuilder {
      * DataTablesのテーブルラッパーに必要なCSSクラスを追加
      * @param tableId - テーブルのID
      */
-    private applyCustomTableStyles(tableId: string): void {
+    static applyCustomTableStyles(tableId: string): void {
         try {
             // DataTablesのwrapperにカスタムクラスを追加
             const wrapper = document.querySelector(`#${tableId}_wrapper`);
@@ -974,7 +962,7 @@ export class PLDashboardTableBuilder {
      * @param holidayData - 会社休日マスタデータ
      * @returns 背景色の文字列、通常日の場合は空文字
      */
-    private getDateBackgroundColor(
+    static getDateBackgroundColor(
         date: string,
         holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
     ): string {
@@ -1005,7 +993,7 @@ export class PLDashboardTableBuilder {
      * 色分けラベルを作成する
      * @returns 色分けラベルのHTML要素
      */
-    private createColorLegend(): HTMLDivElement {
+    static createColorLegend(): HTMLDivElement {
         const legend = document.createElement("div");
         legend.className = "color-legend";
 
@@ -1038,7 +1026,7 @@ export class PLDashboardTableBuilder {
      * DataTablesの検索バーの右に色分けラベルを追加する
      * @param tableId - テーブルのID
      */
-    private addColorLegendToDataTable(tableId: string): void {
+    static addColorLegendToDataTable(tableId: string): void {
         try {
             // DataTablesのdt-top-controlsクラスを持つ要素を探す（優先順位順）
             let targetElement = null;
@@ -1109,7 +1097,7 @@ export class PLDashboardTableBuilder {
      * 会社営業日数ラベルを作成する
      * @param tableId - テーブルのID
      */
-    private addCompanyOperatingDaysLabel(tableId: string): void {
+    static addCompanyOperatingDaysLabel(tableId: string): void {
         try {
             const targetElement = document.querySelector(`#${tableId}_wrapper .dt-top-controls`);
 
@@ -1159,7 +1147,7 @@ export class PLDashboardTableBuilder {
      * @param message - ログメッセージ
      * @param data - ログデータ
      */
-    private debugLog(message: string, data?: unknown): void {
+    static debugLog(message: string, data?: unknown): void {
         Logger.debug(`[TableBuilder] ${message}`, data);
     }
 }
