@@ -19,11 +19,11 @@ jest.mock("../Logger", () => ({
 // UserFriendlyMessagesをモック
 jest.mock("../UserFriendlyMessages", () => ({
     UserFriendlyMessages: {
-        getUserFriendlyMessage: jest.fn((error: Error | unknown, context?: Record<string, unknown>, defaultMessage?: string) => {
+        fromContext: jest.fn((error: Error | unknown, context?: Record<string, unknown>) => {
             if (error instanceof Error) {
                 return `ユーザー向けメッセージ: ${error.message}`;
             }
-            return defaultMessage || "ユーザー向けメッセージ";
+            return "ユーザー向けメッセージ";
         }),
     },
 }));
@@ -72,11 +72,14 @@ describe("ErrorHandler", () => {
 
             ErrorHandler.logError("エラーが発生しました", error, context);
 
-            expect(Logger.error).toHaveBeenCalledWith("エラーが発生しました", expect.objectContaining({
-                error: "テストエラー",
-                code: "Error",
-                context,
-            }));
+            expect(Logger.error).toHaveBeenCalledWith(
+                "エラーが発生しました",
+                expect.objectContaining({
+                    error: "テストエラー",
+                    code: "Error",
+                    context,
+                })
+            );
         });
     });
 
@@ -100,7 +103,11 @@ describe("ErrorHandler", () => {
             const error = new Error("テストエラー");
             const context = { method: "testMethod" };
 
-            const result = ErrorHandler.handleErrorAndReturnNull("エラーが発生しました", error, context);
+            const result = ErrorHandler.handleErrorAndReturnNull(
+                "エラーが発生しました",
+                error,
+                context
+            );
 
             expect(result).toBeNull();
             expect(Logger.error).toHaveBeenCalled();
@@ -112,7 +119,11 @@ describe("ErrorHandler", () => {
             const error = new Error("テストエラー");
             const context = { method: "testMethod" };
 
-            const result = ErrorHandler.handleErrorAndReturnEmpty("エラーが発生しました", error, context);
+            const result = ErrorHandler.handleErrorAndReturnEmpty(
+                "エラーが発生しました",
+                error,
+                context
+            );
 
             expect(result).toEqual([]);
             expect(Logger.error).toHaveBeenCalled();
@@ -130,6 +141,17 @@ describe("ErrorHandler", () => {
 
             expect(Logger.error).toHaveBeenCalled();
         });
+
+        test("Errorインスタンスでない場合は新しいErrorをスロー", () => {
+            const error = "文字列エラー";
+            const context = { method: "testMethod" };
+
+            expect(() => {
+                ErrorHandler.handleErrorAndRethrow("エラーが発生しました", error, context);
+            }).toThrow("エラーが発生しました: 文字列エラー");
+
+            expect(Logger.error).toHaveBeenCalled();
+        });
     });
 
     describe("getUserFriendlyMessage", () => {
@@ -140,8 +162,7 @@ describe("ErrorHandler", () => {
             const message = ErrorHandler.getUserFriendlyMessage(error, context);
 
             expect(message).toContain("ユーザー向けメッセージ");
-            expect(UserFriendlyMessages.getUserFriendlyMessage).toHaveBeenCalled();
+            expect(UserFriendlyMessages.fromContext).toHaveBeenCalledWith(error, context);
         });
     });
 });
-

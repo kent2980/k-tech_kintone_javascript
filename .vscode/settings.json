@@ -28,8 +28,10 @@
         "chg",
         "cybozu",
         "dashbord",
+        "datalabels",
         "datatables",
         "deflist",
+        "defval",
         "dts",
         "eslint",
         "fieldTypes",
@@ -37,6 +39,7 @@
         "iuwp",
         "jsdom",
         "kintone",
+        "lintstagedrc",
         "prettier",
         "VITE",
         "wpzdj"

@@ -1,14 +1,12 @@
 {
     "name": "k-tech_kintone_javascript",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
+    "description": "K-Tech Kintone JavaScript",
     "scripts": {
         "generate:fields": "node src/BOX/PL_dashboard/scripts/generate-fields.js",
         "prebuild": "npm run generate:fields",
-        "build": "npm run build:desktop && npm run build:mobile",
+        "build": "npm run build:desktop",
         "build:desktop": "cross-env BUILD_TARGET=desktop vite build",
-        "build:mobile": "cross-env BUILD_TARGET=mobile vite build",
         "watch": "vite build --watch",
         "upload": "sh -c 'for f in customize-manifest-app*.json; do echo \"Uploading $f\"; dotenv kintone-customize-uploader \"$f\" || exit $?; done'",
         "upload:app43": "dotenv kintone-customize-uploader customize-manifest-app43.json",
@@ -35,8 +33,13 @@
         "type": "git",
         "url": "git+https://github.com/kent2980/kintone_PL-.git"
     },
-    "keywords": [],
-    "author": "",
+    "keywords": [
+        "kintone",
+        "javascript",
+        "typescript",
+        "vite"
+    ],
+    "author": "KentaroYoshida",
     "license": "ISC",
     "type": "commonjs",
     "bugs": {

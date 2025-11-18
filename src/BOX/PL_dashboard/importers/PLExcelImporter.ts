@@ -11,6 +11,12 @@ import utc from "dayjs/plugin/utc";
 import { Logger } from "../utils";
 import { ExcelImporter, TableDataFrame } from "./ExcelImporter";
 
+/**
+ * kintoneレコード形式の型定義
+ * { fieldName: { value: string | number } } の形式
+ */
+type KintoneRecordFormat = Record<string, { value: string | number }>;
+
 // プラグインを拡張
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -32,10 +38,12 @@ export class PLExcelImporter extends ExcelImporter {
 
     /**
      * Excelファイルを読み込む
+     * @param validateBeforeLoad - 読み込み前に検証を行うか（デフォルト: true）
+     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
      */
-    async load(): Promise<void> {
+    async load(validateBeforeLoad: boolean = true, maxSizeMB: number = 10): Promise<void> {
         try {
-            await super.load();
+            await super.load(validateBeforeLoad, maxSizeMB);
             this.isLoaded = true;
             Logger.debug("PLExcelファイルを読み込みました");
         } catch (error) {
@@ -72,7 +80,7 @@ export class PLExcelImporter extends ExcelImporter {
         endColumn: string | number = "P",
         headerRow: number = 3,
         dataStartRow: number = 4
-    ): ExcelRecord[] {
+    ): KintoneRecordFormat[] {
         if (!this.hasSheet(sheetName)) {
             throw new Error(`シート "${sheetName}" が見つかりません`);
         }
@@ -91,23 +99,55 @@ export class PLExcelImporter extends ExcelImporter {
         // itemsのキーをコンソールに出力
         console.log("生産実績データのキー一覧:", Object.keys(items[0] || {}));
 
-        const records: ExcelRecord[] = [];
+        const records: KintoneRecordFormat[] = [];
         items.forEach((item) => {
-            const newItem: ExcelRecord = {
+            // 日付の値を取得して変換
+            const dateValue = item["日付\r\n(生産日）"];
+            let formattedDate = "";
+            if (dateValue instanceof Date) {
+                formattedDate = dayjs(dateValue).format("YYYY-MM-DD");
+            } else if (dateValue !== null && dateValue !== undefined) {
+                formattedDate = String(dateValue);
+            }
+
+            // 数値フィールドの値を取得して変換
+            const getNumberValue = (
+                val: string | number | boolean | Date | null | undefined
+            ): number => {
+                if (typeof val === "number") return val;
+                if (typeof val === "string") {
+                    const num = Number(val);
+                    return isNaN(num) ? 0 : num;
+                }
+                return 0;
+            };
+
+            // 文字列フィールドの値を取得して変換
+            const getStringValue = (
+                val: string | number | boolean | Date | null | undefined
+            ): string => {
+                if (val === null || val === undefined) return "";
+                if (typeof val === "string") return val;
+                if (typeof val === "number") return String(val);
+                if (val instanceof Date) return dayjs(val).format("YYYY-MM-DD");
+                return String(val);
+            };
+
+            const newItem: KintoneRecordFormat = {
                 date: {
-                    value: dayjs(item["日付\r\n(生産日）"]).format("YYYY-MM-DD"),
+                    value: formattedDate,
                 },
                 line_name: {
-                    value: String(item["ライン"]).replace("【", "").replace("】", ""),
+                    value: getStringValue(item["ライン"]).replace("【", "").replace("】", ""),
                 },
-                outside_time: { value: item["派遣工数\r\n（h）"] },
+                outside_time: { value: getNumberValue(item["派遣工数\r\n（h）"]) },
                 user_name: { value: "auto" },
-                added_value: { value: item["付加価値"] },
-                model_name: { value: item["機種名"] },
-                inside_overtime: { value: item["【社】残業工数\r\n（h）"] },
-                inside_time: { value: item["社員工数\r\n（h）"] },
-                actual_number: { value: item["台数"] },
-                outside_overtime: { value: item["派残業工数\r\n（h）"] },
+                added_value: { value: getNumberValue(item["付加価値"]) },
+                model_name: { value: getStringValue(item["機種名"]) },
+                inside_overtime: { value: getNumberValue(item["【社】残業工数\r\n（h）"]) },
+                inside_time: { value: getNumberValue(item["社員工数\r\n（h）"]) },
+                actual_number: { value: getNumberValue(item["台数"]) },
+                outside_overtime: { value: getNumberValue(item["派残業工数\r\n（h）"]) },
                 // 必須フィールド
                 production_number: { value: "0" },
                 target_number: { value: "0" },
@@ -136,7 +176,7 @@ export class PLExcelImporter extends ExcelImporter {
         dataEndColumn: string | number = "AK",
         startRow: number = 26,
         endRow: number = 66
-    ): ExcelRecord[] {
+    ): KintoneRecordFormat[] {
         if (!this.hasSheet(sheetName)) {
             throw new Error(`シート "${sheetName}" が見つかりません`);
         }
@@ -154,7 +194,7 @@ export class PLExcelImporter extends ExcelImporter {
         // カラム名をマッピングして可読性を向上
         this.renameExpenseColumns(record);
 
-        const items: ExcelRecord[] = [];
+        const items: KintoneRecordFormat[] = [];
 
         record.records.forEach((item, index) => {
             const dateValue = item["日付"];
@@ -166,7 +206,7 @@ export class PLExcelImporter extends ExcelImporter {
             }
 
             if (formattedDate === "") return;
-            const newItem: ExcelRecord = {
+            const newItem: KintoneRecordFormat = {
                 date: { value: formattedDate },
                 indirect_material_costs: {
                     value: (item["間接材料費"] || 0).toString(),
@@ -211,7 +251,13 @@ export class PLExcelImporter extends ExcelImporter {
 
         // デバッグ: 生成されたレコード数と日付一覧を出力
         console.log(`生成されたレコード数: ${items.length}件`);
-        const dates = items.map((item) => item.date.value);
+        const dates = items.map((item) => {
+            const dateField = item.date;
+            if (dateField && typeof dateField === "object" && "value" in dateField) {
+                return dateField.value;
+            }
+            return "";
+        });
         console.log("日付一覧:", dates);
         console.log(
             "重複している日付:",
@@ -230,7 +276,7 @@ export class PLExcelImporter extends ExcelImporter {
     getMonthlyData(
         sheetName1: string = "生産履歴（Assy）",
         sheetName2: string = "ＰＬ (日毎) (計画反映版)"
-    ): ExcelRecord {
+    ): KintoneRecordFormat {
         // シートの存在確認
         if (!this.hasSheet(sheetName1)) {
             throw new Error(`シート "${sheetName1}" が見つかりません`);
@@ -397,7 +443,9 @@ export class PLExcelImporter extends ExcelImporter {
      * 元のカラム名（Column_XX形式）から日本語名に変換
      * @param records - 変換対象のレコード配列
      */
-    private renameExpenseColumns(record: TableDataFrame<ExcelRecord>): void {
+    private renameExpenseColumns(
+        record: TableDataFrame<Record<string, string | number | boolean | Date | null>>
+    ): void {
         // カラムマッピング定義
         const columnMapping: Record<string, string> = {
             Column_31: "派遣社員経費",

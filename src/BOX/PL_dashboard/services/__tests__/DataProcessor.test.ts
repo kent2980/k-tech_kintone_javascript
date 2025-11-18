@@ -193,5 +193,96 @@ describe("DataProcessor", () => {
             expect(result[0].actual_number).toBe("10");
         });
     });
-});
 
+    describe("calculateAddedValue", () => {
+        test("直接付加価値が設定されている場合はその値を使用", () => {
+            const record: any = {
+                added_value: { value: "5000" },
+                model_name: { value: "Model A" },
+            };
+
+            const result = DataProcessor.calculateAddedValue(record, []);
+
+            expect(result).toBe(5000);
+        });
+
+        test("マスタデータから付加価値を取得", () => {
+            const record: any = {
+                added_value: { value: "" },
+                model_name: { value: "Model A" },
+                model_code: { value: "" },
+                actual_number: { value: "10" },
+            };
+
+            const masterModelData: any[] = [
+                {
+                    model_name: { value: "Model A" },
+                    added_value: { value: "1000" },
+                },
+            ];
+
+            const result = DataProcessor.calculateAddedValue(record, masterModelData);
+
+            expect(result).toBe(10000); // 1000 * 10
+        });
+
+        test("マスタデータが見つからない場合は0を返す", () => {
+            const record: any = {
+                added_value: { value: "" },
+                model_name: { value: "Model B" },
+                model_code: { value: "" },
+            };
+
+            const masterModelData: any[] = [
+                {
+                    model_name: { value: "Model A" },
+                    added_value: { value: "1000" },
+                },
+            ];
+
+            const result = DataProcessor.calculateAddedValue(record, masterModelData);
+
+            expect(result).toBe(0);
+        });
+    });
+
+    describe("calculateCosts", () => {
+        test("経費を正しく計算", () => {
+            const record: any = {
+                inside_time: { value: "8" },
+                outside_time: { value: "4" },
+                inside_overtime: { value: "2" },
+                outside_overtime: { value: "1" },
+            };
+
+            const result = DataProcessor.calculateCosts(record, 3000, 2500);
+
+            expect(result.insideCost).toBe(24000); // 8 * 3000
+            expect(result.outsideCost).toBe(10000); // 4 * 2500
+            expect(result.insideOvertimeCost).toBe(7500); // 2 * 3000 * 1.25
+            expect(result.outsideOvertimeCost).toBe(3125); // 1 * 2500 * 1.25
+            expect(result.totalCost).toBe(44625); // 24000 + 10000 + 7500 + 3125
+        });
+    });
+
+    describe("getFieldValue", () => {
+        test("フィールドの値を数値として取得", () => {
+            expect(DataProcessor.getFieldValue({ value: "123" })).toBe(123);
+            expect(DataProcessor.getFieldValue({ value: 456 })).toBe(456);
+        });
+
+        test("フィールドがundefinedの場合は0を返す", () => {
+            expect(DataProcessor.getFieldValue(undefined)).toBe(0);
+        });
+    });
+
+    describe("getFieldText", () => {
+        test("フィールドの値を文字列として取得", () => {
+            expect(DataProcessor.getFieldText({ value: "test" })).toBe("test");
+        });
+
+        test("フィールドがundefinedの場合は空文字を返す", () => {
+            expect(DataProcessor.getFieldText(undefined)).toBe("");
+        });
+    });
+});

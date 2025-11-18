@@ -8,6 +8,7 @@ import { BusinessCalculationService } from "../BusinessCalculationService";
 /// <reference path="../../../../../../globals.d.ts" />
 /// <reference path="../../fields/line_daily_fields.d.ts" />
 /// <reference path="../../fields/model_master_fields.d.ts" />
+/// <reference path="../../fields/month_fields.d.ts" />
 
 describe("BusinessCalculationService", () => {
     describe("calculateAddedValue", () => {
@@ -16,12 +17,26 @@ describe("BusinessCalculationService", () => {
                 model_name: { value: "Model A", type: "SINGLE_LINE_TEXT" },
                 model_code: { value: "A001", type: "SINGLE_LINE_TEXT" },
                 added_value: { value: "1000", type: "NUMBER" },
-            },
+                $id: { value: "1", type: "ID" },
+                $revision: { value: "1", type: "REVISION" },
+                更新者: { value: { code: "user1", name: "User 1" }, type: "MODIFIER" },
+                作成者: { value: { code: "user1", name: "User 1" }, type: "CREATOR" },
+                レコード番号: { value: "1", type: "RECORD_NUMBER" },
+                更新日時: { value: "2024-01-01T00:00:00Z", type: "UPDATED_TIME" },
+                作成日時: { value: "2024-01-01T00:00:00Z", type: "CREATED_TIME" },
+            } as model_master.SavedFields,
             {
                 model_name: { value: "Model B", type: "SINGLE_LINE_TEXT" },
                 model_code: { value: "", type: "SINGLE_LINE_TEXT" },
                 added_value: { value: "2000", type: "NUMBER" },
-            },
+                $id: { value: "2", type: "ID" },
+                $revision: { value: "1", type: "REVISION" },
+                更新者: { value: { code: "user1", name: "User 1" }, type: "MODIFIER" },
+                作成者: { value: { code: "user1", name: "User 1" }, type: "CREATOR" },
+                レコード番号: { value: "2", type: "RECORD_NUMBER" },
+                更新日時: { value: "2024-01-01T00:00:00Z", type: "UPDATED_TIME" },
+                作成日時: { value: "2024-01-01T00:00:00Z", type: "CREATED_TIME" },
+            } as model_master.SavedFields,
         ];
 
         test("直接付加価値が設定されている場合はその値を使用", () => {
@@ -158,7 +173,7 @@ describe("BusinessCalculationService", () => {
 
             expect(result.grossProfit).toBe(40000); // 100000 - 60000
             expect(result.profitRate).toBe(40); // (40000 / 100000) * 100
-            expect(result.profitRateString).toBe("40.0%");
+            expect(result.profitRateString).toBe("40.00%");
         });
 
         test("付加価値が0の場合は利益率0を返す", () => {
@@ -166,7 +181,7 @@ describe("BusinessCalculationService", () => {
 
             expect(result.grossProfit).toBe(0);
             expect(result.profitRate).toBe(0);
-            expect(result.profitRateString).toBe("0.0%");
+            expect(result.profitRateString).toBe("0%");
         });
 
         test("赤字の場合も正しく計算", () => {
@@ -174,7 +189,7 @@ describe("BusinessCalculationService", () => {
 
             expect(result.grossProfit).toBe(-30000);
             expect(result.profitRate).toBe(-60);
-            expect(result.profitRateString).toBe("-60.0%");
+            expect(result.profitRateString).toBe("-60.00%");
         });
     });
 
@@ -195,15 +210,32 @@ describe("BusinessCalculationService", () => {
                 model_name: { value: "Model A", type: "SINGLE_LINE_TEXT" },
                 model_code: { value: "A001", type: "SINGLE_LINE_TEXT" },
                 added_value: { value: "10000", type: "NUMBER" },
-            },
+                $id: { value: "1", type: "ID" },
+                $revision: { value: "1", type: "REVISION" },
+                更新者: { value: { code: "user1", name: "User 1" }, type: "MODIFIER" },
+                作成者: { value: { code: "user1", name: "User 1" }, type: "CREATOR" },
+                レコード番号: { value: "1", type: "RECORD_NUMBER" },
+                更新日時: { value: "2024-01-01T00:00:00Z", type: "UPDATED_TIME" },
+                作成日時: { value: "2024-01-01T00:00:00Z", type: "CREATED_TIME" },
+            } as model_master.SavedFields,
         ];
 
         test("経営指標を統合計算", () => {
+            const mockMonthlyData: monthly.SavedFields = {
+                inside_unit: { value: "3000", type: "NUMBER" },
+                outside_unit: { value: "2500", type: "NUMBER" },
+                $id: { value: "1", type: "ID" },
+                $revision: { value: "1", type: "REVISION" },
+                更新者: { value: { code: "user1", name: "User 1" }, type: "MODIFIER" },
+                作成者: { value: { code: "user1", name: "User 1" }, type: "CREATOR" },
+                レコード番号: { value: "1", type: "RECORD_NUMBER" },
+                更新日時: { value: "2024-01-01T00:00:00Z", type: "UPDATED_TIME" },
+                作成日時: { value: "2024-01-01T00:00:00Z", type: "CREATED_TIME" },
+            } as monthly.SavedFields;
+
             const result = BusinessCalculationService.calculateBusinessMetrics(
                 mockRecord,
-                mockMasterModelData,
-                3000,
-                2500
+                mockMonthlyData
             );
 
             expect(result).toHaveProperty("addedValue");
@@ -216,15 +248,90 @@ describe("BusinessCalculationService", () => {
         });
 
         test("マスタデータがない場合でも計算可能", () => {
+            const mockMonthlyData: monthly.SavedFields = {
+                inside_unit: { value: "3000", type: "NUMBER" },
+                outside_unit: { value: "2500", type: "NUMBER" },
+                $id: { value: "1", type: "ID" },
+                $revision: { value: "1", type: "REVISION" },
+                更新者: { value: { code: "user1", name: "User 1" }, type: "MODIFIER" },
+                作成者: { value: { code: "user1", name: "User 1" }, type: "CREATOR" },
+                レコード番号: { value: "1", type: "RECORD_NUMBER" },
+                更新日時: { value: "2024-01-01T00:00:00Z", type: "UPDATED_TIME" },
+                作成日時: { value: "2024-01-01T00:00:00Z", type: "CREATED_TIME" },
+            } as monthly.SavedFields;
+
             const result = BusinessCalculationService.calculateBusinessMetrics(
                 mockRecord,
-                [],
-                3000,
-                2500
+                mockMonthlyData
             );
 
             expect(result.addedValue.addedValue).toBe(10000); // 直接設定された値
             expect(result.cost.totalCost).toBe(44625);
+        });
+    });
+
+    describe("calculateCumulativeRevenue", () => {
+        test("累積収益分析を計算", () => {
+            const result = BusinessCalculationService.calculateCumulativeRevenue(
+                100000,
+                60000,
+                500000,
+                300000
+            );
+
+            expect(result.cumulativeAddedValue).toBe(600000); // 500000 + 100000
+            expect(result.cumulativeExpenses).toBe(360000); // 300000 + 60000
+            expect(result.cumulativeGrossProfit).toBe(240000); // 600000 - 360000
+            expect(result.cumulativeProfitRate).toBe(40); // (240000 / 600000) * 100
+        });
+
+        test("前日累積がない場合", () => {
+            const result = BusinessCalculationService.calculateCumulativeRevenue(100000, 60000);
+
+            expect(result.cumulativeAddedValue).toBe(100000);
+            expect(result.cumulativeExpenses).toBe(60000);
+            expect(result.cumulativeGrossProfit).toBe(40000);
+            expect(result.cumulativeProfitRate).toBe(40);
+        });
+
+        test("累積付加価値が0の場合は利益率0を返す", () => {
+            const result = BusinessCalculationService.calculateCumulativeRevenue(0, 0, 0, 0);
+
+            expect(result.cumulativeProfitRate).toBe(0);
+        });
+    });
+
+    describe("formatProfitRate", () => {
+        test("利益率をフォーマット", () => {
+            const result = BusinessCalculationService.formatProfitRate(40.123);
+
+            expect(result).toBe("40.12%");
+        });
+
+        test("負の利益率をフォーマット", () => {
+            const result = BusinessCalculationService.formatProfitRate(-50.5);
+
+            expect(result).toBe("-50.50%");
+        });
+    });
+
+    describe("formatAmount", () => {
+        test("金額をフォーマット", () => {
+            const result = BusinessCalculationService.formatAmount(1234567);
+
+            expect(result).toBe("1,234,567");
+        });
+
+        test("負の金額をフォーマット", () => {
+            const result = BusinessCalculationService.formatAmount(-1234567);
+
+            expect(result).toBe("-1,234,567");
+        });
+
+        test("0をフォーマット", () => {
+            const result = BusinessCalculationService.formatAmount(0);
+
+            expect(result).toBe("0");
         });
     });
 });

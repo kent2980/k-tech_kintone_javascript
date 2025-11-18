@@ -15,8 +15,10 @@ export const APP_CONFIG = {
     // キャッシュ設定
     CACHE_DURATION: {
         MASTER_MODEL: 1800000, // 30分（マスタデータは変更頻度低）
-        PL_MONTHLY: 300000, // 5分
-        DAILY_DATA: 60000, // 1分
+        PL_MONTHLY: 1800000, // 30分
+        PL_DAILY: 1800000, // 30分
+        PRODUCTION_REPORT: 1800000, // 30分
+        HOLIDAY: 1800000, // 30分
     },
 
     // デバッグ設定
@@ -41,5 +43,14 @@ export const APP_CONFIG = {
             "sorting recordlist-header-cell-gaia label-13458061 recordlist-header-sortable-gaia",
         RECORDLIST_BODY: "recordlist-body-gaia",
         RECORDLIST_ROW: "recordlist-row-gaia recordlist-row-gaia-hover-highlight",
+    },
+
+    // キャッシュキーのプレフィックス（命名規則を統一）
+    CACHE_KEY_PREFIX: {
+        PL_MONTHLY: "pl-monthly",
+        PL_DAILY: "pl-daily",
+        PRODUCTION_REPORT: "production-report",
+        MASTER_MODEL: "master-model",
+        HOLIDAY: "holiday",
     },
 } as const;

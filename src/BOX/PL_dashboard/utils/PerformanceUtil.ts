@@ -53,14 +53,14 @@ export class PerformanceUtil {
      * @param delay - 遅延時間（ミリ秒）
      * @returns デバウンスされた関数
      */
-    static debounce<T extends (...functionArgs: unknown[]) => unknown>(
+    static debounce<T extends (...args: unknown[]) => unknown>(
         func: T,
         delay: number
-    ): (...functionArgs: Parameters<T>) => void {
+    ): (...args: Parameters<T>) => void {
         let timeoutId: ReturnType<typeof setTimeout>;
-        return (...functionArgs: Parameters<T>) => {
+        return (...args: Parameters<T>) => {
             clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(null, functionArgs), delay);
+            timeoutId = setTimeout(() => func.apply(null, args), delay);
         };
     }
 
@@ -70,14 +70,14 @@ export class PerformanceUtil {
      * @param limit - 実行間隔（ミリ秒）
      * @returns スロットリングされた関数
      */
-    static throttle<T extends (...functionArgs: unknown[]) => unknown>(
+    static throttle<T extends (...args: unknown[]) => unknown>(
         func: T,
         limit: number
-    ): (...functionArgs: Parameters<T>) => void {
+    ): (...args: Parameters<T>) => void {
         let inThrottle = false;
-        return (...functionArgs: Parameters<T>) => {
+        return (...args: Parameters<T>) => {
             if (!inThrottle) {
-                func.apply(null, functionArgs);
+                func.apply(null, args);
                 inThrottle = true;
                 setTimeout(() => (inThrottle = false), limit);
             }
@@ -93,7 +93,7 @@ export class PerformanceUtil {
      */
     static observeViewport(
         element: Element,
-        callback: (observerEntry: IntersectionObserverEntry) => void,
+        callback: (_observerEntry: IntersectionObserverEntry) => void,
         options: IntersectionObserverInit = {}
     ): string {
         const key = `viewport-${Date.now()}-${Math.random()}`;
@@ -178,7 +178,7 @@ export class PerformanceUtil {
      */
     static async processBatches<T, R>(
         data: T[],
-        processor: (processingBatch: T[]) => R[],
+        processor: (batch: T[]) => R[],
         batchSize: number = 100
     ): Promise<R[]> {
         const results: R[] = [];

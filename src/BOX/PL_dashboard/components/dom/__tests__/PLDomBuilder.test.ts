@@ -100,5 +100,74 @@ describe("PLDomBuilder", () => {
             expect(info).toBeNull();
         });
     });
-});
 
+    describe("addOption", () => {
+        test("セレクトボックスにオプションを追加", () => {
+            const select = document.createElement("select");
+            domBuilder.addOption(select, "value1", "Option 1");
+
+            expect(select.options.length).toBe(1);
+            expect(select.options[0].value).toBe("value1");
+            expect(select.options[0].textContent).toBe("Option 1");
+        });
+    });
+
+    describe("createYearSelect", () => {
+        test("年選択セレクトボックスを作成", () => {
+            const select = domBuilder.createYearSelect(5);
+
+            expect(select).toBeInstanceOf(HTMLSelectElement);
+            expect(select.id).toBe("year-select");
+            expect(select.options.length).toBeGreaterThan(5); // デフォルトオプション + 5年
+        });
+    });
+
+    describe("createMonthSelect", () => {
+        test("月選択セレクトボックスを作成", () => {
+            const select = domBuilder.createMonthSelect();
+
+            expect(select).toBeInstanceOf(HTMLSelectElement);
+            expect(select.id).toBe("month-select");
+            expect(select.options.length).toBe(13); // デフォルトオプション + 12ヶ月
+        });
+    });
+
+    describe("createLabel", () => {
+        test("ラベル要素を作成", () => {
+            const label = domBuilder.createLabel("Test Label", "test-id");
+
+            expect(label).toBeInstanceOf(HTMLLabelElement);
+            expect(label.textContent).toBe("Test Label");
+            expect(label.getAttribute("for")).toBe("test-id");
+        });
+    });
+
+    describe("createFilterContainer", () => {
+        test("フィルターコンテナを作成", () => {
+            const container = domBuilder.createFilterContainer();
+
+            expect(container).toBeInstanceOf(HTMLDivElement);
+            expect(container.querySelector("#year-select")).toBeTruthy();
+            expect(container.querySelector("#month-select")).toBeTruthy();
+        });
+    });
+
+    describe("createToggleViewButton", () => {
+        test("ビュー切り替えボタンを作成", () => {
+            const button = domBuilder.createToggleViewButton();
+
+            expect(button).toBeInstanceOf(HTMLButtonElement);
+            expect(button.id).toBeTruthy();
+        });
+    });
+
+    describe("createTabContainer", () => {
+        test("タブコンテナを作成", () => {
+            const result = domBuilder.createTabContainer();
+
+            expect(result.tabContainer).toBeInstanceOf(HTMLDivElement);
+            expect(result.tabButtonsContainer).toBeInstanceOf(HTMLDivElement);
+            expect(result.tabContentsContainer).toBeInstanceOf(HTMLDivElement);
+        });
+    });
+});

@@ -122,8 +122,8 @@ describe("XssProtection", () => {
             const input = "/path/to/page";
             const result = XssProtection.sanitizeUrl(input);
 
-            // 相対URLはそのまま返される（URLオブジェクトの作成に失敗するため）
-            expect(result).toBe("/path/to/page");
+            // 相対URLはベースURLと結合される（Jest環境ではhttps://example.cybozu.comがベースURL）
+            expect(result).toBe("https://example.cybozu.com/path/to/page");
         });
 
         test("空文字列の場合は空文字列を返す", () => {

@@ -1,6 +1,14 @@
+/**
+ * アクティブフィルターの型定義
+ */
+export interface ActiveFilter {
+    year: number;
+    month: number;
+}
+
 export class ActiveFilterStore {
     private static instance: ActiveFilterStore;
-    private activeFilters: Record<string, any> = {};
+    private activeFilters: Partial<ActiveFilter> = {};
 
     private constructor() {}
 
@@ -18,7 +26,7 @@ export class ActiveFilterStore {
         };
     }
 
-    public getFilter(): Record<string, any> {
+    public getFilter(): Partial<ActiveFilter> {
         return this.activeFilters;
     }
 

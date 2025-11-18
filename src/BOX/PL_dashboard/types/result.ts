@@ -56,7 +56,9 @@ export interface Failure {
 
 /**
  * Result型のヘルパー関数
+ * 型名Result<T>と衝突しないように、eslint-disable-next-lineを使用
  */
+// eslint-disable-next-line no-redeclare
 export const Result = {
     /**
      * 成功を表すResultを作成
@@ -113,4 +115,3 @@ export const Result = {
         return result.success === false;
     },
 };
-

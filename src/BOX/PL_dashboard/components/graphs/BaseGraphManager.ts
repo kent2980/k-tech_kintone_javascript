@@ -53,6 +53,7 @@ export abstract class BaseGraphManager {
         padding: string = "20px"
     ): { container: HTMLDivElement; canvas: HTMLCanvasElement } {
         const container = document.createElement("div");
+        container.id = `container-${canvasId}`;
         container.style.width = width;
         container.style.height = height;
         container.style.minHeight = minHeight;
@@ -72,11 +73,7 @@ export abstract class BaseGraphManager {
      * @param chart - Chart.jsインスタンス
      * @param container - コンテナ要素
      */
-    protected registerChart(
-        canvasId: string,
-        chart: Chart,
-        container: HTMLDivElement
-    ): void {
+    protected registerChart(canvasId: string, chart: Chart, container: HTMLDivElement): void {
         const chartInfo: ChartInfo = {
             canvasId,
             chart,
@@ -167,4 +164,3 @@ export abstract class BaseGraphManager {
         this.destroyAllCharts();
     }
 }
-

@@ -80,7 +80,10 @@ export class MemoryLeakDetector {
 
         // DataTablesインスタンスの検出
         try {
+            // jQueryはグローバルに存在する可能性があるため、型アサーションを使用
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (typeof window !== "undefined" && (window as any).jQuery) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const $ = (window as any).jQuery;
                 const tables = $("table").filter(function (this: HTMLElement) {
                     return $.fn.DataTable && $.fn.DataTable.isDataTable(this);
@@ -130,17 +133,17 @@ export class MemoryLeakDetector {
         totalJSHeapSize?: number;
         jsHeapSizeLimit?: number;
     } {
-        if (
-            typeof performance !== "undefined" &&
-            (performance as any).memory
-        ) {
+        // performance.memoryは非標準のプロパティのため、型アサーションを使用
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (typeof performance !== "undefined" && (performance as any).memory) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const memory = (performance as any).memory;
             return {
-                usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-                totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-                jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,
+                usedJSHeapSize: memory.usedJSHeapSize as number,
+                totalJSHeapSize: memory.totalJSHeapSize as number,
+                jsHeapSizeLimit: memory.jsHeapSizeLimit as number,
             };
         }
         return {};
     }
 }
-

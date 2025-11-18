@@ -12,3 +12,26 @@ src/BOX/PL_dashboard/generated/
 
 # test data
 src/BOX/PL_dashboard/__tests__/data
+
+coverage/
+
+docs/
+
+*.log
+
+.DS_Store
+
+*.local
+
+.vscode/
+
+.idea/
+
+*.tmp
+
+*.temp
+
+.eslintrc.js
+
+.prettierignore
+docs/

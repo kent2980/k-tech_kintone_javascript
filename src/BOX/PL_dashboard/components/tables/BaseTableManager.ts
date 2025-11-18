@@ -321,7 +321,9 @@ export abstract class BaseTableManager {
                 this.onDataTableInitialized(tableId);
             };
 
-            const finalOptions: DataTablesOptions & { initComplete?: DataTablesInitCompleteCallback } = {
+            const finalOptions: DataTablesOptions & {
+                initComplete?: DataTablesInitCompleteCallback;
+            } = {
                 ...defaultOptions,
                 ...options,
                 // initCompleteコールバックでDataTables初期化完了後にカスタム処理を実行
@@ -329,6 +331,8 @@ export abstract class BaseTableManager {
             };
 
             // DataTablesを適用
+            // DataTablesの型定義が不完全なため、型アサーションを使用
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const dataTable = $(`#${tableId}`).DataTable(finalOptions as any);
 
             // テーブル情報を更新
@@ -455,19 +459,27 @@ export abstract class BaseTableManager {
                         tbody.innerHTML = "";
                         // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
                         const fragment = document.createDocumentFragment();
-                        (newData as (TableRowData | unknown[])[]).forEach((row: TableRowData | unknown[]) => {
-                            const tr = document.createElement("tr");
-                            tr.className =
-                                "recordlist-row-gaia recordlist-row-gaia-hover-highlight";
-                            if (Array.isArray(row)) {
-                                const cells: HTMLTableCellElement[] = [];
-                                row.forEach((cell: unknown) => {
-                                    cells.push(this.createTableCell(cell));
-                                });
-                                batchAppendCells(tr, cells);
+                        (newData as (TableRowData | unknown[])[]).forEach(
+                            (row: TableRowData | unknown[]) => {
+                                const tr = document.createElement("tr");
+                                tr.className =
+                                    "recordlist-row-gaia recordlist-row-gaia-hover-highlight";
+                                if (Array.isArray(row)) {
+                                    const cells: HTMLTableCellElement[] = [];
+                                    row.forEach((cell: unknown) => {
+                                        // 型ガード: string | number のみ許可
+                                        if (typeof cell === "string" || typeof cell === "number") {
+                                            cells.push(this.createTableCell(cell));
+                                        } else {
+                                            // その他の型の場合は文字列に変換
+                                            cells.push(this.createTableCell(String(cell)));
+                                        }
+                                    });
+                                    batchAppendCells(tr, cells);
+                                }
+                                fragment.appendChild(tr);
                             }
-                            fragment.appendChild(tr);
-                        });
+                        );
                         tbody.appendChild(fragment);
 
                         // テーブル情報を更新

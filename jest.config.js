@@ -23,6 +23,7 @@ module.exports = {
         "!src/BOX/PL_dashboard/fields/**",
         "!src/BOX/PL_dashboard/generated/**",
         "!src/BOX/PL_dashboard/scripts/**",
+        "!src/BOX/PL_dashboard/**/index.ts", // exportのみのファイルを除外
     ],
 
     // カバレッジ出力
@@ -58,6 +59,7 @@ module.exports = {
     // モック設定
     moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
+        "^dompurify$": "<rootDir>/src/BOX/PL_dashboard/__mocks__/dompurify.ts",
     },
 
     // グローバル変数（kintone環境をモック）

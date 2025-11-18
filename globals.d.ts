@@ -15,6 +15,26 @@ declare module "*.min.css";
 declare module "pdfmake/build/pdfmake";
 declare module "pdfmake/build/vfs_fonts";
 
+// DOMPurify modules (テスト環境用)
+declare module "dompurify" {
+    export interface Config {
+        ALLOWED_TAGS?: string[];
+        ALLOWED_ATTR?: string[];
+        ALLOW_DATA_ATTR?: boolean;
+        KEEP_CONTENT?: boolean;
+        [key: string]: unknown;
+    }
+
+    export interface DOMPurify {
+        sanitize(html: string, config?: Config): string;
+        isSupported: boolean;
+        [key: string]: unknown;
+    }
+
+    const DOMPurify: DOMPurify;
+    export default DOMPurify;
+}
+
 // kintone API
 declare namespace kintone {
   namespace app {

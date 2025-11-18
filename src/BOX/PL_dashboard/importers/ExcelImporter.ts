@@ -1,12 +1,23 @@
 import * as XLSX from "xlsx";
-import { FileValidator, FileValidationResult } from "../utils/FileValidator";
 import { Logger } from "../utils";
+import { FileValidationResult, FileValidator } from "../utils/FileValidator";
+
+/**
+ * Excelセルの値の型
+ * XLSXライブラリのセル値の型定義
+ */
+export type ExcelCellValue = string | number | boolean | Date | null | undefined;
 
 /**
  * DataFrameの形式でテーブルデータを格納するインターフェース
  * Pythonの pandas DataFrame に相当する構造
  */
-export interface TableDataFrame<T extends Record<string, string | number | boolean | Date | null> = Record<string, string | number | boolean | Date | null>> {
+export interface TableDataFrame<
+    T extends Record<string, string | number | boolean | Date | null> = Record<
+        string,
+        string | number | boolean | Date | null
+    >,
+> {
     /** カラム名の配列 */
     columns: string[];
     /** レコードの配列（オブジェクト形式） */
@@ -174,7 +185,7 @@ export class ExcelImporter {
      * @param sheetName - シート名（省略時は最初のシート）
      * @returns セルの値
      */
-    getCellValue(cellAddress: string, sheetName?: string): any {
+    getCellValue(cellAddress: string, sheetName?: string): ExcelCellValue {
         const sheet = this.getSheet(sheetName);
         const cell = sheet[cellAddress];
 
@@ -238,13 +249,13 @@ export class ExcelImporter {
      * @param sheetName - シート名
      * @returns 2次元配列
      */
-    getRangeValues(range: string, sheetName?: string): any[][] {
+    getRangeValues(range: string, sheetName?: string): ExcelCellValue[][] {
         const sheet = this.getSheet(sheetName);
         const decodedRange = XLSX.utils.decode_range(range);
-        const result: any[][] = [];
+        const result: ExcelCellValue[][] = [];
 
         for (let row = decodedRange.s.r; row <= decodedRange.e.r; row++) {
-            const rowData: any[] = [];
+            const rowData: ExcelCellValue[] = [];
             for (let col = decodedRange.s.c; col <= decodedRange.e.c; col++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
                 const cell = sheet[cellAddress];
@@ -334,7 +345,7 @@ export class ExcelImporter {
         }
 
         // データ行を読み込んでレコード（オブジェクト形式）に変換
-        const records: Record<string, any>[] = [];
+        const records: Record<string, string | number | boolean | Date | null>[] = [];
         let currentRow = dataStartRow - 1; // 0始まりに変換
 
         while (true) {
@@ -417,7 +428,7 @@ export class ExcelImporter {
                 ? XLSX.utils.decode_col(dataEndColumn)
                 : dataEndColumn - 1;
         const columns: string[] = [];
-        const records: Record<string, any>[] = [];
+        const records: Record<string, string | number | boolean | Date | null>[] = [];
         const startRowIndex = startRow - 1; // 0始まりに変換
         const endRowIndex = endRow - 1; // 0始まりに変換
         // カラム名を取得
@@ -448,7 +459,7 @@ export class ExcelImporter {
             ) {
                 break;
             }
-            const record: Record<string, any> = {};
+            const record: Record<string, string | number | boolean | Date | null> = {};
             let columnIndex = 0;
             for (let row = startRowIndex; row <= endRowIndex; row++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: row, c: column });
@@ -501,12 +512,12 @@ export class ExcelImporter {
      * @param options - 変換オプション
      * @returns JSON配列
      */
-    sheetToJson<T = any>(
+    sheetToJson<T extends Record<string, ExcelCellValue> = Record<string, ExcelCellValue>>(
         sheetName?: string,
         options: {
             header?: number | string[];
             range?: string | number;
-            defval?: any;
+            defval?: ExcelCellValue;
         } = {}
     ): T[] {
         const sheet = this.getSheet(sheetName);

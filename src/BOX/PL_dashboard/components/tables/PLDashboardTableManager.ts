@@ -998,14 +998,20 @@ export class PLDashboardTableManager extends BaseTableManager {
                 }
 
                 // 休日リストをストアから取得
-                const yearMonth: Record<string, any> = ActiveFilterStore.getInstance().getFilter();
-                const holidayList = HolidayStore.getInstance().getSelectHolidayDates(
-                    yearMonth.year,
-                    yearMonth.month
-                );
+                const yearMonth = ActiveFilterStore.getInstance().getFilter();
+                const holidayList =
+                    yearMonth.year && yearMonth.month
+                        ? HolidayStore.getInstance().getSelectHolidayDates(
+                              yearMonth.year,
+                              yearMonth.month
+                          )
+                        : [];
 
                 // 営業日数を計算
-                const totalDaysInMonth = new Date(yearMonth.year, yearMonth.month, 0).getDate();
+                const totalDaysInMonth =
+                    yearMonth.year && yearMonth.month
+                        ? new Date(yearMonth.year, yearMonth.month, 0).getDate()
+                        : 0;
                 const operatingDays = totalDaysInMonth - holidayList.length;
 
                 // 新しい営業日数ラベルを作成

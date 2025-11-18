@@ -1,9 +1,10 @@
 import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import type { ScriptableScaleContext } from "chart.js";
 
 import { HolidayStore } from "../../store";
-import { RevenueAnalysis, ChartTickContext } from "../../types";
-import { DateUtil } from "../../utils";
+import { RevenueAnalysis } from "../../types";
+import { DateUtil, Logger } from "../../utils";
 import { BaseGraphManager } from "./BaseGraphManager";
 
 /**
@@ -139,9 +140,12 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
                                 weight: "normal",
                                 size: 10,
                             },
-                            formatter: (value, context) => {
+                            formatter: (
+                                value: number,
+                                context: { dataset?: { label?: string } }
+                            ): string => {
                                 // 利益率（折れ線グラフ）の場合は%を付ける
-                                if (context.dataset.label === "利益率") {
+                                if (context.dataset?.label === "利益率") {
                                     return value.toFixed(1) + "%";
                                 }
                                 // 金額の場合は桁区切りで表示
@@ -157,7 +161,7 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
                                 maxRotation: 0,
                                 minRotation: 0,
                                 maxTicksLimit: undefined,
-                                color: function (context: ChartTickContext): string {
+                                color: function (context: ScriptableScaleContext): string {
                                     // ラベルのインデックスから対応する日付を取得
                                     const index = context.index;
                                     if (index < RevenueAnalysisList.length) {
@@ -175,7 +179,9 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
                                     return "#333333"; // 通常日: デフォルト色
                                 },
                                 font: {
-                                    weight: function (context: ChartTickContext): string {
+                                    weight: function (
+                                        context: ScriptableScaleContext
+                                    ): "normal" | "bold" | "bolder" | "lighter" | number {
                                         // 休日の場合は太字にする
                                         const index = context.index;
                                         if (index < RevenueAnalysisList.length) {
@@ -268,11 +274,25 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
         const expensesData = RevenueAnalysisList.map((item) => item.CumulativeExpenses);
         const profitRateData = RevenueAnalysisList.map((item) => Number(item.CumulativeProfitRate));
 
-        chart.data.labels = labels as any;
+        // Chart.jsの型定義に合わせて型アサーションを使用
+        // labelsは string[][] または string[] の形式
+        type ChartDataLabels = (string | string[])[];
+        type ChartDataDataset = { data?: number[] };
+        type ChartData = { labels?: ChartDataLabels; datasets?: ChartDataDataset[] };
+        (chart.data as ChartData).labels = labels;
         if (chart.data.datasets && chart.data.datasets.length >= 3) {
-            chart.data.datasets[0].data = addedValueData as any;
-            chart.data.datasets[1].data = expensesData as any;
-            chart.data.datasets[2].data = profitRateData as any;
+            // datasets[0]は累積付加価値（数値配列）
+            if (chart.data.datasets[0]) {
+                (chart.data.datasets[0] as ChartDataDataset).data = addedValueData;
+            }
+            // datasets[1]は累積経費（数値配列）
+            if (chart.data.datasets[1]) {
+                (chart.data.datasets[1] as ChartDataDataset).data = expensesData;
+            }
+            // datasets[2]は累積利益率（数値配列）
+            if (chart.data.datasets[2]) {
+                (chart.data.datasets[2] as ChartDataDataset).data = profitRateData;
+            }
         }
 
         chart.update();

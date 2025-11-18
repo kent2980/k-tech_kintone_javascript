@@ -8,7 +8,7 @@ import {
     UploadCompleteEvent,
     UploadErrorEvent,
 } from "../../types";
-import { DomUtil, ErrorHandler, XssProtection } from "../../utils";
+import { DomUtil, ErrorHandler, Logger, XssProtection } from "../../utils";
 import { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
 import { PLDomBuilder } from "./PLDomBuilder";
 
@@ -213,10 +213,12 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         try {
                             await importer.load(true, 10); // 10MB制限
                         } catch (validationError) {
-                            const errorMessage =
+                            // エラーメッセージはログに記録するが、変数として保持する必要はない
+                            const errorMsg =
                                 validationError instanceof Error
                                     ? validationError.message
                                     : "ファイルの検証に失敗しました";
+                            Logger.error("ファイル検証エラー", { error: errorMsg });
                             ErrorHandler.logError("ファイル検証エラー", validationError, {
                                 method: "savePastData",
                                 fileName: file.name,
@@ -235,10 +237,14 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         const validate = importer.validateFormat();
                         if (!validate.ok) {
                             const errorMessage = validate.messages.join("\n");
-                            ErrorHandler.logError("ファイル形式検証エラー", new Error(errorMessage), {
-                                method: "savePastData",
-                                fileName: file.name,
-                            });
+                            ErrorHandler.logError(
+                                "ファイル形式検証エラー",
+                                new Error(errorMessage),
+                                {
+                                    method: "savePastData",
+                                    fileName: file.name,
+                                }
+                            );
                             const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
                                 new Error(errorMessage),
                                 { method: "savePastData" },

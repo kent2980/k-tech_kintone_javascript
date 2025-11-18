@@ -63,10 +63,7 @@ export class XssProtection {
      * // 結果: "<div>Hello </div>"（scriptタグが削除される）
      * ```
      */
-    static sanitizeHtml(
-        html: string,
-        options?: Config
-    ): string {
+    static sanitizeHtml(html: string, options?: Config): string {
         if (!html) {
             return "";
         }
@@ -177,7 +174,7 @@ export class XssProtection {
             }
 
             return urlObj.href;
-        } catch (error) {
+        } catch {
             // 相対URLの場合はそのまま返す（ただし、javascript:などの危険な文字列はチェック）
             if (url.toLowerCase().startsWith("javascript:")) {
                 Logger.warn("javascript:プロトコルは許可されていません", { url });
@@ -224,13 +221,8 @@ export class XssProtection {
      * @param html - 設定するHTML文字列
      * @param options - DOMPurifyのオプション（オプション）
      */
-    static setInnerHtml(
-        element: HTMLElement,
-        html: string,
-        options?: Config
-    ): void {
+    static setInnerHtml(element: HTMLElement, html: string, options?: Config): void {
         const sanitized = this.sanitizeHtml(html, options);
         element.innerHTML = sanitized;
     }
 }
-
