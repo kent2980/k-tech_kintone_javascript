@@ -2,7 +2,13 @@
 
 import { PLExcelImporter } from "../../importers/index";
 import { KintoneApiService } from "../../services/KintoneApiService";
-import { DomUtil } from "../../utils";
+import {
+    UploadStartEvent,
+    UploadProgressEvent,
+    UploadCompleteEvent,
+    UploadErrorEvent,
+} from "../../types";
+import { DomUtil, ErrorHandler, XssProtection } from "../../utils";
 import { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
 import { PLDomBuilder } from "./PLDomBuilder";
 
@@ -125,7 +131,10 @@ export class PLHeaderContainer extends BaseDomBuilder {
             if (el) return el as HTMLDivElement;
             const overlay = document.createElement("div");
             overlay.id = "upload-progress-overlay";
-            overlay.innerHTML = `
+            // XSS対策: 固定のHTML文字列をサニタイズ（念のため）
+            XssProtection.setInnerHtml(
+                overlay,
+                `
                 <div class="upload-progress-box">
                     <div id="upload-progress-title">アップロード中...</div>
                     <div class="upload-progress-bar-container">
@@ -133,7 +142,8 @@ export class PLHeaderContainer extends BaseDomBuilder {
                     </div>
                     <div id="upload-progress-text" class="upload-progress-text">0 / 0</div>
                 </div>
-            `;
+            `
+            );
             document.body.appendChild(overlay);
             return overlay;
         };
@@ -195,12 +205,46 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         // データ登録中オーバーレイ表示
                         // 注意: このメソッドは静的メソッドのまま（後方互換性のため）
                         PLHeaderContainer.showDataUploadingOverlay(document.body);
+
                         // ファイルを読み込み、データをキントーンに保存
                         const importer = new PLExcelImporter(file);
-                        await importer.load();
+
+                        // ファイル検証を実行（サイズ、拡張子、MIMEタイプ、マジックナンバー）
+                        try {
+                            await importer.load(true, 10); // 10MB制限
+                        } catch (validationError) {
+                            const errorMessage =
+                                validationError instanceof Error
+                                    ? validationError.message
+                                    : "ファイルの検証に失敗しました";
+                            ErrorHandler.logError("ファイル検証エラー", validationError, {
+                                method: "savePastData",
+                                fileName: file.name,
+                                fileSize: file.size,
+                            });
+                            const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+                                validationError,
+                                { method: "savePastData" },
+                                "選択されたファイルが正しい形式ではありません。Excelファイル（.xlsx または .xls）を選択してください。"
+                            );
+                            PLHeaderContainer.showCenteredAlert(userFriendlyMessage);
+                            throw validationError;
+                        }
+
+                        // ファイル形式の検証（シート構造の検証）
                         const validate = importer.validateFormat();
                         if (!validate.ok) {
-                            alert("選択されたファイルの形式が正しくありません。");
+                            const errorMessage = validate.messages.join("\n");
+                            ErrorHandler.logError("ファイル形式検証エラー", new Error(errorMessage), {
+                                method: "savePastData",
+                                fileName: file.name,
+                            });
+                            const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+                                new Error(errorMessage),
+                                { method: "savePastData" },
+                                "選択されたファイルの形式が正しくありません。必要なシートや列が不足しています。"
+                            );
+                            PLHeaderContainer.showCenteredAlert(userFriendlyMessage);
                             throw new Error("Invalid file format");
                         }
                         const monthData = importer.getMonthlyData();
@@ -208,13 +252,13 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         const expenseData = importer.getExpenseCalculationData();
 
                         // progress event handlers
-                        const onStart = (e: any) => {
-                            const total = e?.detail?.totalTasks || 0;
+                        const onStart = (e: UploadStartEvent) => {
+                            const total = e.detail?.totalTasks || 0;
                             showOverlay(total);
                         };
-                        const onProgress = (e: any) => {
-                            const completed = e?.detail?.completed || 0;
-                            const total = e?.detail?.total || 0;
+                        const onProgress = (e: UploadProgressEvent) => {
+                            const completed = e.detail?.completed || 0;
+                            const total = e.detail?.total || 0;
                             updateOverlay(completed, total);
                         };
                         const onComplete = () => {
@@ -230,10 +274,11 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         window.addEventListener("uploadComplete", onComplete as EventListener);
                         window.addEventListener("uploadError", onError as EventListener);
 
+                        const apiService = new KintoneApiService();
                         await Promise.all([
-                            KintoneApiService.savePLMonthlyData(monthData),
-                            KintoneApiService.savePLDailyData(expenseData),
-                            KintoneApiService.saveProductionReportData(productData),
+                            apiService.savePLMonthlyData(monthData),
+                            apiService.savePLDailyData(expenseData),
+                            apiService.saveProductionReportData(productData),
                         ]);
 
                         // イベントリスナーを削除
@@ -250,11 +295,18 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         const resultMsg = `${monthData.year.value}年${monthData.month.value}月のデータ登録が完了しました。`;
                         PLHeaderContainer.showCenteredAlert(resultMsg);
                     } catch (error) {
-                        console.error("過去データの登録が失敗しました。", error);
+                        ErrorHandler.logError("過去データの登録が失敗しました", error, {
+                            method: "savePastData",
+                        });
                         // オーバーレイ非表示
                         PLHeaderContainer.hideDataUploadingOverlay();
                         // エラーメッセージ（中央表示）
-                        PLHeaderContainer.showCenteredAlert("過去データの登録が失敗しました。");
+                        const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+                            error,
+                            { method: "savePastData" },
+                            "過去データの登録が失敗しました。しばらく待ってから再度お試しください。"
+                        );
+                        PLHeaderContainer.showCenteredAlert(userFriendlyMessage);
                     } finally {
                         // ボタンの状態をリセット
                         button.disabled = false;

@@ -72,7 +72,7 @@ export class PLExcelImporter extends ExcelImporter {
         endColumn: string | number = "P",
         headerRow: number = 3,
         dataStartRow: number = 4
-    ): Record<string, any>[] {
+    ): ExcelRecord[] {
         if (!this.hasSheet(sheetName)) {
             throw new Error(`シート "${sheetName}" が見つかりません`);
         }
@@ -91,9 +91,9 @@ export class PLExcelImporter extends ExcelImporter {
         // itemsのキーをコンソールに出力
         console.log("生産実績データのキー一覧:", Object.keys(items[0] || {}));
 
-        const records: Record<string, any>[] = [];
+        const records: ExcelRecord[] = [];
         items.forEach((item) => {
-            const newItem: Record<string, any> = {
+            const newItem: ExcelRecord = {
                 date: {
                     value: dayjs(item["日付\r\n(生産日）"]).format("YYYY-MM-DD"),
                 },
@@ -136,7 +136,7 @@ export class PLExcelImporter extends ExcelImporter {
         dataEndColumn: string | number = "AK",
         startRow: number = 26,
         endRow: number = 66
-    ): Record<string, any>[] {
+    ): ExcelRecord[] {
         if (!this.hasSheet(sheetName)) {
             throw new Error(`シート "${sheetName}" が見つかりません`);
         }
@@ -154,7 +154,7 @@ export class PLExcelImporter extends ExcelImporter {
         // カラム名をマッピングして可読性を向上
         this.renameExpenseColumns(record);
 
-        const items: Record<string, any>[] = [];
+        const items: ExcelRecord[] = [];
 
         record.records.forEach((item, index) => {
             const dateValue = item["日付"];
@@ -166,7 +166,7 @@ export class PLExcelImporter extends ExcelImporter {
             }
 
             if (formattedDate === "") return;
-            const newItem: Record<string, any> = {
+            const newItem: ExcelRecord = {
                 date: { value: formattedDate },
                 indirect_material_costs: {
                     value: (item["間接材料費"] || 0).toString(),
@@ -230,7 +230,7 @@ export class PLExcelImporter extends ExcelImporter {
     getMonthlyData(
         sheetName1: string = "生産履歴（Assy）",
         sheetName2: string = "ＰＬ (日毎) (計画反映版)"
-    ): Record<string, any> {
+    ): ExcelRecord {
         // シートの存在確認
         if (!this.hasSheet(sheetName1)) {
             throw new Error(`シート "${sheetName1}" が見つかりません`);
@@ -397,7 +397,7 @@ export class PLExcelImporter extends ExcelImporter {
      * 元のカラム名（Column_XX形式）から日本語名に変換
      * @param records - 変換対象のレコード配列
      */
-    private renameExpenseColumns(record: TableDataFrame<Record<string, any>>): void {
+    private renameExpenseColumns(record: TableDataFrame<ExcelRecord>): void {
         // カラムマッピング定義
         const columnMapping: Record<string, string> = {
             Column_31: "派遣社員経費",

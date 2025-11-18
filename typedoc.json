@@ -1,0 +1,56 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/BOX/PL_dashboard/services",
+    "src/BOX/PL_dashboard/components",
+    "src/BOX/PL_dashboard/utils",
+    "src/BOX/PL_dashboard/store",
+    "src/BOX/PL_dashboard/types"
+  ],
+  "out": "docs/api",
+  "theme": "default",
+  "name": "PL Dashboard API リファレンス",
+  "includeVersion": true,
+  "readme": "src/BOX/PL_dashboard/README.md",
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "excludeExternals": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Services",
+    "Components",
+    "Utils",
+    "Store",
+    "Types",
+    "*"
+  ],
+  "sort": [
+    "source-order"
+  ],
+  "kindSortOrder": [
+    "Project",
+    "Module",
+    "Namespace",
+    "Enum",
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Constructor",
+    "Property",
+    "Method",
+    "Function",
+    "Accessor",
+    "Variable"
+  ],
+  "gitRevision": "main",
+  "gitRemote": "origin",
+  "validation": {
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "logLevel": "Warn",
+  "plugin": [],
+  "skipErrorChecking": true
+}
+

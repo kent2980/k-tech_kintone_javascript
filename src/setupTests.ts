@@ -1,30 +1,37 @@
-// Jest 初期化: テスト環境で必要なグローバルを設定します
-// kintone の簡易モック
-(global as any).kintone = {};
+/**
+ * Jest テスト環境のセットアップ
+ * kintone、jQuery、Chart.jsなどのモックを設定
+ */
 
-// 最低限の jQuery スタブを用意（モジュールが存在すればそれを使用）
-try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const jq = require("jquery");
-    (global as any).$ = jq;
-    (global as any).jQuery = jq;
-} catch (e) {
-    const jqStub: any = function () {
-        return { length: 0 };
-    };
-    jqStub.fn = {};
-    jqStub.fn.DataTable = function () {
-        return {
-            clear: () => {},
-            rows: { add: () => {} },
-            draw: () => {},
-        };
-    };
-    (global as any).$ = jqStub;
-    (global as any).jQuery = jqStub;
+import { mockKintone, mockJQuery, mockChart, mockDOMPurify } from "./BOX/PL_dashboard/__mocks__/setup";
+
+// kintoneモックを設定
+(global as any).kintone = mockKintone;
+if (typeof window !== "undefined") {
+    (window as any).kintone = mockKintone;
 }
 
-// グローバルログの抑制
-(global as any).console = global.console;
+// jQueryモックを設定
+(global as any).$ = mockJQuery;
+(global as any).jQuery = mockJQuery;
+if (typeof window !== "undefined") {
+    (window as any).$ = mockJQuery;
+    (window as any).jQuery = mockJQuery;
+}
+
+// Chart.jsモックを設定
+(global as any).Chart = mockChart;
+if (typeof window !== "undefined") {
+    (window as any).Chart = mockChart;
+}
+
+// DOMPurifyモックを設定
+(global as any).DOMPurify = mockDOMPurify;
+if (typeof window !== "undefined") {
+    (window as any).DOMPurify = mockDOMPurify;
+}
+
+// グローバルログの抑制（必要に応じて）
+// (global as any).console = global.console;
 
 export {};

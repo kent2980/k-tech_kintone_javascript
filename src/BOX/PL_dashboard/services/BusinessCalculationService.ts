@@ -11,6 +11,8 @@ import { Logger } from "../utils/Logger";
 
 /**
  * 付加価値計算結果
+ *
+ * @category Services
  */
 export interface AddedValueResult {
     /** 付加価値 */
@@ -23,6 +25,8 @@ export interface AddedValueResult {
 
 /**
  * 工数・コスト計算結果
+ *
+ * @category Services
  */
 export interface CostCalculationResult {
     /** 社員工数 */
@@ -47,6 +51,8 @@ export interface CostCalculationResult {
 
 /**
  * 利益計算結果
+ *
+ * @category Services
  */
 export interface ProfitCalculationResult {
     /** 粗利益 */
@@ -59,6 +65,8 @@ export interface ProfitCalculationResult {
 
 /**
  * 完全な経営指標計算結果
+ *
+ * @category Services
  */
 export interface BusinessMetrics {
     /** 付加価値計算結果 */
@@ -71,6 +79,26 @@ export interface BusinessMetrics {
 
 /**
  * 経営計算サービスクラス
+ *
+ * @remarks
+ * このクラスは経営指標の計算を担当し、以下の機能を提供します：
+ * - 付加価値の計算（calculateAddedValue）
+ * - 工数・コストの計算（calculateCosts）
+ * - 利益の計算（calculateProfit）
+ * - 経営指標の統合計算（calculateBusinessMetrics）
+ *
+ * @example
+ * ```typescript
+ * const metrics = BusinessCalculationService.calculateBusinessMetrics(
+ *   record,
+ *   masterModelData,
+ *   insideUnit,
+ *   outsideUnit
+ * );
+ * console.log(metrics.profit.grossProfit);
+ * ```
+ *
+ * @category Services
  */
 export class BusinessCalculationService {
     /** 残業時間の割増率 */
@@ -78,9 +106,27 @@ export class BusinessCalculationService {
 
     /**
      * 付加価値を計算する
-     * @param record - 日次レコード
-     * @param masterModelData - マスタ機種データ
-     * @returns 付加価値計算結果
+     *
+     * @param record - 日次レコード（line_daily.SavedFields）
+     * @param masterModelData - マスタ機種データの配列
+     * @returns 付加価値計算結果（AddedValueResult）
+     *
+     * @remarks
+     * - レコードに直接付加価値が設定されている場合は、その値を使用します
+     * - 直接付加価値が設定されていない場合は、マスタデータから機種を検索して計算します
+     * - 機種名と機種コードでマッチングを行います（機種コードが空の場合は機種名のみでマッチング）
+     * - マッチする機種が見つからない場合は、付加価値0を返します
+     *
+     * @example
+     * ```typescript
+     * const result = BusinessCalculationService.calculateAddedValue(record, masterModelData);
+     * if (result.calculationMethod === "direct") {
+     *   console.log("直接設定された付加価値:", result.addedValue);
+     * } else {
+     *   console.log("マスタから計算された付加価値:", result.addedValue);
+     *   console.log("マッチした機種:", result.matchedModel);
+     * }
+     * ```
      */
     static calculateAddedValue(
         record: line_daily.SavedFields,
@@ -142,10 +188,28 @@ export class BusinessCalculationService {
 
     /**
      * 工数・コストを計算する
-     * @param record - 日次レコード
-     * @param insideUnit - 社員単価
-     * @param outsideUnit - 派遣単価
-     * @returns コスト計算結果
+     *
+     * @param record - 日次レコード（line_daily.SavedFields）
+     * @param insideUnit - 社員単価（1時間あたり）
+     * @param outsideUnit - 派遣単価（1時間あたり）
+     * @returns コスト計算結果（CostCalculationResult）
+     *
+     * @remarks
+     * - 基本工数（社員・派遣）と残業工数を取得し、それぞれのコストを計算します
+     * - 残業工数には1.25倍の割増率が適用されます
+     * - 経費合計は全てのコストの合計値です
+     *
+     * @example
+     * ```typescript
+     * const costResult = BusinessCalculationService.calculateCosts(
+     *   record,
+     *   3000, // 社員単価
+     *   2500  // 派遣単価
+     * );
+     * console.log("総コスト:", costResult.totalCost);
+     * console.log("社員コスト:", costResult.insideCost);
+     * console.log("派遣コスト:", costResult.outsideCost);
+     * ```
      */
     static calculateCosts(
         record: line_daily.SavedFields,

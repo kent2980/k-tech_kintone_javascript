@@ -23,6 +23,7 @@ import {
 } from "../../types";
 import { TableRowData } from "../../types/table";
 import { DateUtil, Logger } from "../../utils";
+import { batchAppendCells, batchAppendRows } from "../../utils/DomBatchUpdater";
 import { BaseTableManager } from "./BaseTableManager";
 
 /**
@@ -177,15 +178,20 @@ export class PLDashboardTableManager extends BaseTableManager {
         const holidayStore = HolidayStore.getInstance();
         const holidayData = holidayStore.getHolidayData();
 
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        const rows: HTMLTableRowElement[] = [];
         tableData.forEach((cells, index) => {
             const record = records[index];
             const row = document.createElement("tr");
             row.className = "recordlist-row-gaia recordlist-row-gaia-hover-highlight";
 
+            const tableCells: HTMLTableCellElement[] = [];
             cells.forEach((cellValue) => {
-                const td = this.createTableCell(cellValue ?? "");
-                row.appendChild(td);
+                tableCells.push(this.createTableCell(cellValue ?? ""));
             });
+
+            // セルを一括追加
+            batchAppendCells(row, tableCells);
 
             // 休日色分けを適用
             const backgroundColor = this.getDateBackgroundColor(
@@ -196,8 +202,11 @@ export class PLDashboardTableManager extends BaseTableManager {
                 row.style.backgroundColor = backgroundColor;
             }
 
-            tbody.appendChild(row);
+            rows.push(row);
         });
+
+        // 行を一括追加
+        batchAppendRows(tbody, rows);
 
         table.appendChild(tbody);
         container.appendChild(table);
@@ -431,6 +440,8 @@ export class PLDashboardTableManager extends BaseTableManager {
         const thead = document.createElement("thead");
         thead.className = "pl-table-thead-sticky";
         const headerRow = document.createElement("tr");
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        const fragment = document.createDocumentFragment();
         columns.forEach((column, index) => {
             const th = document.createElement("th");
             th.textContent = column;
@@ -444,8 +455,9 @@ export class PLDashboardTableManager extends BaseTableManager {
                     "pl-table-th-compact sorting recordlist-header-cell-gaia label-13458061 recordlist-header-sortable-gaia";
             }
 
-            headerRow.appendChild(th);
+            fragment.appendChild(th);
         });
+        headerRow.appendChild(fragment);
         thead.appendChild(headerRow);
         table.appendChild(thead);
 
@@ -459,12 +471,15 @@ export class PLDashboardTableManager extends BaseTableManager {
         // 日付リストを取得
         const dateList = getDateList();
 
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        const rows: HTMLTableRowElement[] = [];
         tableData.forEach((cellValues, index) => {
             const date = dateList[index];
             const totals = getTotalsByDate(date);
             const row = document.createElement("tr");
             row.className = "recordlist-row-gaia recordlist-row-gaia-hover-highlight";
 
+            const cells: HTMLTableCellElement[] = [];
             cellValues.forEach((cellValue, cellIndex) => {
                 const td = document.createElement("td");
                 td.textContent = String(cellValue);
@@ -482,11 +497,16 @@ export class PLDashboardTableManager extends BaseTableManager {
                     td.style.backgroundColor = backgroundColor;
                 }
 
-                row.appendChild(td);
+                cells.push(td);
             });
 
-            tbody.appendChild(row);
+            // セルを一括追加
+            batchAppendCells(row, cells);
+            rows.push(row);
         });
+
+        // 行を一括追加
+        batchAppendRows(tbody, rows);
 
         table.appendChild(tbody);
         container.appendChild(table);
@@ -667,6 +687,8 @@ export class PLDashboardTableManager extends BaseTableManager {
         const holidayStore = HolidayStore.getInstance();
         const holidayData = holidayStore.getHolidayData();
 
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        const rows: HTMLTableRowElement[] = [];
         tableData.forEach((cells, index) => {
             const item = RevenueAnalysisList[index];
             const row = document.createElement("tr");
@@ -675,6 +697,7 @@ export class PLDashboardTableManager extends BaseTableManager {
             // 日付に応じた背景色を取得
             const backgroundColor = this.getDateBackgroundColor(item.date, holidayData);
 
+            const tableCells: HTMLTableCellElement[] = [];
             cells.forEach((cellValue, cellIndex) => {
                 const td = document.createElement("td");
                 // 利益率列のみパーセンテージ表示に変換
@@ -697,11 +720,16 @@ export class PLDashboardTableManager extends BaseTableManager {
                     td.style.backgroundColor = backgroundColor;
                 }
 
-                row.appendChild(td);
+                tableCells.push(td);
             });
 
-            tbody.appendChild(row);
+            // セルを一括追加
+            batchAppendCells(row, tableCells);
+            rows.push(row);
         });
+
+        // 行を一括追加
+        batchAppendRows(tbody, rows);
 
         table.appendChild(tbody);
         container.appendChild(table);

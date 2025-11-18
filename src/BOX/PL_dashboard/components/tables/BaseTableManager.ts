@@ -1,8 +1,14 @@
 /// <reference path="../../../../../kintone.d.ts" />
 /// <reference path="../../../../../globals.d.ts" />
 
-import { DataTablesApi, DataTablesOptions, TableBuilderConfig, TableRowData } from "../../types";
-import { Logger } from "../../utils";
+import {
+    DataTablesApi,
+    DataTablesOptions,
+    DataTablesInitCompleteCallback,
+    TableBuilderConfig,
+    TableRowData,
+} from "../../types";
+import { Logger, batchAppendCells, batchAppendRows } from "../../utils";
 
 // jQueryを最初にインポート（DataTablesが依存するため）
 import $ from "jquery";
@@ -23,6 +29,8 @@ import "datatables.net-buttons/js/buttons.print.min.js";
 
 /**
  * テーブル情報を管理するインターフェース
+ *
+ * @category Components
  */
 export interface TableInfo {
     /** テーブルID */
@@ -98,14 +106,16 @@ export abstract class BaseTableManager {
         thead.className = "pl-table-thead-sticky";
 
         const headerRow = document.createElement("tr");
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        const fragment = document.createDocumentFragment();
         columns.forEach((column) => {
             const th = document.createElement("th");
             th.textContent = column;
             th.className =
                 "pl-table-th-standard sorting recordlist-header-cell-gaia label-13458061 recordlist-header-sortable-gaia";
-            headerRow.appendChild(th);
+            fragment.appendChild(th);
         });
-
+        headerRow.appendChild(fragment);
         thead.appendChild(headerRow);
         return thead;
     }
@@ -154,9 +164,8 @@ export abstract class BaseTableManager {
             row.className = className;
         }
 
-        cells.forEach((cell) => {
-            row.appendChild(cell);
-        });
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        batchAppendCells(row, cells);
 
         return row;
     }
@@ -304,21 +313,23 @@ export abstract class BaseTableManager {
             };
 
             // オプションをマージして、initCompleteコールバックを追加
-            const finalOptions = {
+            const initCompleteCallback: DataTablesInitCompleteCallback = (settings, json) => {
+                // カスタムスタイルを適用
+                this.applyCustomTableStyles(tableId);
+
+                // サブクラスで実装される追加処理を呼び出す
+                this.onDataTableInitialized(tableId);
+            };
+
+            const finalOptions: DataTablesOptions & { initComplete?: DataTablesInitCompleteCallback } = {
                 ...defaultOptions,
                 ...options,
                 // initCompleteコールバックでDataTables初期化完了後にカスタム処理を実行
-                initComplete: (settings: any, json: any) => {
-                    // カスタムスタイルを適用
-                    this.applyCustomTableStyles(tableId);
-
-                    // サブクラスで実装される追加処理を呼び出す
-                    this.onDataTableInitialized(tableId);
-                },
+                initComplete: initCompleteCallback,
             };
 
             // DataTablesを適用
-            const dataTable = $(`#${tableId}`).DataTable(finalOptions);
+            const dataTable = $(`#${tableId}`).DataTable(finalOptions as any);
 
             // テーブル情報を更新
             const tableInfo = this.tables.get(tableId);
@@ -359,14 +370,35 @@ export abstract class BaseTableManager {
             if (tableInfo.dataTableInstance && this.isDataTablesAvailable()) {
                 const table = $(`#${tableId}`);
                 if (table.length && $.fn.DataTable.isDataTable(table)) {
-                    table.DataTable().destroy();
+                    const dataTable = table.DataTable();
+
+                    // ボタンインスタンスを破棄（DataTables Buttons拡張が有効な場合）
+                    try {
+                        if (dataTable.buttons && typeof dataTable.buttons === "function") {
+                            const buttons = dataTable.buttons();
+                            if (buttons && typeof buttons.destroy === "function") {
+                                buttons.destroy();
+                            }
+                        }
+                    } catch (buttonError) {
+                        Logger.debug(`DataTableボタン破棄でエラー: ${buttonError}`);
+                    }
+
+                    // DataTablesインスタンスを破棄
+                    dataTable.destroy(true); // true = DOM要素も削除
                     Logger.debug(`DataTable ${tableId} を破棄しました`);
                 }
             }
 
-            // DOM要素を削除
+            // DOM要素を削除（DataTables.destroy(true)で削除されていない場合のフォールバック）
             if (tableInfo.containerElement && tableInfo.containerElement.parentNode) {
                 tableInfo.containerElement.parentNode.removeChild(tableInfo.containerElement);
+            } else if (tableInfo.tableElement && tableInfo.tableElement.parentNode) {
+                // テーブル要素のみが残っている場合
+                const tableElement = tableInfo.tableElement;
+                if (tableElement.parentNode) {
+                    tableElement.parentNode.removeChild(tableElement);
+                }
             }
 
             // テーブル情報を削除
@@ -421,18 +453,22 @@ export abstract class BaseTableManager {
                     const tbody = tableInfo.tableElement.querySelector("tbody");
                     if (tbody) {
                         tbody.innerHTML = "";
-                        newData.forEach((row: any) => {
+                        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+                        const fragment = document.createDocumentFragment();
+                        (newData as (TableRowData | unknown[])[]).forEach((row: TableRowData | unknown[]) => {
                             const tr = document.createElement("tr");
                             tr.className =
                                 "recordlist-row-gaia recordlist-row-gaia-hover-highlight";
                             if (Array.isArray(row)) {
-                                row.forEach((cell: any) => {
-                                    const td = this.createTableCell(cell);
-                                    tr.appendChild(td);
+                                const cells: HTMLTableCellElement[] = [];
+                                row.forEach((cell: unknown) => {
+                                    cells.push(this.createTableCell(cell));
                                 });
+                                batchAppendCells(tr, cells);
                             }
-                            tbody.appendChild(tr);
+                            fragment.appendChild(tr);
                         });
+                        tbody.appendChild(fragment);
 
                         // テーブル情報を更新
                         tableInfo.data = newData as TableRowData[];
@@ -501,6 +537,8 @@ export abstract class BaseTableManager {
         // 各色分けアイテムを作成（サブクラスでオーバーライド可能）
         const legendItems = this.getColorLegendItems();
 
+        // DocumentFragmentを使用してバッチ追加（パフォーマンス最適化）
+        const fragment = document.createDocumentFragment();
         legendItems.forEach((item) => {
             const legendItem = document.createElement("div");
             legendItem.className = "color-legend-item";
@@ -513,8 +551,9 @@ export abstract class BaseTableManager {
 
             legendItem.appendChild(colorBox);
             legendItem.appendChild(label);
-            legend.appendChild(legendItem);
+            fragment.appendChild(legendItem);
         });
+        legend.appendChild(fragment);
 
         return legend;
     }

@@ -4,8 +4,25 @@ import { DataTablesOptions } from "./dataTables";
  * テーブル関連の型定義
  */
 
+/**
+ * テーブルセルの値
+ *
+ * @category Types
+ */
 export type TableCellValue = string | number | null;
+
+/**
+ * テーブル行データ
+ *
+ * @category Types
+ */
 export type TableRowData = TableCellValue[];
+
+/**
+ * テーブルデータ
+ *
+ * @category Types
+ */
 export type TableData = TableRowData[];
 
 export interface TableOptions {
@@ -16,6 +33,8 @@ export interface TableOptions {
 
 /**
  * テーブルビルダーの設定オプション
+ *
+ * @category Types
  */
 export interface TableBuilderConfig {
     /** 固定ヘッダーを有効にするか */

@@ -2,7 +2,7 @@ import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import { HolidayStore } from "../../store";
-import { RevenueAnalysis } from "../../types";
+import { RevenueAnalysis, ChartTickContext } from "../../types";
 import { DateUtil } from "../../utils";
 import { BaseGraphManager } from "./BaseGraphManager";
 
@@ -157,7 +157,7 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
                                 maxRotation: 0,
                                 minRotation: 0,
                                 maxTicksLimit: undefined,
-                                color: function (context: any) {
+                                color: function (context: ChartTickContext): string {
                                     // ラベルのインデックスから対応する日付を取得
                                     const index = context.index;
                                     if (index < RevenueAnalysisList.length) {
@@ -175,7 +175,7 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
                                     return "#333333"; // 通常日: デフォルト色
                                 },
                                 font: {
-                                    weight: function (context: any) {
+                                    weight: function (context: ChartTickContext): string {
                                         // 休日の場合は太字にする
                                         const index = context.index;
                                         if (index < RevenueAnalysisList.length) {
@@ -240,9 +240,20 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
      */
     public updateMixedChart(canvasId: string, RevenueAnalysisList: RevenueAnalysis[]): void {
         const chartInfo = this.getChartInfo(canvasId);
-        if (!chartInfo) return;
+        if (!chartInfo) {
+            // チャートが存在しない場合は新規作成
+            Logger.debug(`チャート ${canvasId} が存在しないため、新規作成します`);
+            return;
+        }
 
         const chart = chartInfo.chart;
+
+        // チャートが破棄されている場合は再作成
+        if (!chart || chart.ctx === null) {
+            Logger.debug(`チャート ${canvasId} が破棄されているため、再作成します`);
+            this.destroyChart(canvasId);
+            return;
+        }
 
         const labels = RevenueAnalysisList.map((item) => {
             const dateObj = new Date(item.date);

@@ -1,16 +1,52 @@
+import { HolidayStore } from "../store";
 import { ProductHistoryData, TotalsByDate } from "../types";
-import { CalculationUtil, Logger } from "../utils";
+import { CalculationUtil, DateUtil, Logger } from "../utils";
 
 /// <reference path="../fields/daily_fields.d.ts" />
 /// <reference path="../fields/line_daily_fields.d.ts" />
 /// <reference path="../fields/model_master_fields.d.ts" />
+/// <reference path="../fields/holiday_fields.d.ts" />
 
 /**
  * データ処理・計算を担当するサービスクラス
+ *
+ * @remarks
+ * このクラスはデータの集計・変換を担当し、以下の機能を提供します：
+ * - 日付別合計値の計算（getTotalsByDate）
+ * - 日付リストの生成（getDateList）
+ * - 製品履歴データの処理
+ *
+ * @example
+ * ```typescript
+ * const totals = DataProcessor.getTotalsByDate(productHistoryData, "2024-01-01");
+ * const dateList = DataProcessor.getDateList(productHistoryData, "2024", "01");
+ * ```
+ *
+ * @category Services
  */
 export class DataProcessor {
     /**
-     * 製品履歴データから日付別の合計値を計算する
+     * 休日タイプコードを取得する
+     * @param date - 対象日付
+     * @returns 休日タイプコード（0: 平日, -1: 法定休日, -2: 所定休日）
+     */
+    private static getHolidayTypeCode(date: string): number {
+        const holidayStore = HolidayStore.getInstance();
+        const holidayData = holidayStore.getHolidayData();
+        const holidayRecord = holidayData.find((item) => item.date?.value === date);
+        if (!holidayRecord) {
+            return 0; // 平日
+        } else if (holidayRecord.holiday_type?.value === "法定休日") {
+            return -1; // 法定休日
+        } else if (holidayRecord.holiday_type?.value === "所定休日") {
+            return -2; // 所定休日
+        } else {
+            return 0; // 平日
+        }
+    }
+
+    /**
+     * 製品履歴データから日付別の合計値を計算する（休日タイプ処理を含む）
      * @param productHistoryData - 製品履歴データ
      * @param date - 対象日付
      * @returns 日付別合計値
@@ -22,15 +58,35 @@ export class DataProcessor {
         let totalGrossProfit = 0;
         let totalInsideOvertime = 0;
         let totalOutsideOvertime = 0;
+        let totalInsideHolidayOvertime = 0;
+        let totalOutsideHolidayOvertime = 0;
+
+        const holidayTypeCode = this.getHolidayTypeCode(date);
 
         productHistoryData?.forEach((item) => {
             if (item.date === date) {
+                // 各種合計値を加算
                 totalActualNumber += CalculationUtil.safeNumber(item.actual_number);
                 totalAddedValue += CalculationUtil.safeNumber(item.addedValue);
                 totalCost += CalculationUtil.safeNumber(item.totalCost);
                 totalGrossProfit += CalculationUtil.safeNumber(item.grossProfit);
-                totalInsideOvertime += CalculationUtil.safeNumber(item.insideOvertime);
-                totalOutsideOvertime += CalculationUtil.safeNumber(item.outsideOvertime);
+
+                // 休日タイプに応じて残業時間を分類
+                if (holidayTypeCode === 0) {
+                    // 平日の場合
+                    totalInsideOvertime += CalculationUtil.safeNumber(item.insideOvertime);
+                    totalOutsideOvertime += CalculationUtil.safeNumber(item.outsideOvertime);
+                } else if (holidayTypeCode === -1 || holidayTypeCode === -2) {
+                    // 法定休日または所定休日の場合
+                    totalInsideHolidayOvertime += CalculationUtil.safeNumber(
+                        item.insideRegularTime
+                    );
+                    totalInsideHolidayOvertime += CalculationUtil.safeNumber(item.insideOvertime);
+                    totalOutsideHolidayOvertime += CalculationUtil.safeNumber(item.outsideOvertime);
+                    totalOutsideHolidayOvertime += CalculationUtil.safeNumber(
+                        item.outsideRegularTime
+                    );
+                }
             }
         });
 
@@ -39,7 +95,11 @@ export class DataProcessor {
         totalCost = CalculationUtil.divideByThousand(totalCost);
         totalGrossProfit = CalculationUtil.divideByThousand(totalGrossProfit);
 
-        const profitRate = CalculationUtil.calculateProfitRate(totalGrossProfit, totalCost);
+        // 利益率を計算（totalCost > 0の場合）
+        const profitRate =
+            totalCost > 0
+                ? Number(((totalGrossProfit / totalCost) * 100).toFixed(2))
+                : CalculationUtil.calculateProfitRate(totalGrossProfit, totalCost);
 
         return {
             date,
@@ -50,17 +110,29 @@ export class DataProcessor {
             profitRate,
             totalInsideOvertime,
             totalOutsideOvertime,
-            totalInsideHolidayOvertime: 0,
-            totalOutsideHolidayOvertime: 0,
+            totalInsideHolidayOvertime,
+            totalOutsideHolidayOvertime,
         };
     }
 
     /**
      * 製品履歴データから日付リストを取得する
      * @param productHistoryData - 製品履歴データ
+     * @param year - 年（オプション、指定された場合は完全な日付リストを生成）
+     * @param month - 月（オプション、指定された場合は完全な日付リストを生成）
      * @returns 一意な日付のリスト
      */
-    static getDateList(productHistoryData: ProductHistoryData[]): string[] {
+    static getDateList(
+        productHistoryData: ProductHistoryData[],
+        year?: string,
+        month?: string
+    ): string[] {
+        // 年月が指定されている場合は完全な日付リストを生成
+        if (year && month) {
+            return DateUtil.generateMonthlyDateList(year, month);
+        }
+
+        // フォールバック: 元データから日付を取得
         const dateSet = new Set<string>();
         productHistoryData?.forEach((item) => {
             dateSet.add(item.date);

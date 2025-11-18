@@ -6,6 +6,11 @@
 // 基本的な型定義
 // =======================================================================
 
+/**
+ * 製品履歴データ
+ *
+ * @category Types
+ */
 export interface ProductHistoryData {
     /** 日付 */
     date: string;
@@ -31,6 +36,11 @@ export interface ProductHistoryData {
     outsideRegularTime: string;
 }
 
+/**
+ * 日付別合計値
+ *
+ * @category Types
+ */
 export interface TotalsByDate {
     /** 日付 */
     date: string;
@@ -54,6 +64,11 @@ export interface TotalsByDate {
     totalOutsideHolidayOvertime: number;
 }
 
+/**
+ * 収益分析データ
+ *
+ * @category Types
+ */
 export interface RevenueAnalysis {
     /** 日付 */
     date: string;
@@ -75,6 +90,11 @@ export interface RevenueAnalysis {
     CumulativeProfitRate: string | number;
 }
 
+/**
+ * タブコンテナの結果
+ *
+ * @category Types
+ */
 export interface TabContainerResult {
     tabContainer: HTMLDivElement;
     tabButtonsContainer: HTMLDivElement;
@@ -87,7 +107,11 @@ export interface ApiResponse<T> {
     totalCount?: number;
 }
 
-// フィルター設定型
+/**
+ * フィルター設定
+ *
+ * @category Types
+ */
 export interface FilterConfig {
     year: string | null;
     month: string | null;
@@ -206,6 +230,49 @@ export interface PerformanceMetrics {
 export type EventHandler<T = Event> = (event: T) => void;
 export type AsyncEventHandler<T = Event> = (event: T) => Promise<void>;
 
+// CustomEvent detail型定義
+export interface UploadStartEventDetail {
+    appId?: number;
+    action?: string;
+    totalTasks: number;
+}
+
+export interface UploadProgressEventDetail {
+    appId?: number;
+    action?: string;
+    completed: number;
+    total: number;
+}
+
+export interface UploadCompleteEventDetail {
+    appId?: number;
+    action?: string;
+    totalTasks: number;
+}
+
+export interface UploadErrorEventDetail {
+    appId?: number;
+    action?: string;
+    error: Error | string;
+}
+
+// CustomEvent型定義
+export interface UploadStartEvent extends CustomEvent {
+    detail: UploadStartEventDetail;
+}
+
+export interface UploadProgressEvent extends CustomEvent {
+    detail: UploadProgressEventDetail;
+}
+
+export interface UploadCompleteEvent extends CustomEvent {
+    detail: UploadCompleteEventDetail;
+}
+
+export interface UploadErrorEvent extends CustomEvent {
+    detail: UploadErrorEventDetail;
+}
+
 // データ変換関数型
 export type DataTransformer<TInput, TOutput> = (input: TInput) => TOutput;
 export type AsyncDataTransformer<TInput, TOutput> = (input: TInput) => Promise<TOutput>;
@@ -232,9 +299,52 @@ export interface HookResult<T> {
 }
 
 // =======================================================================
+// Excelインポーター用の型定義
+// =======================================================================
+
+// Excelレコードの基本型（動的なキーを持つ）
+export type ExcelRecord = Record<string, string | number | boolean | Date | null>;
+
+// Excelデータフレームの型定義
+export interface ExcelDataFrame<T extends ExcelRecord = ExcelRecord> {
+    columns: string[];
+    records: T[];
+    rowCount: number;
+    columnCount: number;
+}
+
+// =======================================================================
 // 追加の型定義モジュールのエクスポート
 // =======================================================================
 export * from "./dataTables";
 export * from "./kintoneApi";
 export * from "./mobile";
 export * from "./table";
+export * from "./chart";
+export * from "./result";
+
+// =======================================================================
+// コンポーネント型定義の再エクスポート
+// =======================================================================
+export type { BaseDomElementInfo } from "../components/dom/BaseDomBuilder";
+export type { TableInfo } from "../components/tables/BaseTableManager";
+export type { ChartInfo } from "../components/graphs/BaseGraphManager";
+export type { PLDomElementInfo } from "../components/dom/PLDomBuilder";
+
+// =======================================================================
+// サービス型定義の再エクスポート
+// =======================================================================
+export type { CumulativeData } from "../services/RevenueAnalysisCalculationService";
+export type {
+    AddedValueResult,
+    CostCalculationResult,
+    ProfitCalculationResult,
+    BusinessMetrics,
+} from "../services/BusinessCalculationService";
+export type { ValidationResult } from "../services/BusinessCalculationHelperService";
+export type { ProfitCalculationResult as DailyProfitCalculationResult } from "../services/ProfitCalculationService";
+
+// =======================================================================
+// ユーティリティ型定義の再エクスポート
+// =======================================================================
+export type { MemoryLeakReport } from "../utils/MemoryLeakDetector";

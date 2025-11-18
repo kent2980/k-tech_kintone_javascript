@@ -3,6 +3,8 @@
 
 /**
  * DOM要素情報を管理する基底インターフェース
+ *
+ * @category Components
  */
 export interface BaseDomElementInfo {
     /** 要素ID */

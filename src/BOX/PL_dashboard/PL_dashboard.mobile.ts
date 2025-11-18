@@ -14,7 +14,7 @@ import "./styles/mobile.css";
 // Import modular components
 import { FilterConfig, ProductHistoryData } from "./types";
 
-import { DateUtil, Logger, PerformanceUtil } from "./utils";
+import { DateUtil, ErrorHandler, Logger, PerformanceUtil } from "./utils";
 
 import { KintoneApiService } from "./services";
 
@@ -40,6 +40,9 @@ import { PLDomBuilder } from "./components";
 
     // PLDomBuilder のインスタンスを作成
     const domBuilder = new PLDomBuilder();
+
+    // KintoneApiService のインスタンスを作成
+    const apiService = new KintoneApiService();
 
     // パッシブイベントリスナーのサポート検出
     let supportsPassive = false;
@@ -724,11 +727,21 @@ import { PLDomBuilder } from "./components";
     }
 
     /**
+     * サマリーデータの型定義
+     */
+    interface SummaryData {
+        totalQuantity: number;
+        totalHours: number;
+        totalValue: number;
+        recordCount: number;
+    }
+
+    /**
      * モバイル用サマリーカードを作成する
      * @param summaryData - サマリーデータ
      * @returns サマリーカード
      */
-    function createMobileSummaryCard(summaryData: any): HTMLDivElement {
+    function createMobileSummaryCard(summaryData: SummaryData): HTMLDivElement {
         const card = document.createElement("div");
         card.className = "mobile-summary-card";
         card.style.backgroundColor = "#3498db";
@@ -787,7 +800,7 @@ import { PLDomBuilder } from "./components";
      * @param records - レコードデータ
      * @returns サマリーデータ
      */
-    function calculateSummary(records: line_daily.SavedFields[]): any {
+    function calculateSummary(records: line_daily.SavedFields[]): SummaryData {
         let totalQuantity = 0;
         let totalHours = 0;
         let totalValue = 0;
@@ -830,7 +843,7 @@ import { PLDomBuilder } from "./components";
         month: string
     ): Promise<monthly.SavedFields | null> {
         Logger.info(`fetchPLMonthlyData開始: ${year}年${month}月`);
-        const result = await KintoneApiService.fetchPLMonthlyData(year, month);
+        const result = await apiService.fetchPLMonthlyData(year, month);
         Logger.info(`fetchPLMonthlyData完了: ${result ? "データあり" : "データなし"}`);
         if (result) {
             Logger.info(
@@ -847,7 +860,7 @@ import { PLDomBuilder } from "./components";
      * @returns レコードの配列
      */
     async function fetchPLDailyData(year: string, month: string): Promise<daily.SavedFields[]> {
-        return await KintoneApiService.fetchPLDailyData(year, month);
+        return await apiService.fetchPLDailyData(year, month);
     }
 
     /**
@@ -861,7 +874,7 @@ import { PLDomBuilder } from "./components";
         month: string | null = null
     ): Promise<line_daily.SavedFields[]> {
         const filterConfig: FilterConfig = { year, month };
-        return await KintoneApiService.fetchProductionReportData(filterConfig);
+        return await apiService.fetchProductionReportData(filterConfig);
     }
 
     /**
@@ -869,7 +882,7 @@ import { PLDomBuilder } from "./components";
      * @returns レコードの配列
      */
     async function fetchMasterModelData(): Promise<model_master.SavedFields[]> {
-        return await KintoneApiService.fetchMasterModelData();
+        return await apiService.fetchMasterModelData();
     }
 
     /**
@@ -977,12 +990,24 @@ import { PLDomBuilder } from "./components";
                 const filterTime = PerformanceUtil.endMeasure("mobile-filter-change");
                 Logger.success(`モバイルフィルター処理完了: ${filterTime.toFixed(2)}ms`);
             } catch (error) {
-                Logger.error("モバイルフィルタリング処理でエラー:", error);
+                ErrorHandler.logError("モバイルフィルタリング処理でエラー", error, {
+                    method: "handleFilterChange",
+                    year: yearSelect?.value,
+                    month: monthSelect?.value,
+                });
 
                 // エラーメッセージを表示
+                const userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+                    error,
+                    {
+                        method: "handleFilterChange",
+                        year: yearSelect?.value,
+                        month: monthSelect?.value,
+                    },
+                    "データの取得に失敗しました。ネットワーク接続を確認してください。"
+                );
                 const errorDiv = document.createElement("div");
-                errorDiv.textContent =
-                    "データの取得に失敗しました。ネットワーク接続を確認してください。";
+                errorDiv.textContent = userFriendlyMessage;
                 errorDiv.style.backgroundColor = "#f8d7da";
                 errorDiv.style.color = "#721c24";
                 errorDiv.style.padding = "15px";

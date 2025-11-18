@@ -1,11 +1,12 @@
 import * as XLSX from "xlsx";
+import { FileValidator, FileValidationResult } from "../utils/FileValidator";
 import { Logger } from "../utils";
 
 /**
  * DataFrameの形式でテーブルデータを格納するインターフェース
  * Pythonの pandas DataFrame に相当する構造
  */
-export interface TableDataFrame<T extends Record<string, any> = Record<string, any>> {
+export interface TableDataFrame<T extends Record<string, string | number | boolean | Date | null> = Record<string, string | number | boolean | Date | null>> {
     /** カラム名の配列 */
     columns: string[];
     /** レコードの配列（オブジェクト形式） */
@@ -20,7 +21,7 @@ export interface TableDataFrame<T extends Record<string, any> = Record<string, a
  * 月次データをDataFrame形式で取得するためのインターフェース
  * 月次データの名前と値を持つ
  */
-export interface MonthlyDataFrame extends Record<string, any> {
+export interface MonthlyDataFrame extends Record<string, string | number | boolean | Date | null> {
     /** 社員単価 */
     inside_unit: number;
     /** 派遣単価 */
@@ -50,9 +51,63 @@ export class ExcelImporter {
     }
 
     /**
-     * Excelファイルを読み込んで展開
+     * ファイルを検証する
+     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
+     * @returns 検証結果
      */
-    async load(): Promise<void> {
+    async validateFile(maxSizeMB: number = 10): Promise<FileValidationResult> {
+        // ファイル名の検証
+        const fileNameResult = FileValidator.validateFileName(this.file.name);
+        if (!fileNameResult.isValid) {
+            return fileNameResult;
+        }
+
+        // Excelファイルの基本検証（サイズ、拡張子、MIMEタイプ）
+        const excelResult = FileValidator.validateExcelFile(this.file, maxSizeMB);
+        if (!excelResult.isValid) {
+            return excelResult;
+        }
+
+        // マジックナンバーの検証（悪意のあるファイルの検出）
+        const magicNumberResult = await FileValidator.validateMagicNumber(this.file);
+        if (!magicNumberResult.isValid) {
+            return magicNumberResult;
+        }
+
+        // 警告がある場合は警告を含めて返す
+        return {
+            isValid: true,
+            errors: [],
+            warnings: [...excelResult.warnings, ...magicNumberResult.warnings],
+        };
+    }
+
+    /**
+     * Excelファイルを読み込んで展開
+     * @param validateBeforeLoad - 読み込み前に検証を行うか（デフォルト: true）
+     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
+     */
+    async load(validateBeforeLoad: boolean = true, maxSizeMB: number = 10): Promise<void> {
+        // 読み込み前に検証を実行
+        if (validateBeforeLoad) {
+            const validationResult = await this.validateFile(maxSizeMB);
+            if (!validationResult.isValid) {
+                const errorMessage = validationResult.errors.join("\n");
+                Logger.error("Excelファイルの検証に失敗しました", {
+                    errors: validationResult.errors,
+                    warnings: validationResult.warnings,
+                });
+                throw new Error(`ファイル検証エラー: ${errorMessage}`);
+            }
+
+            // 警告がある場合はログに記録
+            if (validationResult.warnings.length > 0) {
+                Logger.warn("Excelファイルの検証で警告が発生しました", {
+                    warnings: validationResult.warnings,
+                });
+            }
+        }
+
         try {
             const arrayBuffer = await this.readFileAsArrayBuffer(this.file);
             this.workbook = XLSX.read(arrayBuffer, {
@@ -297,7 +352,7 @@ export class ExcelImporter {
             }
 
             // 行のデータをオブジェクトに変換
-            const record: Record<string, any> = {};
+            const record: Record<string, string | number | boolean | Date | null> = {};
             for (let col = startColIndex; col <= endColIndex; col++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: currentRow, c: col });
                 const cell = sheet[cellAddress];

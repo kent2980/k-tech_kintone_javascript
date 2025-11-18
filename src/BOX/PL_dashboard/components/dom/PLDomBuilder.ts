@@ -1,11 +1,13 @@
 import { TabContainerResult } from "../../types";
-import { DateUtil, DomUtil } from "../../utils";
+import { DateUtil, DomUtil, XssProtection } from "../../utils";
 import { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
 
 /**
  * DOM要素情報を管理するインターフェース（PL固有の拡張）
+ *
+ * @category Components
  */
-interface PLDomElementInfo extends BaseDomElementInfo {
+export interface PLDomElementInfo extends BaseDomElementInfo {
     /** 要素の種類 */
     type: "select" | "label" | "button" | "container" | "tab" | "message" | "scrollable";
 }
@@ -250,7 +252,8 @@ export class PLDomBuilder extends BaseDomBuilder {
         contentDiv.style.display = isActive ? "block" : "none";
 
         if (typeof content === "string") {
-            contentDiv.innerHTML = content;
+            // XSS対策: HTML文字列をサニタイズしてから設定
+            XssProtection.setInnerHtml(contentDiv, content);
         } else {
             contentDiv.appendChild(content);
         }

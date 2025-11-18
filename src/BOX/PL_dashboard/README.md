@@ -66,6 +66,52 @@ components/
    - DataTables.jsを適用
    - ソート・検索・エクスポート機能を有効化
 
+## APIドキュメント
+
+このプロジェクトでは、TypeDocを使用してAPIドキュメントを自動生成しています。
+
+### ドキュメントの生成
+
+```bash
+npm run docs
+```
+
+生成されたドキュメントは `docs/api` ディレクトリに出力され、以下のカテゴリで整理されています：
+
+- **Services**: サービス層のクラス（KintoneApiService、BusinessCalculationServiceなど）
+- **Components**: コンポーネント層のクラス（PLDashboardTableManager、PLDashboardGraphBuilderなど）
+- **Utils**: ユーティリティクラス（Logger、ErrorHandler、DateUtilなど）
+- **Store**: ストアクラス（HolidayStore、MasterModelStoreなど）
+
+### 主要なAPI
+
+#### KintoneApiService
+
+kintone APIとの通信を担当するサービスクラス。
+
+**主要メソッド**:
+
+- `fetchPLMonthlyData(year, month)`: PL月次データを取得
+- `fetchPLDailyData(year, month)`: PL日次データを取得
+- `fetchProductionReportData(filterConfig)`: 生産日報データを取得
+- `savePLMonthlyData(data)`: PL月次データを保存
+- `savePLDailyData(data)`: PL日次データを保存
+
+詳細は `docs/api` を参照してください。
+
+#### BusinessCalculationService
+
+経営指標の計算を担当するサービスクラス。
+
+**主要メソッド**:
+
+- `calculateAddedValue(record, masterModelData)`: 付加価値を計算
+- `calculateCosts(record, insideUnit, outsideUnit)`: 工数・コストを計算
+- `calculateProfit(addedValue, totalCost)`: 利益を計算
+- `calculateBusinessMetrics(record, masterModelData, insideUnit, outsideUnit)`: 経営指標を統合計算
+
+詳細は `docs/api` を参照してください。
+
 ## 主要コンポーネント
 
 ### PLDashboardTableManager
@@ -134,6 +180,23 @@ kintone REST APIとの通信を担当します。
 - `calculateBusinessMetrics()`: 経営指標計算
 - 付加価値・コスト・利益率の算出
 
+### BusinessCalculationHelperService
+
+経営指標の検証・分析機能を提供する静的メソッドのみのユーティリティクラスです。
+
+**主要メソッド**:
+
+- `validateBusinessMetrics()`: 経営指標の計算結果を検証
+- `detectAnomalies()`: 異常値を検出
+
+**使用例**:
+
+```typescript
+// 静的メソッドとして使用
+const validation = BusinessCalculationHelperService.validateBusinessMetrics(metrics, recordDate);
+const anomalies = BusinessCalculationHelperService.detectAnomalies(metrics);
+```
+
 ### ProfitCalculationService
 
 損益計算を担当します。
@@ -151,6 +214,28 @@ kintone REST APIとの通信を担当します。
 
 - `createRevenueAnalysisItem()`: 収益分析アイテム作成
 - `createCumulativeDataManager()`: 累積データ管理
+
+### DataProcessor
+
+データ処理・計算を担当する静的メソッドのみのユーティリティクラスです。
+
+**主要メソッド**:
+
+- `getTotalsByDate()`: 製品履歴データから日付別の合計値を計算（休日タイプ処理を含む）
+- `getDateList()`: 製品履歴データから日付リストを取得（年月指定で完全な日付リストを生成可能）
+- `getRecordsByDate()`: 日次データから指定した日付のレコードを取得
+- `createProductHistoryData()`: 製品履歴データを生成
+- `calculateAddedValue()`: 生産レコードから付加価値を計算
+- `calculateCosts()`: 経費データを計算
+
+**使用例**:
+
+```typescript
+// 静的メソッドとして使用
+const totals = DataProcessor.getTotalsByDate(productHistoryData, date);
+const dateList = DataProcessor.getDateList(productHistoryData, year, month);
+const records = DataProcessor.getRecordsByDate(dailyReportData, date);
+```
 
 ## 状態管理
 
@@ -195,6 +280,39 @@ Excelファイルから過去データをインポートします。
 // モバイルデバイスでアクセスすると自動的にモバイル版が表示されます
 ```
 
+## セキュリティ対策
+
+### XSS対策
+
+このプロジェクトでは、XSS（Cross-Site Scripting）攻撃を防ぐために以下の対策を実装しています：
+
+1. **DOMPurifyライブラリの使用**: HTML文字列をサニタイズ
+2. **テキストエスケープ**: 危険な文字をHTMLエンティティに変換
+3. **textContentの優先使用**: `innerHTML`の代わりに`textContent`を使用（自動エスケープ）
+4. **URL検証**: `javascript:`などの危険なプロトコルを検出
+
+#### XssProtectionユーティリティ
+
+```typescript
+import { XssProtection } from "../utils";
+
+// HTML文字列をサニタイズ
+XssProtection.setInnerHtml(element, userInput);
+
+// テキストコンテンツを安全に設定（textContentを使用）
+XssProtection.setTextContent(element, userInput);
+
+// URLを検証・サニタイズ
+const safeUrl = XssProtection.sanitizeUrl(userInput);
+```
+
+#### ベストプラクティス
+
+- ✅ **推奨**: `textContent`を使用（自動エスケープ）
+- ✅ **推奨**: `XssProtection.setInnerHtml()`を使用（DOMPurifyでサニタイズ）
+- ❌ **非推奨**: `innerHTML`に直接ユーザー入力を設定
+- ❌ **非推奨**: `eval()`や`Function()`の使用
+
 ## 開発ガイドライン
 
 ### 新機能追加時の注意点
@@ -203,6 +321,49 @@ Excelファイルから過去データをインポートします。
 2. **責務の分離**: データ変換・レンダリング・統合処理を分離
 3. **型安全性**: TypeScriptの型定義を活用
 4. **エラーハンドリング**: 統一したエラー処理方式を採用
+5. **セキュリティ**: XSS対策を常に意識し、ユーザー入力を適切にサニタイズ
+
+## テスト
+
+### テスト環境
+
+このプロジェクトではJestを使用してユニットテストを実行します。
+
+### テストの実行
+
+```bash
+# すべてのテストを実行
+npm test
+
+# カバレッジ付きで実行
+npm run test:coverage
+
+# ウォッチモードで実行
+npm run test:watch
+```
+
+### テストカバレッジ
+
+カバレッジ目標は以下の通りです：
+
+- **全体**: 60%以上
+- **サービス層** (`services/**/*.ts`): 70%以上
+- **ユーティリティ層** (`utils/**/*.ts`): 70%以上
+
+### 主要なテストファイル
+
+- `services/__tests__/BusinessCalculationService.test.ts`: 経営計算サービスのテスト
+- `services/__tests__/DataProcessor.test.ts`: データ処理サービスのテスト
+- `services/__tests__/KintoneApiService.test.ts`: kintone APIサービスのテスト
+- `utils/__tests__/XssProtection.test.ts`: XSS対策ユーティリティのテスト
+- `components/tables/__tests__/PLDashboardTableManager.test.ts`: テーブル管理のテスト
+
+### モック
+
+kintone API、jQuery、Chart.jsなどの外部依存関係はモック化されています：
+
+- `__mocks__/kintone.ts`: kintone APIのモック
+- `__mocks__/setup.ts`: テスト環境のセットアップ
 
 ### テーブル追加方法
 

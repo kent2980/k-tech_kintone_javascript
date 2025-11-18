@@ -5,8 +5,10 @@ import { RevenueAnalysis } from "../types";
 
 /**
  * 累積データを管理するクラス
+ *
+ * @category Services
  */
-class CumulativeData {
+export class CumulativeData {
     private _cumulativeAddedValue: number = 0;
     private _cumulativeExpenses: number = 0;
     private _cumulativeGrossProfit: number = 0;

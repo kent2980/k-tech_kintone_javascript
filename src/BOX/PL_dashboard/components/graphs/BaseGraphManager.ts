@@ -5,6 +5,8 @@ import Chart from "chart.js/auto";
 
 /**
  * グラフ情報を管理するインターフェース
+ *
+ * @category Components
  */
 export interface ChartInfo {
     /** キャンバスID */
@@ -95,7 +97,18 @@ export abstract class BaseGraphManager {
 
         try {
             // Chart.jsインスタンスを破棄
+            // destroy()メソッドはイベントリスナーもクリーンアップする
             chartInfo.chart.destroy();
+
+            // キャンバス要素のコンテキストをクリア（メモリリーク防止）
+            const canvas = chartInfo.container.querySelector("canvas");
+            if (canvas) {
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    // コンテキストのクリーンアップ
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
 
             // DOM要素を削除
             if (chartInfo.container && chartInfo.container.parentNode) {
@@ -105,6 +118,8 @@ export abstract class BaseGraphManager {
             // チャート情報を削除
             this.charts.delete(canvasId);
         } catch (error) {
+            // エラーが発生してもチャート情報は削除（メモリリーク防止）
+            this.charts.delete(canvasId);
             console.error(`グラフ破棄でエラーが発生しました: ${error}`);
         }
     }
