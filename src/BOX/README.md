@@ -19,7 +19,7 @@ src/BOX/
             │   ├── dom/              # DOM構築コンポーネント
             │   │   ├── BaseDomBuilder.ts         # DOM構築基底クラス
             │   │   ├── PLDomBuilder.ts           # PL専用DOM構築
-            │   │   └── HeaderContainer.ts        # PLヘッダーコンテナ
+            │   │   └── PLHeaderContainer.ts        # PLヘッダーコンテナ
     │   ├── FilterContainer.ts # フィルターコンテナ
     │   └── TabContainer.ts    # タブコンテナ
     ├── services/             # ビジネスロジック・API呼び出し

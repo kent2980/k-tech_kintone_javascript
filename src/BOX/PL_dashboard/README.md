@@ -45,7 +45,7 @@ components/
 ├── dom/                 # DOM構築
 │   ├── BaseDomBuilder.ts        # 汎用DOM構築機能
 │   ├── PLDomBuilder.ts          # PL専用DOM構築
-│   └── HeaderContainer.ts       # PLヘッダーコンテナ
+│   └── PLHeaderContainer.ts       # PLヘッダーコンテナ
 ├── FilterContainer.ts   # フィルターコンテナ
 └── TabContainer.ts      # タブコンテナ
 ```
