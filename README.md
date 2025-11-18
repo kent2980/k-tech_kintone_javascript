@@ -135,7 +135,7 @@ console.error('エラー情報:', error);
 │           │   ├── dom/                  # DOM構築コンポーネント
 │           │   │   ├── BaseDomBuilder.ts
 │           │   │   ├── PLDomBuilder.ts
-│           │   │   └── HeaderContainer.ts
+│           │   │   └── PLHeaderContainer.ts
 │           │   ├── FilterContainer.ts
 │           │   └── TabContainer.ts
 │           ├── services/                # ビジネスロジック・API呼び出し

@@ -88,7 +88,7 @@ src/BOX/
   - 年・月選択ドロップダウン
   - PL固有のDOM要素作成
   
-- **HeaderContainer.ts**: PLヘッダーコンテナクラス（`PLHeaderContainer`）
+- **PLHeaderContainer.ts**: PLヘッダーコンテナクラス（`PLHeaderContainer`）
   - `BaseDomBuilder`を継承
   - フィルターコンテナ
   - 設定リンク
