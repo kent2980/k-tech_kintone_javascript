@@ -27,9 +27,9 @@ import { BusinessCalculationService, KintoneApiService } from "./services";
 
 import {
     HeaderContainer,
-    PLDomBuilder,
     PLDashboardGraphBuilder,
     PLDashboardTableManager,
+    PLDomBuilder,
 } from "./components";
 import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 (function () {
