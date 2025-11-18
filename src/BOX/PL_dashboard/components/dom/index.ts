@@ -4,5 +4,4 @@
 
 export { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
 export { PLDomBuilder } from "./PLDomBuilder";
-export { HeaderContainer } from "./HeaderContainer";
-
+export { PLHeaderContainer } from "./PLHeaderContainer";

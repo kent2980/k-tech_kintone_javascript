@@ -29,7 +29,7 @@ BaseGraphManager (基底クラス)
 
 BaseDomBuilder (基底クラス)
   ├── PLDomBuilder (PL専用実装)
-  └── HeaderContainer (ヘッダー専用実装)
+  └── PLHeaderContainer (PLヘッダー専用実装)
 ```
 
 ### コンポーネント構造
@@ -45,7 +45,7 @@ components/
 ├── dom/                 # DOM構築
 │   ├── BaseDomBuilder.ts        # 汎用DOM構築機能
 │   ├── PLDomBuilder.ts          # PL専用DOM構築
-│   └── HeaderContainer.ts      # ヘッダーコンテナ
+│   └── HeaderContainer.ts       # PLヘッダーコンテナ
 ├── FilterContainer.ts   # フィルターコンテナ
 └── TabContainer.ts      # タブコンテナ
 ```
@@ -102,9 +102,9 @@ PL専用のDOM要素構築を担当します。
 - `createYearSelect()`: 年選択ドロップダウン作成
 - `createMonthSelect()`: 月選択ドロップダウン作成
 
-### HeaderContainer
+### PLHeaderContainer
 
-ヘッダー領域のコンテナを管理します。
+ヘッダー領域のコンテナを管理します。`BaseDomBuilder`を継承し、PL専用のヘッダー機能を提供します。
 
 **主要メソッド**:
 

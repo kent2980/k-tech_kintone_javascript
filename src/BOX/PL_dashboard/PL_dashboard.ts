@@ -26,7 +26,7 @@ import { DateUtil, Logger, PerformanceUtil } from "./utils";
 import { BusinessCalculationService, KintoneApiService } from "./services";
 
 import {
-    HeaderContainer,
+    PLHeaderContainer,
     PLDashboardGraphBuilder,
     PLDashboardTableManager,
     PLDomBuilder,
@@ -734,7 +734,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         }
 
         // ヘッダーコンテナを作成して追加
-        const headerContainerInstance = new HeaderContainer(domBuilder);
+        const headerContainerInstance = new PLHeaderContainer(domBuilder);
         const headerContainer = headerContainerInstance.create();
         headerSpace.appendChild(headerContainer);
 

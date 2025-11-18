@@ -9,7 +9,7 @@ import { PLDomBuilder } from "./PLDomBuilder";
 /**
  * ヘッダー要素情報を管理するインターフェース（Header固有の拡張）
  */
-interface HeaderElementInfo extends BaseDomElementInfo {
+interface PLHeaderElementInfo extends BaseDomElementInfo {
     /** 要素の種類 */
     type: "container" | "filter" | "link" | "button" | "overlay" | "alert";
 }
@@ -18,7 +18,7 @@ interface HeaderElementInfo extends BaseDomElementInfo {
  * ヘッダーコンテナを作成・管理するクラス
  * BaseDomBuilderを継承し、ヘッダー要素の状態を管理する
  */
-export class HeaderContainer extends BaseDomBuilder {
+export class PLHeaderContainer extends BaseDomBuilder {
     /** ヘッダーコンテナ要素 */
     private headerContainer: HTMLDivElement | null = null;
 
@@ -52,12 +52,12 @@ export class HeaderContainer extends BaseDomBuilder {
     protected registerElementWithType(
         id: string,
         element: HTMLElement,
-        type: HeaderElementInfo["type"]
+        type: PLHeaderElementInfo["type"]
     ): void {
         this.registerElement(id, element);
         const elementInfo = this.getElementInfo(id);
         if (elementInfo) {
-            (elementInfo as HeaderElementInfo).type = type;
+            (elementInfo as PLHeaderElementInfo).type = type;
         }
     }
     /**
@@ -194,7 +194,7 @@ export class HeaderContainer extends BaseDomBuilder {
                     try {
                         // データ登録中オーバーレイ表示
                         // 注意: このメソッドは静的メソッドのまま（後方互換性のため）
-                        HeaderContainer.showDataUploadingOverlay(document.body);
+                        PLHeaderContainer.showDataUploadingOverlay(document.body);
                         // ファイルを読み込み、データをキントーンに保存
                         const importer = new PLExcelImporter(file);
                         await importer.load();
@@ -243,18 +243,18 @@ export class HeaderContainer extends BaseDomBuilder {
                         window.removeEventListener("uploadError", onError as EventListener);
 
                         // オーバーレイ非表示
-                        HeaderContainer.hideDataUploadingOverlay();
+                        PLHeaderContainer.hideDataUploadingOverlay();
 
                         // 成功メッセージ（中央表示）
-                        HeaderContainer.hideDataUploadingOverlay();
+                        PLHeaderContainer.hideDataUploadingOverlay();
                         const resultMsg = `${monthData.year.value}年${monthData.month.value}月のデータ登録が完了しました。`;
-                        HeaderContainer.showCenteredAlert(resultMsg);
+                        PLHeaderContainer.showCenteredAlert(resultMsg);
                     } catch (error) {
                         console.error("過去データの登録が失敗しました。", error);
                         // オーバーレイ非表示
-                        HeaderContainer.hideDataUploadingOverlay();
+                        PLHeaderContainer.hideDataUploadingOverlay();
                         // エラーメッセージ（中央表示）
-                        HeaderContainer.showCenteredAlert("過去データの登録が失敗しました。");
+                        PLHeaderContainer.showCenteredAlert("過去データの登録が失敗しました。");
                     } finally {
                         // ボタンの状態をリセット
                         button.disabled = false;
@@ -490,7 +490,7 @@ export class HeaderContainer extends BaseDomBuilder {
      * @returns ヘッダーコンテナ
      */
     static create(domBuilder?: PLDomBuilder): HTMLDivElement {
-        const instance = new HeaderContainer(domBuilder);
+        const instance = new PLHeaderContainer(domBuilder);
         return instance.create();
     }
 
@@ -500,7 +500,7 @@ export class HeaderContainer extends BaseDomBuilder {
      */
     static showDataUploadingOverlay(parent: HTMLElement): void {
         // グローバルインスタンスを使用（後方互換性のため）
-        const instance = new HeaderContainer();
+        const instance = new PLHeaderContainer();
         instance.showDataUploadingOverlay(parent);
     }
 
@@ -509,7 +509,7 @@ export class HeaderContainer extends BaseDomBuilder {
      */
     static hideDataUploadingOverlay(): void {
         // グローバルインスタンスを使用（後方互換性のため）
-        const instance = new HeaderContainer();
+        const instance = new PLHeaderContainer();
         instance.hideDataUploadingOverlay();
     }
 
@@ -520,8 +520,7 @@ export class HeaderContainer extends BaseDomBuilder {
      */
     static showCenteredAlert(message: string, autoCloseMs?: number): void {
         // グローバルインスタンスを使用（後方互換性のため）
-        const instance = new HeaderContainer();
+        const instance = new PLHeaderContainer();
         instance.showCenteredAlert(message, autoCloseMs);
     }
 }
-

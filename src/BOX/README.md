@@ -16,10 +16,10 @@ src/BOX/
     │   ├── graphs/           # グラフ管理コンポーネント
     │   │   ├── BaseGraphManager.ts       # グラフ管理基底クラス
     │   │   └── PLDashboardGraphBuilder.ts # PL専用グラフ構築
-    │   ├── dom/              # DOM構築コンポーネント
-    │   │   ├── BaseDomBuilder.ts         # DOM構築基底クラス
-    │   │   ├── PLDomBuilder.ts           # PL専用DOM構築
-    │   │   └── HeaderContainer.ts        # ヘッダーコンテナ
+            │   ├── dom/              # DOM構築コンポーネント
+            │   │   ├── BaseDomBuilder.ts         # DOM構築基底クラス
+            │   │   ├── PLDomBuilder.ts           # PL専用DOM構築
+            │   │   └── HeaderContainer.ts        # PLヘッダーコンテナ
     │   ├── FilterContainer.ts # フィルターコンテナ
     │   └── TabContainer.ts    # タブコンテナ
     ├── services/             # ビジネスロジック・API呼び出し
@@ -88,7 +88,8 @@ src/BOX/
   - 年・月選択ドロップダウン
   - PL固有のDOM要素作成
   
-- **HeaderContainer.ts**: ヘッダーコンテナクラス
+- **HeaderContainer.ts**: PLヘッダーコンテナクラス（`PLHeaderContainer`）
+  - `BaseDomBuilder`を継承
   - フィルターコンテナ
   - 設定リンク
   - 過去データ読み込みボタン
