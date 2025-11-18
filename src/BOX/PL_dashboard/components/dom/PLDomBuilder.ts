@@ -1,18 +1,51 @@
-import { TabContainerResult } from "../types";
-import { DomUtil } from "../utils";
-import { FilterContainer } from "./FilterContainer";
+import { TabContainerResult } from "../../types";
+import { DateUtil, DomUtil } from "../../utils";
+import { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
 
 /**
- * PLダッシュボード用のDOM構築ユーティリティクラス
+ * DOM要素情報を管理するインターフェース（PL固有の拡張）
  */
-export class PLDashboardDomBuilder {
+interface PLDomElementInfo extends BaseDomElementInfo {
+    /** 要素の種類 */
+    type: "select" | "label" | "button" | "container" | "tab" | "message" | "scrollable";
+}
+
+/**
+ * PLダッシュボード用のDOM構築クラス
+ * BaseDomBuilderを継承し、PL管理に特化したDOM構築機能を提供
+ */
+export class PLDomBuilder extends BaseDomBuilder {
+    /**
+     * コンストラクタ
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * DOM要素情報を登録（PL固有の拡張）
+     * @param id - 要素ID
+     * @param element - DOM要素
+     * @param type - 要素の種類
+     */
+    protected registerElementWithType(
+        id: string,
+        element: HTMLElement,
+        type: PLDomElementInfo["type"]
+    ): void {
+        this.registerElement(id, element);
+        const elementInfo = this.getElementInfo(id);
+        if (elementInfo) {
+            (elementInfo as PLDomElementInfo).type = type;
+        }
+    }
     /**
      * オプション要素をセレクトボックスに追加する
      * @param selectElement - セレクトボックス要素
      * @param value - オプションの値
      * @param text - オプションの表示テキスト
      */
-    static addOption(selectElement: HTMLSelectElement, value: string | number, text: string): void {
+    public addOption(selectElement: HTMLSelectElement, value: string | number, text: string): void {
         DomUtil.addOption(selectElement, value, text);
     }
 
@@ -21,16 +54,53 @@ export class PLDashboardDomBuilder {
      * @param yearCount - 過去何年分を表示するか
      * @returns 年選択セレクトボックス
      */
-    static createYearSelect(yearCount: number = 10): HTMLSelectElement {
-        return FilterContainer.createYearSelect(yearCount);
+    public createYearSelect(yearCount: number = 10): HTMLSelectElement {
+        const yearSelect = document.createElement("select");
+        yearSelect.id = "year-select";
+
+        // デフォルトオプション
+        DomUtil.addOption(yearSelect, "", "-- 選択 --");
+
+        // 過去yearCount年分のオプションを追加
+        const currentYear = DateUtil.getCurrentYear();
+        for (let i = 0; i < yearCount; i++) {
+            const year = currentYear - i;
+            DomUtil.addOption(yearSelect, year, year.toString());
+        }
+
+        // 現在の年をデフォルト選択
+        yearSelect.value = currentYear.toString();
+
+        // 要素を登録
+        this.registerElementWithType(yearSelect.id, yearSelect, "select");
+
+        return yearSelect;
     }
 
     /**
      * 月選択セレクトボックスを作成する
      * @returns 月選択セレクトボックス
      */
-    static createMonthSelect(): HTMLSelectElement {
-        return FilterContainer.createMonthSelect();
+    public createMonthSelect(): HTMLSelectElement {
+        const monthSelect = document.createElement("select");
+        monthSelect.id = "month-select";
+
+        // デフォルトオプション
+        DomUtil.addOption(monthSelect, "", "-- 選択 --");
+
+        // 12ヶ月分のオプションを追加
+        for (let i = 1; i <= 12; i++) {
+            DomUtil.addOption(monthSelect, i.toString(), `${i}月`);
+        }
+
+        // 現在の月をデフォルト選択
+        const currentMonth = DateUtil.getCurrentMonth();
+        monthSelect.value = currentMonth.toString();
+
+        // 要素を登録
+        this.registerElementWithType(monthSelect.id, monthSelect, "select");
+
+        return monthSelect;
     }
 
     /**
@@ -40,7 +110,7 @@ export class PLDashboardDomBuilder {
      * @param marginLeft - 左マージン（オプション）
      * @returns ラベル要素
      */
-    static createLabel(
+    public createLabel(
         text: string,
         forId: string,
         marginLeft: string | null = null
@@ -52,7 +122,7 @@ export class PLDashboardDomBuilder {
      * フィルターコンテナを作成する
      * @returns フィルターコンテナ
      */
-    static createFilterContainer(): HTMLDivElement {
+    public createFilterContainer(): HTMLDivElement {
         const container = document.createElement("div");
         container.style.margin = "10px 0";
 
@@ -64,6 +134,9 @@ export class PLDashboardDomBuilder {
         container.appendChild(this.createLabel("月: ", "month-select", "20px"));
         container.appendChild(this.createMonthSelect());
 
+        // 要素を登録
+        this.registerElementWithType("filter-container", container, "container");
+
         return container;
     }
 
@@ -71,7 +144,7 @@ export class PLDashboardDomBuilder {
      * 表示スペース切替ボタンを作成する
      * @returns 切替ボタン
      */
-    static createToggleViewButton(): HTMLButtonElement {
+    public createToggleViewButton(): HTMLButtonElement {
         const button = document.createElement("button");
         button.id = "toggle-view-button";
         button.innerText = "表示スペース切替";
@@ -79,6 +152,10 @@ export class PLDashboardDomBuilder {
         button.style.marginLeft = "20px";
         button.style.padding = "6px 12px";
         button.style.cursor = "pointer";
+
+        // 要素を登録
+        this.registerElementWithType(button.id, button, "button");
+
         return button;
     }
 
@@ -86,7 +163,7 @@ export class PLDashboardDomBuilder {
      * タブコンテナを作成する関数
      * @returns タブコンテナ、ボタンコンテナ、コンテンツコンテナ
      */
-    static createTabContainer(): TabContainerResult {
+    public createTabContainer(): TabContainerResult {
         // メインコンテナ
         const tabContainer = document.createElement("div");
         tabContainer.id = "tab-container";
@@ -106,6 +183,9 @@ export class PLDashboardDomBuilder {
         tabContainer.appendChild(tabButtonsContainer);
         tabContainer.appendChild(tabContentsContainer);
 
+        // 要素を登録
+        this.registerElementWithType(tabContainer.id, tabContainer, "tab");
+
         return { tabContainer, tabButtonsContainer, tabContentsContainer };
     }
 
@@ -116,7 +196,7 @@ export class PLDashboardDomBuilder {
      * @param isActive - アクティブかどうか
      * @returns タブボタン
      */
-    static createTabButton(
+    public createTabButton(
         tabId: string,
         tabLabel: string,
         isActive: boolean = false
@@ -146,6 +226,9 @@ export class PLDashboardDomBuilder {
             }
         });
 
+        // 要素を登録
+        this.registerElementWithType(button.id, button, "button");
+
         return button;
     }
 
@@ -156,7 +239,7 @@ export class PLDashboardDomBuilder {
      * @param isActive - アクティブかどうか
      * @returns タブコンテンツ要素
      */
-    static createTabContent(
+    public createTabContent(
         contentId: string,
         content: HTMLElement | string,
         isActive: boolean = false
@@ -172,6 +255,9 @@ export class PLDashboardDomBuilder {
             contentDiv.appendChild(content);
         }
 
+        // 要素を登録
+        this.registerElementWithType(contentDiv.id, contentDiv, "tab");
+
         return contentDiv;
     }
 
@@ -180,7 +266,7 @@ export class PLDashboardDomBuilder {
      * @param message - 表示するメッセージ
      * @returns メッセージ要素
      */
-    static createNoDataMessage(message: string): HTMLDivElement {
+    public createNoDataMessage(message: string): HTMLDivElement {
         const noDataMessage = document.createElement("div");
         noDataMessage.textContent = message;
         noDataMessage.style.marginTop = "20px";
@@ -190,6 +276,12 @@ export class PLDashboardDomBuilder {
         noDataMessage.style.borderRadius = "4px";
         noDataMessage.style.textAlign = "center";
         noDataMessage.style.color = "#6c757d";
+
+        // 要素を登録（IDがない場合は自動生成）
+        const messageId = `no-data-message-${Date.now()}`;
+        noDataMessage.id = messageId;
+        this.registerElementWithType(messageId, noDataMessage, "message");
+
         return noDataMessage;
     }
 
@@ -199,13 +291,26 @@ export class PLDashboardDomBuilder {
      * @param maxHeight - 最大高さ（デフォルト: "600px"）
      * @returns スクロール可能なコンテナ
      */
-    static createScrollableContainer(id: string, maxHeight: string = "600px"): HTMLDivElement {
+    public createScrollableContainer(id: string, maxHeight: string = "600px"): HTMLDivElement {
         const container = document.createElement("div");
         container.id = id;
         container.style.marginTop = "20px";
         container.style.maxHeight = maxHeight;
         container.style.overflowY = "auto";
         container.style.position = "relative";
+
+        // 要素を登録
+        this.registerElementWithType(id, container, "scrollable");
+
         return container;
+    }
+
+    /**
+     * DOM要素情報を取得（PL固有の型で返す）
+     * @param id - 要素ID
+     * @returns DOM要素情報、存在しない場合はnull
+     */
+    public getElementInfo(id: string): PLDomElementInfo | null {
+        return super.getElementInfo(id) as PLDomElementInfo | null;
     }
 }

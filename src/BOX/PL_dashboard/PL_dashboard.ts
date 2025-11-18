@@ -25,8 +25,12 @@ import { DateUtil, Logger, PerformanceUtil } from "./utils";
 
 import { BusinessCalculationService, KintoneApiService } from "./services";
 
-import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } from "./components";
-import { TableBuilderFactory } from "./components/TableBuilderFactory";
+import {
+    HeaderContainer,
+    PLDomBuilder,
+    PLDashboardGraphBuilder,
+    PLDashboardTableManager,
+} from "./components";
 import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 (function () {
     "use strict";
@@ -40,16 +44,18 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
     let filteredRecords: line_daily.SavedFields[] = [];
     let lastActiveTabId: string = "production-tab";
 
-    // TableBuilderFactory を使用してテーブルビルダーを作成
-    const productionTableBuilder =
-        TableBuilderFactory.createProductionTableBuilder("production-table");
-    const profitCalculationTableBuilder = TableBuilderFactory.createProfitCalculationTableBuilder(
-        "profit-calculation-table"
-    );
-    const revenueAnalysisTableBuilder =
-        TableBuilderFactory.createRevenueAnalysisTableBuilder("revenue-analysis-table");
+    // PLDashboardTableManager のインスタンスを作成
+    const tableManager = new PLDashboardTableManager({
+        stickyHeader: true,
+        enableDataTables: true,
+        holidayColoring: true,
+    });
 
-    // DOM構築関数は PLDashboardDomBuilder クラスに移動しました
+    // PLDashboardGraphBuilder のインスタンスを作成
+    const graphBuilder = new PLDashboardGraphBuilder();
+
+    // PLDomBuilder のインスタンスを作成
+    const domBuilder = new PLDomBuilder();
 
     /**
      * 表示スペース切替ボタンを作成する
@@ -271,7 +277,6 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                     // テーブルデータを再構築
                     const prodRows: unknown[] = [];
 
-                    // TableBuilderFactoryを使用してテーブルビルダーを取得
                     filteredRecords.forEach((record) => {
                         // 各種指標を計算
                         const metrics = BusinessCalculationService.calculateBusinessMetrics(
@@ -325,27 +330,39 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                     //
                     const productionTableElement = document.getElementById("production-table");
                     if (productionTableElement && (window as any).jQuery) {
-                        PLDashboardTableBuilder.updateTableData("production-table", prodRows);
+                        tableManager.updateTableData("production-table", prodRows);
                         tableContainer = existingProductionContainer as HTMLElement;
                     } else {
                         tableContainer = await PerformanceUtil.createElementLazy(() =>
-                            PLDashboardTableBuilder.createProductionPerformanceTable(
+                            tableManager.createProductionPerformanceTable(
+                                "production-table",
                                 filteredRecords,
                                 plMonthlyData,
                                 product_history_data,
-                                DateUtil.getDayOfWeek
+                                DateUtil.getDayOfWeek,
+                                {
+                                    holidayColoring: true,
+                                }
                             )
                         );
                     }
                 } else {
                     tableContainer = await PerformanceUtil.createElementLazy(() =>
-                        TableBuilderFactory.createProductionTableBuilder("production-table", {
-                            holidayColoring: true,
-                        })
+                        tableManager.createProductionPerformanceTable(
+                            "production-table",
+                            filteredRecords,
+                            plMonthlyData,
+                            product_history_data,
+                            DateUtil.getDayOfWeek,
+                            {
+                                holidayColoring: true,
+                            }
+                        )
                     );
                 }
                 const profitTableContainer = await PerformanceUtil.createElementLazy(() =>
-                    PLDashboardTableBuilder.createProfitCalculationTable(
+                    tableManager.createProfitCalculationTable(
+                        "calculation-table",
                         dailyReportData,
                         filteredRecords,
                         plMonthlyData,
@@ -382,21 +399,20 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
                     const summaryTableElement = document.getElementById("revenue-summary-table");
                     if (summaryTableElement && (window as any).jQuery) {
-                        PLDashboardTableBuilder.updateTableData(
-                            "revenue-summary-table",
-                            summaryRows
-                        );
+                        tableManager.updateTableData("revenue-summary-table", summaryRows);
                         summaryTableContainer = existingSummaryContainer as HTMLElement;
                     } else {
                         summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
-                            PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                            tableManager.createRevenueAnalysisSummaryTable(
+                                "revenue-summary-table",
                                 RevenueAnalysisList
                             )
                         );
                     }
                 } else {
                     summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                        tableManager.createRevenueAnalysisSummaryTable(
+                            "revenue-summary-table",
                             RevenueAnalysisList
                         )
                     );
@@ -405,14 +421,11 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                 const existingCanvas = document.getElementById("mixed-chart");
                 if (existingCanvas) {
                     // update chart data only
-                    PLDashboardGraphBuilder.updateMixedChart("mixed-chart", RevenueAnalysisList);
+                    graphBuilder.updateMixedChart("mixed-chart", RevenueAnalysisList);
                     mixedChartContainer = existingCanvas.parentElement as HTMLElement;
                 } else {
                     mixedChartContainer = await PerformanceUtil.createElementLazy(() =>
-                        PLDashboardGraphBuilder.createMixedChartContainer(
-                            "mixed-chart",
-                            RevenueAnalysisList
-                        )
+                        graphBuilder.createMixedChartContainer("mixed-chart", RevenueAnalysisList)
                     );
                 }
 
@@ -721,7 +734,8 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         }
 
         // ヘッダーコンテナを作成して追加
-        const headerContainer = HeaderContainer.create();
+        const headerContainerInstance = new HeaderContainer(domBuilder);
+        const headerContainer = headerContainerInstance.create();
         headerSpace.appendChild(headerContainer);
 
         // 年選択セレクトボックスの変更イベント

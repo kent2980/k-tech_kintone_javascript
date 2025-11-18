@@ -1,29 +1,85 @@
-/// <reference path="../../../../kintone.d.ts" />
+/// <reference path="../../../../../kintone.d.ts" />
 
-import { PLExcelImporter } from "../importers/index";
-import { KintoneApiService } from "../services/KintoneApiService";
-import { DomUtil } from "../utils";
-import { PLDashboardDomBuilder } from "./PLDashboardDomBuilder";
+import { PLExcelImporter } from "../../importers/index";
+import { KintoneApiService } from "../../services/KintoneApiService";
+import { DomUtil } from "../../utils";
+import { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
+import { PLDomBuilder } from "./PLDomBuilder";
+
 /**
- * ヘッダーコンテナを作成するクラス
+ * ヘッダー要素情報を管理するインターフェース（Header固有の拡張）
  */
-export class HeaderContainer {
+interface HeaderElementInfo extends BaseDomElementInfo {
+    /** 要素の種類 */
+    type: "container" | "filter" | "link" | "button" | "overlay" | "alert";
+}
+
+/**
+ * ヘッダーコンテナを作成・管理するクラス
+ * BaseDomBuilderを継承し、ヘッダー要素の状態を管理する
+ */
+export class HeaderContainer extends BaseDomBuilder {
+    /** ヘッダーコンテナ要素 */
+    private headerContainer: HTMLDivElement | null = null;
+
+    /** フィルターコンテナ要素 */
+    private filterContainer: HTMLDivElement | null = null;
+
+    /** 設定リンク要素 */
+    private settingsLink: HTMLAnchorElement | null = null;
+
+    /** 過去データ読み込みボタン要素 */
+    private loadPastDataButton: HTMLButtonElement | null = null;
+
+    /** PLDomBuilderのインスタンス */
+    private domBuilder: PLDomBuilder;
+
+    /**
+     * コンストラクタ
+     * @param domBuilder - PLDomBuilderのインスタンス（オプション、渡されない場合は内部で作成）
+     */
+    constructor(domBuilder?: PLDomBuilder) {
+        super();
+        this.domBuilder = domBuilder || new PLDomBuilder();
+    }
+
+    /**
+     * ヘッダー要素情報を登録（Header固有の拡張）
+     * @param id - 要素ID
+     * @param element - DOM要素
+     * @param type - 要素の種類
+     */
+    protected registerElementWithType(
+        id: string,
+        element: HTMLElement,
+        type: HeaderElementInfo["type"]
+    ): void {
+        this.registerElement(id, element);
+        const elementInfo = this.getElementInfo(id);
+        if (elementInfo) {
+            (elementInfo as HeaderElementInfo).type = type;
+        }
+    }
     /**
      * フィルターコンテナを作成する
      * @returns フィルターコンテナ
      */
-    private static createFilterContainer(): HTMLDivElement {
+    private createFilterContainer(): HTMLDivElement {
         const container = document.createElement("div");
         container.className = "header-filter-container";
 
         // 年フィルター
         container.appendChild(DomUtil.createLabel("年: ", "year-select"));
-        container.appendChild(PLDashboardDomBuilder.createYearSelect(10));
+        container.appendChild(this.domBuilder.createYearSelect(10));
 
         // 月フィルター
         container.appendChild(DomUtil.createLabel("月: ", "month-select", "20px"));
-        container.appendChild(PLDashboardDomBuilder.createMonthSelect());
+        container.appendChild(this.domBuilder.createMonthSelect());
 
+        // 要素を登録
+        this.registerElementWithType("filter-container", container, "filter");
+
+        this.filterContainer = container;
         return container;
     }
 
@@ -31,7 +87,7 @@ export class HeaderContainer {
      * 設定リンクを作成する
      * @returns 設定リンク
      */
-    private static createSettingsLink(): HTMLAnchorElement {
+    private createSettingsLink(): HTMLAnchorElement {
         const thisAppId = kintone.app.getId();
         const settingsHref = `https://d5wpzdj4iuwp.cybozu.com/k/admin/app/flow?app=${thisAppId}#section=form`;
         const settingsLink = document.createElement("a");
@@ -39,6 +95,11 @@ export class HeaderContainer {
         settingsLink.href = settingsHref;
         settingsLink.target = "_blank";
         settingsLink.className = "header-settings-link";
+
+        // 要素を登録
+        this.registerElementWithType("settings-link", settingsLink, "link");
+
+        this.settingsLink = settingsLink;
         return settingsLink;
     }
 
@@ -46,7 +107,7 @@ export class HeaderContainer {
      * 過去データ読み込みボタンを作成する
      * @returns 過去データ読み込みボタン
      */
-    private static createLoadPastDataButton(): HTMLButtonElement {
+    private createLoadPastDataButton(): HTMLButtonElement {
         // キントーンAPIサービスのインスタンスを作成
 
         const button = document.createElement("button");
@@ -132,6 +193,7 @@ export class HeaderContainer {
 
                     try {
                         // データ登録中オーバーレイ表示
+                        // 注意: このメソッドは静的メソッドのまま（後方互換性のため）
                         HeaderContainer.showDataUploadingOverlay(document.body);
                         // ファイルを読み込み、データをキントーンに保存
                         const importer = new PLExcelImporter(file);
@@ -209,6 +271,10 @@ export class HeaderContainer {
             input.click();
         });
 
+        // 要素を登録
+        this.registerElementWithType(button.id, button, "button");
+
+        this.loadPastDataButton = button;
         return button;
     }
 
@@ -216,7 +282,11 @@ export class HeaderContainer {
      * ヘッダーコンテナを作成する（フィルターと設定リンクを横並びに配置）
      * @returns ヘッダーコンテナ
      */
-    static create(): HTMLDivElement {
+    public create(): HTMLDivElement {
+        if (this.headerContainer) {
+            return this.headerContainer;
+        }
+
         const headerContainer = document.createElement("div");
         headerContainer.className = "header-container";
 
@@ -237,14 +307,50 @@ export class HeaderContainer {
         const loadPastDataButton = this.createLoadPastDataButton();
         spacer.appendChild(loadPastDataButton);
 
+        // 要素を登録
+        this.registerElementWithType("header-container", headerContainer, "container");
+
+        this.headerContainer = headerContainer;
         return headerContainer;
+    }
+
+    /**
+     * ヘッダーコンテナ要素を取得
+     * @returns ヘッダーコンテナ要素、作成されていない場合はnull
+     */
+    public getElement(): HTMLDivElement | null {
+        return this.headerContainer;
+    }
+
+    /**
+     * フィルターコンテナ要素を取得
+     * @returns フィルターコンテナ要素、作成されていない場合はnull
+     */
+    public getFilterContainer(): HTMLDivElement | null {
+        return this.filterContainer;
+    }
+
+    /**
+     * 設定リンク要素を取得
+     * @returns 設定リンク要素、作成されていない場合はnull
+     */
+    public getSettingsLink(): HTMLAnchorElement | null {
+        return this.settingsLink;
+    }
+
+    /**
+     * 過去データ読み込みボタン要素を取得
+     * @returns 過去データ読み込みボタン要素、作成されていない場合はnull
+     */
+    public getLoadPastDataButton(): HTMLButtonElement | null {
+        return this.loadPastDataButton;
     }
 
     /**
      * データ登録中オーバーレイ表示
      * @param parent - オーバーレイを追加する親要素
      */
-    static showDataUploadingOverlay(parent: HTMLElement): void {
+    public showDataUploadingOverlay(parent: HTMLElement): void {
         try {
             if (!parent) return;
             // 親要素を相対配置にしてオーバーレイを絶対配置で被せる
@@ -291,17 +397,23 @@ export class HeaderContainer {
             overlay.appendChild(box);
 
             parent.appendChild(overlay);
+
+            // 要素を登録
+            this.registerElementWithType(overlay.id, overlay, "overlay");
         } catch (e) {
             console.error("データ登録中オーバーレイの作成に失敗しました。", e);
         }
     }
+
     /**
      * データ登録中オーバーレイ非表示
      */
-    static hideDataUploadingOverlay(): void {
+    public hideDataUploadingOverlay(): void {
         const overlay = document.getElementById("File-loading-overlay");
         if (overlay && overlay.parentElement) {
             overlay.parentElement.removeChild(overlay);
+            // 要素を削除
+            this.removeElement(overlay.id);
         }
     }
 
@@ -310,7 +422,7 @@ export class HeaderContainer {
      * @param message - 表示するメッセージ
      * @param autoCloseMs - 自動で閉じるまでの時間（ミリ秒）。省略または0以下の場合は自動で閉じない
      */
-    static showCenteredAlert = (message: string, autoCloseMs?: number) => {
+    public showCenteredAlert(message: string, autoCloseMs?: number): void {
         const overlay = document.createElement("div");
         overlay.style.position = "fixed";
         overlay.style.top = "0";
@@ -359,8 +471,57 @@ export class HeaderContainer {
         overlay.appendChild(box);
         document.body.appendChild(overlay);
 
+        // 要素を登録
+        const alertId = `centered-alert-${Date.now()}`;
+        overlay.id = alertId;
+        this.registerElementWithType(alertId, overlay, "alert");
+
         if (autoCloseMs && autoCloseMs > 0) {
-            setTimeout(() => overlay.remove(), autoCloseMs);
+            setTimeout(() => {
+                overlay.remove();
+                this.removeElement(alertId);
+            }, autoCloseMs);
         }
-    };
+    }
+
+    /**
+     * 静的メソッドとしての後方互換性のためのメソッド
+     * @param domBuilder - PLDomBuilderのインスタンス（オプション）
+     * @returns ヘッダーコンテナ
+     */
+    static create(domBuilder?: PLDomBuilder): HTMLDivElement {
+        const instance = new HeaderContainer(domBuilder);
+        return instance.create();
+    }
+
+    /**
+     * 静的メソッドとしての後方互換性のためのメソッド
+     * @param parent - オーバーレイを追加する親要素
+     */
+    static showDataUploadingOverlay(parent: HTMLElement): void {
+        // グローバルインスタンスを使用（後方互換性のため）
+        const instance = new HeaderContainer();
+        instance.showDataUploadingOverlay(parent);
+    }
+
+    /**
+     * 静的メソッドとしての後方互換性のためのメソッド
+     */
+    static hideDataUploadingOverlay(): void {
+        // グローバルインスタンスを使用（後方互換性のため）
+        const instance = new HeaderContainer();
+        instance.hideDataUploadingOverlay();
+    }
+
+    /**
+     * 静的メソッドとしての後方互換性のためのメソッド
+     * @param message - 表示するメッセージ
+     * @param autoCloseMs - 自動で閉じるまでの時間（ミリ秒）
+     */
+    static showCenteredAlert(message: string, autoCloseMs?: number): void {
+        // グローバルインスタンスを使用（後方互換性のため）
+        const instance = new HeaderContainer();
+        instance.showCenteredAlert(message, autoCloseMs);
+    }
 }
+

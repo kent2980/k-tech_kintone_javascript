@@ -41,5 +41,7 @@
         "VITE",
         "wpzdj"
     ],
-    "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"]
+    "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"],
+    "cursor.chat.language": "ja",
+    "cursor.commitMessage.language": "ja"
 }

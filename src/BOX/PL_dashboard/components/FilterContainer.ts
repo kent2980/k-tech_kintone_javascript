@@ -8,54 +8,6 @@ export class FilterContainer {
     private monthSelect: HTMLSelectElement;
     private container: HTMLDivElement;
 
-    /**
-     * 年選択セレクトボックスを作成する（静的メソッド）
-     * @param yearCount - 過去何年分を表示するか
-     * @returns 年選択セレクトボックス
-     */
-    public static createYearSelect(yearCount: number = 10): HTMLSelectElement {
-        const yearSelect = document.createElement("select");
-        yearSelect.id = "year-select";
-
-        // デフォルトオプション
-        DomUtil.addOption(yearSelect, "", "-- 選択 --");
-
-        // 過去yearCount年分のオプションを追加
-        const currentYear = DateUtil.getCurrentYear();
-        for (let i = 0; i < yearCount; i++) {
-            const year = currentYear - i;
-            DomUtil.addOption(yearSelect, year, year.toString());
-        }
-
-        // 現在の年をデフォルト選択
-        yearSelect.value = currentYear.toString();
-
-        return yearSelect;
-    }
-
-    /**
-     * 月選択セレクトボックスを作成する（静的メソッド）
-     * @returns 月選択セレクトボックス
-     */
-    public static createMonthSelect(): HTMLSelectElement {
-        const monthSelect = document.createElement("select");
-        monthSelect.id = "month-select";
-
-        // デフォルトオプション
-        DomUtil.addOption(monthSelect, "", "-- 選択 --");
-
-        // 12ヶ月分のオプションを追加
-        for (let i = 1; i <= 12; i++) {
-            DomUtil.addOption(monthSelect, i.toString(), `${i}月`);
-        }
-
-        // 現在の月をデフォルト選択
-        const currentMonth = DateUtil.getCurrentMonth();
-        monthSelect.value = currentMonth.toString();
-
-        return monthSelect;
-    }
-
     constructor() {
         this.container = this.createContainer();
         this.yearSelect = this.createYearSelect();

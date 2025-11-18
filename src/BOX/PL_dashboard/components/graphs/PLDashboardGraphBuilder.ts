@@ -1,35 +1,81 @@
 import Chart from "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
-import { HolidayStore } from "../store";
-import { RevenueAnalysis } from "../types";
-import { DateUtil } from "../utils";
-import { PLDashboardTableBuilder } from "./PLDashboardTableBuilder";
-export class PLDashboardGraphBuilder {
-    // store chart instances by canvas id so we can update data without recreating DOM
-    private static charts: Map<string, Chart> = new Map();
+import { HolidayStore } from "../../store";
+import { RevenueAnalysis } from "../../types";
+import { DateUtil } from "../../utils";
+import { BaseGraphManager } from "./BaseGraphManager";
+
+/**
+ * PLダッシュボード用のグラフ管理クラス
+ * BaseGraphManagerを継承し、PL管理に特化したグラフ機能を提供
+ */
+export class PLDashboardGraphBuilder extends BaseGraphManager {
+    /**
+     * コンストラクタ
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * 日付に応じた背景色を取得する
+     * @param date - 日付文字列（YYYY-MM-DD形式）
+     * @param holidayData - 会社休日マスタデータ
+     * @returns 背景色の文字列、通常日の場合は空文字
+     */
+    private getDateBackgroundColor(
+        date: string,
+        holidayData: { date?: { value: string }; holiday_type?: { value: string } }[] = []
+    ): string {
+        const dateObj = new Date(date);
+        const dayOfWeek = dateObj.getDay();
+
+        // 会社休日マスタの日付と一致する場合はholiday_typeに応じた背景色を設定
+        const holidayRecord = holidayData.find((holiday) => holiday.date?.value === date);
+        if (holidayRecord) {
+            const holidayType = holidayRecord.holiday_type?.value;
+            switch (holidayType) {
+                case "法定休日":
+                    return "#e6f3ff"; // 薄い青
+                case "所定休日":
+                    return "#ffe6e6"; // 薄い赤
+                case "一斉有給":
+                    return "#fffacd"; // 薄い黄色
+                default:
+                    return "#ffe6e6"; // デフォルトは薄い赤
+            }
+        }
+
+        // 通常日は背景色なし
+        return "";
+    }
 
     /**
      * 折れ線と棒グラフの複合グラフを作成したコンテナを作成
+     * @param canvasId - キャンバスID
+     * @param RevenueAnalysisList - 収益分析データ
+     * @returns グラフコンテナ要素
      */
-    static createMixedChartContainer(
+    public createMixedChartContainer(
         canvasId: string,
         RevenueAnalysisList: RevenueAnalysis[]
     ): HTMLDivElement {
-        const container = document.createElement("div");
-        container.style.width = "100%";
-        container.style.height = "600px";
-        container.style.minHeight = "500px";
-        container.style.padding = "20px";
-        container.style.boxSizing = "border-box";
-        const canvas = document.createElement("canvas");
-        canvas.id = canvasId;
-        container.appendChild(canvas);
+        // 既存のグラフがあれば破棄
+        if (this.hasChart(canvasId)) {
+            this.destroyChart(canvasId);
+        }
+
+        // グラフコンテナを作成
+        const { container, canvas } = this.createChartContainer(canvasId);
         const ctx = canvas.getContext("2d");
 
         // 祝日データを取得
         const holidayStore = HolidayStore.getInstance();
         const holidayData = holidayStore.getHolidayData();
+
+        // thisの参照を保持
+        const self = this;
 
         if (ctx) {
             const labels = RevenueAnalysisList.map((item) => {
@@ -116,11 +162,10 @@ export class PLDashboardGraphBuilder {
                                     const index = context.index;
                                     if (index < RevenueAnalysisList.length) {
                                         const date = RevenueAnalysisList[index].date;
-                                        const backgroundColor =
-                                            PLDashboardTableBuilder.getDateBackgroundColor(
-                                                date,
-                                                holidayData
-                                            );
+                                        const backgroundColor = self.getDateBackgroundColor(
+                                            date,
+                                            holidayData
+                                        );
 
                                         // 背景色に応じてテキスト色を調整
                                         if (backgroundColor === "#e6f3ff") return "#0066cc"; // 法定休日: 青色テキスト
@@ -135,11 +180,10 @@ export class PLDashboardGraphBuilder {
                                         const index = context.index;
                                         if (index < RevenueAnalysisList.length) {
                                             const date = RevenueAnalysisList[index].date;
-                                            const backgroundColor =
-                                                PLDashboardTableBuilder.getDateBackgroundColor(
-                                                    date,
-                                                    holidayData
-                                                );
+                                            const backgroundColor = self.getDateBackgroundColor(
+                                                date,
+                                                holidayData
+                                            );
                                             return backgroundColor ? "bold" : "normal";
                                         }
                                         return "normal";
@@ -180,8 +224,9 @@ export class PLDashboardGraphBuilder {
                 },
                 plugins: [ChartDataLabels],
             });
-            // store chart instance
-            PLDashboardGraphBuilder.charts.set(canvasId, chart);
+
+            // グラフ情報を登録
+            this.registerChart(canvasId, chart, container);
         }
 
         // グラフコンテナを返す
@@ -190,10 +235,14 @@ export class PLDashboardGraphBuilder {
 
     /**
      * 既存のチャートを更新（データのみ）
+     * @param canvasId - キャンバスID
+     * @param RevenueAnalysisList - 収益分析データ
      */
-    static updateMixedChart(canvasId: string, RevenueAnalysisList: RevenueAnalysis[]): void {
-        const chart = PLDashboardGraphBuilder.charts.get(canvasId);
-        if (!chart) return;
+    public updateMixedChart(canvasId: string, RevenueAnalysisList: RevenueAnalysis[]): void {
+        const chartInfo = this.getChartInfo(canvasId);
+        if (!chartInfo) return;
+
+        const chart = chartInfo.chart;
 
         const labels = RevenueAnalysisList.map((item) => {
             const dateObj = new Date(item.date);
@@ -216,12 +265,8 @@ export class PLDashboardGraphBuilder {
         }
 
         chart.update();
-    }
 
-    /**
-     * グラフを破棄
-     */
-    destroy(): void {
-        // no-op for static usage
+        // 更新日時を更新
+        chartInfo.updatedAt = new Date();
     }
 }

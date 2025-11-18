@@ -18,7 +18,7 @@ import { DateUtil, Logger, PerformanceUtil } from "./utils";
 
 import { KintoneApiService } from "./services";
 
-import { PLDashboardDomBuilder } from "./components";
+import { PLDomBuilder } from "./components";
 
 (function () {
     "use strict";
@@ -37,6 +37,9 @@ import { PLDashboardDomBuilder } from "./components";
     const product_history_data: ProductHistoryData[] = [];
     let plMonthlyData: monthly.SavedFields | null = null;
     let filteredRecords: line_daily.SavedFields[] = [];
+
+    // PLDomBuilder のインスタンスを作成
+    const domBuilder = new PLDomBuilder();
 
     // パッシブイベントリスナーのサポート検出
     let supportsPassive = false;
@@ -163,7 +166,7 @@ import { PLDashboardDomBuilder } from "./components";
         yearLabel.style.fontSize = "12px";
         yearGroup.appendChild(yearLabel);
 
-        const yearSelect = PLDashboardDomBuilder.createYearSelect(10);
+        const yearSelect = domBuilder.createYearSelect(10);
         yearSelect.className = "mobile-filter-select";
         yearSelect.style.width = "100%";
         yearSelect.style.padding = "6px";
@@ -181,7 +184,7 @@ import { PLDashboardDomBuilder } from "./components";
         monthLabel.style.fontSize = "12px";
         monthGroup.appendChild(monthLabel);
 
-        const monthSelect = PLDashboardDomBuilder.createMonthSelect();
+        const monthSelect = domBuilder.createMonthSelect();
         monthSelect.className = "mobile-filter-select";
         monthSelect.style.width = "100%";
         monthSelect.style.padding = "6px";

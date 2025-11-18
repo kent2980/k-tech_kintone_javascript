@@ -123,15 +123,36 @@ console.error('エラー情報:', error);
 ├── src/
 │   └── BOX/
 │       └── PL_dashboard/
-│           ├── PL_dashboard.ts      # メインのTypeScriptファイル
-│           ├── PL_dashboard.css     # スタイルファイル
-│           └── fields/                 # アプリ固有のフィールド定義
-├── dist/                               # ビルド出力フォルダ
-├── fields/                             # 共通のkintoneフィールド型定義
-├── customize-manifest*.json            # 各アプリのカスタマイズ設定
-├── vite.config.ts                      # Vite設定ファイル（複数エントリー対応）
-├── tsconfig.json                       # TypeScript設定ファイル
-└── package.json                        # npm設定ファイル
+│           ├── PL_dashboard.ts          # メインのTypeScriptファイル（デスクトップ版）
+│           ├── PL_dashboard.mobile.ts    # モバイル版TypeScriptファイル
+│           ├── components/               # UIコンポーネント
+│           │   ├── tables/               # テーブル管理コンポーネント
+│           │   │   ├── BaseTableManager.ts
+│           │   │   └── PLDashboardTableManager.ts
+│           │   ├── graphs/               # グラフ管理コンポーネント
+│           │   │   ├── BaseGraphManager.ts
+│           │   │   └── PLDashboardGraphBuilder.ts
+│           │   ├── dom/                  # DOM構築コンポーネント
+│           │   │   ├── BaseDomBuilder.ts
+│           │   │   ├── PLDomBuilder.ts
+│           │   │   └── HeaderContainer.ts
+│           │   ├── FilterContainer.ts
+│           │   └── TabContainer.ts
+│           ├── services/                # ビジネスロジック・API呼び出し
+│           ├── utils/                   # ユーティリティ関数
+│           ├── types/                   # TypeScript型定義
+│           ├── config/                  # 設定ファイル
+│           ├── store/                   # 状態管理
+│           ├── hooks/                   # カスタムフック
+│           ├── importers/               # ファイルインポーター
+│           ├── fields/                  # アプリ固有のフィールド定義
+│           └── styles/                  # スタイルシート
+├── dist/                                # ビルド出力フォルダ
+├── fields/                              # 共通のkintoneフィールド型定義
+├── customize-manifest*.json             # 各アプリのカスタマイズ設定
+├── vite.config.ts                       # Vite設定ファイル（複数エントリー対応）
+├── tsconfig.json                        # TypeScript設定ファイル
+└── package.json                         # npm設定ファイル
 ```
 
 ## kintoneアプリのフィールド管理
@@ -264,6 +285,21 @@ declare namespace daily {
 | `npm run deploy:app43` | アプリ43に特化したデプロイ            |
 
 ## 更新履歴
+
+### 2025年1月（最新）
+
+#### アーキテクチャの改善
+
+- **親子クラス構造の導入**: 基底クラス（BaseTableManager, BaseGraphManager, BaseDomBuilder）と派生クラスによる責務分離
+- **コンポーネントの再構成**: components/をtables/, graphs/, dom/に細分化
+- **テーブル作成の3層構造**: データ変換・レンダリング・DataTables統合を専用メソッドに分離
+- **クラス名の明確化**: 親子関係が分かる命名規則（Base* → PL*）
+
+#### コード品質の向上
+
+- **静的メソッドの削減**: インスタンス化可能なクラスへの移行
+- **状態管理の改善**: 各マネージャークラスが自身の状態を管理
+- **依存関係の整理**: 循環依存の解消とモジュール構造の最適化
 
 ### 2025年11月9日
 

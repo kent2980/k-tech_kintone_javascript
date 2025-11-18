@@ -16,11 +16,10 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 /**
- * PL管理Excel専用インポーターラッパークラス
- * ExcelImporterを拡張し、PL管理に特化したメソッドを提供
+ * PL管理Excel専用インポータークラス
+ * ExcelImporterを継承し、PL管理に特化したメソッドを提供
  */
-export class PLExcelImporter {
-    private importer: ExcelImporter;
+export class PLExcelImporter extends ExcelImporter {
     private isLoaded: boolean = false;
 
     /**
@@ -28,7 +27,7 @@ export class PLExcelImporter {
      * @param file - インポートするExcelファイル
      */
     constructor(file: File) {
-        this.importer = new ExcelImporter(file);
+        super(file);
     }
 
     /**
@@ -36,7 +35,7 @@ export class PLExcelImporter {
      */
     async load(): Promise<void> {
         try {
-            await this.importer.load();
+            await super.load();
             this.isLoaded = true;
             Logger.debug("PLExcelファイルを読み込みました");
         } catch (error) {
@@ -49,131 +48,9 @@ export class PLExcelImporter {
      * 使用後はリソースを解放
      */
     dispose(): void {
-        this.importer.dispose();
+        super.dispose();
         this.isLoaded = false;
         Logger.debug("PLExcelImporterを破棄しました");
-    }
-
-    // ========================================
-    // PL管理特化メソッド
-    // ========================================
-
-    // ========================================
-    // Delegation methods - ExcelImporterの機能を提供
-    // ========================================
-
-    /**
-     * 全シート名を取得
-     */
-    getSheetNames(): string[] {
-        this.checkLoaded();
-        return this.importer.getSheetNames();
-    }
-
-    /**
-     * 指定されたシートが存在するか確認
-     */
-    hasSheet(sheetName: string): boolean {
-        this.checkLoaded();
-        return this.importer.hasSheet(sheetName);
-    }
-
-    /**
-     * 指定されたセル値を取得
-     */
-    getCellValue(address: string, sheetName?: string): any {
-        this.checkLoaded();
-        return this.importer.getCellValue(address, sheetName);
-    }
-
-    /**
-     * 指定されたセル値を日付として取得
-     */
-    getCellValueAsDate(address: string, sheetName?: string): Date | null {
-        this.checkLoaded();
-        return this.importer.getCellValueAsDate(address, sheetName);
-    }
-
-    /**
-     * テーブルデータを2次元配列で取得
-     */
-    getTableData(
-        startColumn: string | number,
-        endColumn: string | number,
-        headerRow: number,
-        sheetName?: string
-    ): string[][] {
-        this.checkLoaded();
-        return this.importer.getTableData(startColumn, endColumn, headerRow, sheetName);
-    }
-
-    /**
-     * テーブルデータをDataFrame形式で取得
-     */
-    getTableDataAsDataFrame(
-        startColumn: string | number,
-        endColumn: string | number,
-        headerRow: number,
-        dataStartRow: number,
-        sheetName?: string
-    ): TableDataFrame {
-        this.checkLoaded();
-        return this.importer.getTableDataAsDataFrame(
-            startColumn,
-            endColumn,
-            headerRow,
-            dataStartRow,
-            sheetName
-        );
-    }
-
-    /**
-     * 縦方向テーブル（転置テーブル）をDataFrame形式で取得
-     * 左端列がカラム名で、右方向にデータが横並び
-     */
-    getTableDataAsDataFrameTransposed(
-        headerColumn: string | number,
-        dataStartColumn: string | number,
-        dataEndColumn: string | number,
-        startRow: number,
-        endRow: number,
-        sheetName?: string
-    ): TableDataFrame {
-        this.checkLoaded();
-        return this.importer.getTableDataAsDataFrameTransposed(
-            headerColumn,
-            dataStartColumn,
-            dataEndColumn,
-            startRow,
-            endRow,
-            sheetName
-        );
-    }
-
-    /**
-     * セル範囲の値を取得
-     */
-    getRangeValues(range: string, sheetName?: string): any[][] {
-        this.checkLoaded();
-        return this.importer.getRangeValues(range, sheetName);
-    }
-
-    /**
-     * 複数シートからデータを一括取得
-     */
-    getMultiSheetData(sheetConfigs: any[]): Record<string, TableDataFrame> {
-        this.checkLoaded();
-        const result: Record<string, TableDataFrame> = {};
-        for (const config of sheetConfigs) {
-            result[config.sheetName] = this.importer.getTableDataAsDataFrame(
-                config.startColumn,
-                config.endColumn,
-                config.headerRow,
-                config.dataStartRow,
-                config.sheetName
-            );
-        }
-        return result;
     }
 
     // ========================================
@@ -365,25 +242,25 @@ export class PLExcelImporter {
         // sheetName1の処理
 
         /** 社員単価 */
-        const inside_unit: number = this.importer.getCellValueAsNumber("G2", sheetName1);
+        const inside_unit: number = super.getCellValueAsNumber("G2", sheetName1);
         /** 派遣単価 */
-        const outside_unit: number = this.importer.getCellValueAsNumber("I2", sheetName1);
+        const outside_unit: number = super.getCellValueAsNumber("I2", sheetName1);
 
         // sheetName2の処理
         /** 日付 */
-        const day: Date | null = this.importer.getCellValueAsDate("G26", sheetName2);
+        const day: Date | null = super.getCellValueAsDate("G26", sheetName2);
         /** 直行人員単価 */
-        const direct: number = this.importer.getCellValueAsNumber("A28", sheetName2);
+        const direct: number = super.getCellValueAsNumber("A28", sheetName2);
         /** 派遣人員単価 */
-        const dispatch: number = this.importer.getCellValueAsNumber("A30", sheetName2);
+        const dispatch: number = super.getCellValueAsNumber("A30", sheetName2);
         /** 間接人員単価 */
-        const indirect: number = this.importer.getCellValueAsNumber("A32", sheetName2);
+        const indirect: number = super.getCellValueAsNumber("A32", sheetName2);
         /** 直行人員数 */
-        const direct_number: number = this.importer.getCellValueAsNumber("C28", sheetName2);
+        const direct_number: number = super.getCellValueAsNumber("C28", sheetName2);
         /** 派遣人員数 */
-        const dispatch_number: number = this.importer.getCellValueAsNumber("C30", sheetName2);
+        const dispatch_number: number = super.getCellValueAsNumber("C30", sheetName2);
         /** 間接人員数 */
-        const indirect_number: number = this.importer.getCellValueAsNumber("C32", sheetName2);
+        const indirect_number: number = super.getCellValueAsNumber("C32", sheetName2);
 
         const item = {
             year: { value: day ? day.getFullYear().toString() : "" },
