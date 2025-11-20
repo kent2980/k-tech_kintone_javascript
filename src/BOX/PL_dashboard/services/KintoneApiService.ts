@@ -1,12 +1,15 @@
-import { API_LIMITS, APP_IDS } from "../config";
+import { API_LIMITS, APP_CONFIG, APP_IDS } from "../config";
 import { kintoneApiFatalRegisterError } from "../error/kintoneApiError";
 import {
     FilterConfig,
     KintoneDuplicateResult,
+    KintoneRecord,
+    KintoneRecordPostResponse,
+    KintoneRecordsPostResponse,
     KintoneSaveResult,
     KintoneSaveResults,
 } from "../types";
-import { DateUtil, FieldsUtil, Logger, PerformanceUtil } from "../utils";
+import { DateUtil, ErrorHandler, FieldsUtil, Logger, PerformanceUtil } from "../utils";
 
 /// <reference path="../fields/month_fields.d.ts" />
 /// <reference path="../fields/daily_fields.d.ts" />
@@ -16,19 +19,123 @@ import { DateUtil, FieldsUtil, Logger, PerformanceUtil } from "../utils";
 
 /**
  * kintone API関連の処理を担当するサービスクラス
+ *
+ * @remarks
+ * このクラスはkintone APIとの通信を担当し、以下の機能を提供します：
+ * - レコードの取得（fetch）
+ * - レコードの保存（save）
+ * - レコードの更新（update）
+ * - レコードの削除（delete）
+ * - 重複チェック（checkDuplicate）
+ *
+ * @example
+ * ```typescript
+ * const apiService = new KintoneApiService();
+ * const monthlyData = await apiService.fetchPLMonthlyData("2024", "01");
+ * ```
+ *
+ * @category Services
  */
 export class KintoneApiService {
     /**
-     * PL月次データを取得する
-     * @param year - 年
-     * @param month - 月
-     * @returns 取得したレコードデータ
+     * コンストラクタ
+     *
+     * @remarks
+     * 将来的に設定や依存性を注入できるように拡張可能
      */
-    static async fetchPLMonthlyData(
-        year: string,
-        month: string
-    ): Promise<monthly.SavedFields | null> {
-        const cacheKey = `pl-monthly-${year}-${month}`;
+    constructor() {
+        // 現在は設定不要のため空実装
+        // 将来的に設定や依存性を注入できるように拡張可能
+    }
+
+    /**
+     * キャッシュキーを生成する
+     * @param prefix - キャッシュキーのプレフィックス
+     * @param params - 追加パラメータ（年月など）
+     * @returns キャッシュキー
+     */
+    private static createCacheKey(prefix: string, ...params: (string | number)[]): string {
+        return params.length > 0 ? `${prefix}-${params.join("-")}` : prefix;
+    }
+
+    /**
+     * 特定のアプリのキャッシュを無効化する
+     * @param appType - アプリタイプ（PL_MONTHLY, PL_DAILY, MASTER_MODEL, PRODUCTION_REPORT, HOLIDAY）
+     * @param params - 追加パラメータ（年月など、オプション）
+     */
+    private static invalidateCache(
+        appType: keyof typeof APP_CONFIG.CACHE_KEY_PREFIX,
+        ...params: (string | number)[]
+    ): void {
+        const prefix = APP_CONFIG.CACHE_KEY_PREFIX[appType];
+        if (params.length > 0) {
+            // 特定のキーを無効化
+            const cacheKey = this.createCacheKey(prefix, ...params);
+            PerformanceUtil.clearCache(`^${cacheKey}$`);
+            Logger.debug(`キャッシュを無効化しました: ${cacheKey}`);
+        } else {
+            // 該当アプリの全キャッシュを無効化
+            PerformanceUtil.clearCache(`^${prefix}-`);
+            Logger.debug(`キャッシュを無効化しました: ${prefix}-*`);
+        }
+    }
+
+    /**
+     * 複数のアプリのキャッシュを無効化する
+     * @param appTypes - アプリタイプの配列
+     */
+    private static invalidateMultipleCaches(
+        ...appTypes: Array<keyof typeof APP_CONFIG.CACHE_KEY_PREFIX>
+    ): void {
+        for (const appType of appTypes) {
+            this.invalidateCache(appType);
+        }
+    }
+
+    /**
+     * アプリIDからアプリタイプを取得する
+     * @param appId - アプリID
+     * @returns アプリタイプ（見つからない場合はnull）
+     */
+    private static getAppTypeFromId(
+        appId: number
+    ): keyof typeof APP_CONFIG.CACHE_KEY_PREFIX | null {
+        if (appId === APP_IDS.PL_MONTHLY) return "PL_MONTHLY";
+        if (appId === APP_IDS.PL_DAILY) return "PL_DAILY";
+        if (appId === APP_IDS.MASTER_MODEL) return "MASTER_MODEL";
+        if (appId === APP_IDS.PRODUCTION_REPORT) return "PRODUCTION_REPORT";
+        if (appId === APP_IDS.HOLIDAY) return "HOLIDAY";
+        return null;
+    }
+
+    /**
+     * PL月次データを取得する
+     *
+     * @param year - 取得対象の年（例: "2024"）
+     * @param month - 取得対象の月（例: "01" または "1"）
+     * @returns 取得したレコードデータ。データが存在しない場合はnullを返す
+     *
+     * @remarks
+     * - キャッシュ機能を内蔵しており、設定ファイルで指定された期間はキャッシュから取得します
+     * - エラーが発生した場合は、ErrorHandlerを使用してログに記録し、nullを返します
+     *
+     * @example
+     * ```typescript
+     * const apiService = new KintoneApiService();
+     * const data = await apiService.fetchPLMonthlyData("2024", "01");
+     * if (data) {
+     *   console.log(data.year_month?.value);
+     * }
+     * ```
+     *
+     * @throws {Error} kintone API呼び出しに失敗した場合（エラーハンドラーで処理される）
+     */
+    async fetchPLMonthlyData(year: string, month: string): Promise<monthly.SavedFields | null> {
+        const cacheKey = KintoneApiService.createCacheKey(
+            APP_CONFIG.CACHE_KEY_PREFIX.PL_MONTHLY,
+            year,
+            month
+        );
 
         // キャッシュから取得を試行
         const cachedData = PerformanceUtil.getFromCache<monthly.SavedFields>(cacheKey);
@@ -54,25 +161,45 @@ export class KintoneApiService {
 
             const result = response.records[0] || null;
 
-            // 結果をキャッシュ（5分間）
+            // 結果をキャッシュ（設定ファイルからTTLを取得）
             if (result) {
-                PerformanceUtil.setCache(cacheKey, result, 300000);
+                PerformanceUtil.setCache(cacheKey, result, APP_CONFIG.CACHE_DURATION.PL_MONTHLY);
             }
 
             return result;
         } catch (error) {
-            Logger.error("PL月次データ取得エラー:", error);
-            return null;
+            return ErrorHandler.handleErrorAndReturnNull("PL月次データ取得エラー", error, {
+                year,
+                month,
+                appId: APP_IDS.PL_MONTHLY,
+            });
         }
     }
 
     /**
      * PL日次データを取得する
-     * @param year - 年
-     * @param month - 月
-     * @returns レコードの配列
+     *
+     * @param year - 取得対象の年（例: "2024"）
+     * @param month - 取得対象の月（例: "01" または "1"）
+     * @returns 取得したレコードの配列。データが存在しない場合は空配列を返す
+     *
+     * @remarks
+     * - 指定された年月の1日から月末日までのデータを取得します
+     * - 未来の日付の場合は今日までに制限されます
+     * - エラーが発生した場合は、ErrorHandlerを使用してログに記録し、空配列を返します
+     *
+     * @example
+     * ```typescript
+     * const apiService = new KintoneApiService();
+     * const records = await apiService.fetchPLDailyData("2024", "01");
+     * records.forEach(record => {
+     *   console.log(record.date?.value);
+     * });
+     * ```
+     *
+     * @throws {Error} kintone API呼び出しに失敗した場合（エラーハンドラーで処理される）
      */
-    static async fetchPLDailyData(year: string, month: string): Promise<daily.SavedFields[]> {
+    async fetchPLDailyData(year: string, month: string): Promise<daily.SavedFields[]> {
         const fields = FieldsUtil.getDailyFields();
 
         const today = DateUtil.getTodayString();
@@ -94,19 +221,24 @@ export class KintoneApiService {
                 `${queryCondition} order by date asc`
             );
         } catch (error) {
-            Logger.error("PL日次データ取得エラー:", error);
-            return [];
+            return ErrorHandler.handleErrorAndReturnEmpty<daily.SavedFields>(
+                "PL日次データ取得エラー",
+                error,
+                {
+                    year,
+                    month,
+                    appId: APP_IDS.PL_DAILY,
+                }
+            );
         }
     }
 
     /**
-     * 生産日報報告書データを取得する
+     * 生産日報報告書データを取得する（インスタンスメソッド）
      * @param filterConfig - フィルター設定
      * @returns レコードの配列
      */
-    static async fetchProductionReportData(
-        filterConfig: FilterConfig
-    ): Promise<line_daily.SavedFields[]> {
+    async fetchProductionReportData(filterConfig: FilterConfig): Promise<line_daily.SavedFields[]> {
         const fields = FieldsUtil.getLineDailyFields();
 
         const today = DateUtil.getTodayString();
@@ -145,17 +277,23 @@ export class KintoneApiService {
                 `${queryCondition} order by date asc, line_name asc, model_name asc`
             );
         } catch (error) {
-            Logger.error(`${APP_IDS.PRODUCTION_REPORT},生産日報データ取得エラー:`, error);
-            return [];
+            return ErrorHandler.handleErrorAndReturnEmpty<line_daily.SavedFields>(
+                "生産日報データ取得エラー",
+                error,
+                {
+                    filterConfig,
+                    appId: APP_IDS.PRODUCTION_REPORT,
+                }
+            );
         }
     }
 
     /**
-     * マスタ機種一覧データを取得する
+     * マスタ機種一覧データを取得する（インスタンスメソッド）
      * @returns レコードの配列
      */
-    static async fetchMasterModelData(): Promise<model_master.SavedFields[]> {
-        const cacheKey = "master-model-data";
+    async fetchMasterModelData(): Promise<model_master.SavedFields[]> {
+        const cacheKey = KintoneApiService.createCacheKey(APP_CONFIG.CACHE_KEY_PREFIX.MASTER_MODEL);
 
         // キャッシュから取得を試行
         const cachedData = PerformanceUtil.getFromCache<model_master.SavedFields[]>(cacheKey);
@@ -180,21 +318,26 @@ export class KintoneApiService {
                 `マスタ機種一覧データを${records.length}件取得しました (${fetchTime.toFixed(2)}ms)`
             );
 
-            // 結果をキャッシュ（30分間）- マスタデータは変更頻度が低いため
-            PerformanceUtil.setCache(cacheKey, records, 1800000);
+            // 結果をキャッシュ（設定ファイルからTTLを取得）
+            PerformanceUtil.setCache(cacheKey, records, APP_CONFIG.CACHE_DURATION.MASTER_MODEL);
 
             return records;
         } catch (error) {
-            Logger.error("マスタ機種データ取得エラー:", error);
-            return [];
+            return ErrorHandler.handleErrorAndReturnEmpty<model_master.SavedFields>(
+                "マスタ機種データ取得エラー",
+                error,
+                {
+                    appId: APP_IDS.MASTER_MODEL,
+                }
+            );
         }
     }
 
     /**
-     * 祝日データを取得する
+     * 祝日データを取得する（インスタンスメソッド）
      * @returns レコードの配列
      */
-    static async fetchHolidayData(): Promise<holiday.SavedFields[]> {
+    async fetchHolidayData(): Promise<holiday.SavedFields[]> {
         const fields = FieldsUtil.getHolidayFields();
 
         return await this.fetchAllRecords<holiday.SavedFields>(
@@ -205,17 +348,13 @@ export class KintoneApiService {
     }
 
     /**
-     * すべてのレコードを取得する（ページング処理込み）
+     * すべてのレコードを取得する（ページング処理込み）（インスタンスメソッド）
      * @param appId - アプリID
      * @param fields - 取得するフィールド
      * @param query - クエリ条件
      * @returns すべてのレコード
      */
-    private static async fetchAllRecords<T>(
-        appId: number,
-        fields: string[],
-        query: string
-    ): Promise<T[]> {
+    private async fetchAllRecords<T>(appId: number, fields: string[], query: string): Promise<T[]> {
         let allRecords: T[] = [];
         let offset = 0;
         const limit = API_LIMITS.RECORDS_PER_REQUEST;
@@ -240,12 +379,12 @@ export class KintoneApiService {
     }
 
     /**
-     * レコード取得のリトライ処理
+     * レコード取得のリトライ処理（インスタンスメソッド）
      * @param fetchFunction - 実行する取得関数
      * @param maxRetries - 最大リトライ回数
      * @returns 取得結果
      */
-    static async withRetry<T>(
+    async withRetry<T>(
         fetchFunction: () => Promise<T>,
         maxRetries: number = API_LIMITS.MAX_RETRIES
     ): Promise<T> {
@@ -256,7 +395,10 @@ export class KintoneApiService {
                 return await fetchFunction();
             } catch (error) {
                 lastError = error as Error;
-                Logger.warn(`API取得試行 ${i + 1}/${maxRetries} 失敗:`, error);
+                ErrorHandler.logError(`API取得試行 ${i + 1}/${maxRetries} 失敗`, error, {
+                    attempt: i + 1,
+                    maxRetries,
+                });
 
                 if (i < maxRetries - 1) {
                     // 指数バックオフで待機
@@ -269,12 +411,12 @@ export class KintoneApiService {
     }
 
     /**
-     * 与えられた API 呼び出し関数群を並列で実行（同時実行数制限付き）
+     * 与えられた API 呼び出し関数群を並列で実行（同時実行数制限付き）（インスタンスメソッド）
      * 各呼び出しは `withRetry` でラップされます。
      * @param tasks - 実行する API 呼び出し関数の配列
      * @param concurrency - 同時実行数
      */
-    private static async executeBatchedRequests<T>(
+    private async executeBatchedRequests<T>(
         tasks: Array<() => Promise<T>>,
         concurrency: number = 3,
         meta?: { appId?: number; action?: string }
@@ -324,14 +466,14 @@ export class KintoneApiService {
     // ========================================
 
     /**
-     * PL月次データを登録する
+     * PL月次データを登録する（インスタンスメソッド）
      * @param record - 登録するレコード
      * @returns KintoneSaveResult 登録されたレコードIDとリビジョン
      * @throws kintoneApiDuplicateError 重複レコードが見つかった場合のエラー
      * @throws kintoneApiFatalRegisterError その他の登録失敗時のエラー
      */
-    static async savePLMonthlyData(
-        record: Record<string, any>
+    async savePLMonthlyData(
+        record: Record<string, unknown>
     ): Promise<KintoneSaveResult | KintoneDuplicateResult> {
         try {
             // 重複チェック
@@ -348,8 +490,8 @@ export class KintoneApiService {
                     record: JSON.parse(JSON.stringify(record)),
                 });
 
-                // キャッシュをクリア
-                PerformanceUtil.clearCache();
+                // PL月次データのキャッシュを無効化
+                KintoneApiService.invalidateCache("PL_MONTHLY");
 
                 const saveResult: KintoneSaveResult = {
                     ok: true,
@@ -365,35 +507,42 @@ export class KintoneApiService {
                 };
             }
         } catch (error) {
-            Logger.error("PL月次データ登録エラー:", error);
+            ErrorHandler.logError("PL月次データ登録エラー", error, {
+                method: "savePLMonthlyData",
+                appId: APP_IDS.PL_MONTHLY,
+            });
             throw new kintoneApiFatalRegisterError(
-                `PL月次データの登録中にエラーが発生しました。:${error}`
+                `PL月次データの登録中にエラーが発生しました。:${error instanceof Error ? error.message : String(error)}`
             );
         }
     }
 
     /**
-     * PL日次データを登録する
+     * PL日次データを登録する（インスタンスメソッド）
      * @param records - 登録するレコード配列
      * @returns KintoneSaveResults 登録されたレコードID配列
      * @throws kintoneApiDuplicateError 重複レコードが見つかった場合のエラー
      * @throws kintoneApiFatalRegisterError その他の登録失敗時のエラー
      */
-    static async savePLDailyData(
-        records: Record<string, any>[]
+    async savePLDailyData(
+        records: Record<string, unknown>[]
     ): Promise<KintoneSaveResults | KintoneDuplicateResult> {
         try {
             // まずバッチ内で同一の日付が重複していないかチェックして、あれば除去する
             let uploadRecords = records;
             try {
                 const dateValues = records.map((r) => {
-                    const v = r && r.date;
-                    return typeof v === "object" && v && v.value !== undefined ? v.value : v;
+                    const v = r && (r as Record<string, unknown>).date;
+                    return typeof v === "object" &&
+                        v &&
+                        (v as { value?: unknown }).value !== undefined
+                        ? (v as { value: unknown }).value
+                        : v;
                 });
 
                 const seen = new Set<string>();
                 const duplicatesInBatch: string[] = [];
-                const uniqueRecords: Record<string, any>[] = [];
+                const uniqueRecords: Record<string, unknown>[] = [];
 
                 for (let idx = 0; idx < dateValues.length; idx++) {
                     const d = dateValues[idx];
@@ -447,20 +596,22 @@ export class KintoneApiService {
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチに分割して並列で登録（同時実行数は制限）
-            const batches: Record<string, any>[][] = [];
+            const batches: Record<string, unknown>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
                 batches.push(records.slice(i, i + batchSize));
             }
 
-            const uploadResults: any[] = [];
-            const tasks = batches.map((batch) => async () => {
-                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
-                    app: APP_IDS.PL_DAILY,
-                    records: batch,
-                });
-                Logger.debug(`${batch.length}件のPL日次データを登録しました`);
-                uploadResults.push(res);
-                return res;
+            const uploadResults: KintoneRecordsPostResponse[] = [];
+            const tasks = batches.map((batch): (() => Promise<KintoneRecordsPostResponse>) => {
+                return async (): Promise<KintoneRecordsPostResponse> => {
+                    const res = (await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                        app: APP_IDS.PL_DAILY,
+                        records: batch,
+                    })) as KintoneRecordsPostResponse;
+                    Logger.debug(`${batch.length}件のPL日次データを登録しました`);
+                    uploadResults.push(res);
+                    return res;
+                };
             });
 
             await this.executeBatchedRequests(tasks, 3, {
@@ -468,8 +619,8 @@ export class KintoneApiService {
                 action: "savePLDailyData",
             });
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // PL日次データのキャッシュを無効化
+            KintoneApiService.invalidateCache("PL_DAILY");
 
             // uploadResults からsaveResultsを構築
             const saveResults: KintoneSaveResults = {
@@ -487,22 +638,26 @@ export class KintoneApiService {
 
             return saveResults;
         } catch (error) {
-            console.error("PL日次データ登録エラー:", error);
+            ErrorHandler.logError("PL日次データ登録エラー", error, {
+                method: "savePLDailyData",
+                appId: APP_IDS.PL_DAILY,
+                recordCount: records.length,
+            });
             throw new kintoneApiFatalRegisterError(
-                `PL日次データの登録中にエラーが発生しました。:${error}`
+                `PL日次データの登録中にエラーが発生しました。:${error instanceof Error ? error.message : String(error)}`
             );
         }
     }
 
     /**
-     * 生産日報データを登録する
+     * 生産日報データを登録する（インスタンスメソッド）
      * @param records - 登録するレコード配列
      * @returns KintoneSaveResults 登録されたレコードID配列
      * @throws kintoneApiDuplicateError 重複レコードが見つかった場合のエラー
      * @throws kintoneApiFatalRegisterError その他の登録失敗時のエラー
      */
-    static async saveProductionReportData(
-        records: Record<string, any>[]
+    async saveProductionReportData(
+        records: Record<string, unknown>[]
     ): Promise<KintoneSaveResults | KintoneDuplicateResult> {
         try {
             Logger.debug(`${records.length}件の生産日報データを登録しています...`);
@@ -530,19 +685,20 @@ export class KintoneApiService {
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチに分割して並列で登録
-            const batches: Record<string, any>[][] = [];
+            const batches: Record<string, unknown>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
                 batches.push(records.slice(i, i + batchSize));
             }
 
-            const tasks = batches.map((batch) => async () => {
-                console.log(batch);
-                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
-                    app: APP_IDS.PRODUCTION_REPORT,
-                    records: batch,
-                });
-                Logger.debug(`${batch.length}件の生産日報データを登録しました`);
-                return res;
+            const tasks = batches.map((batch): (() => Promise<KintoneRecordsPostResponse>) => {
+                return async (): Promise<KintoneRecordsPostResponse> => {
+                    const res = (await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                        app: APP_IDS.PRODUCTION_REPORT,
+                        records: batch,
+                    })) as KintoneRecordsPostResponse;
+                    Logger.debug(`${batch.length}件の生産日報データを登録しました`);
+                    return res;
+                };
             });
 
             const responses = await this.executeBatchedRequests(tasks, 3, {
@@ -552,13 +708,15 @@ export class KintoneApiService {
             // kintone のレスポンスから id を収集できる場合は収集
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
-                    recordIds.push(...r.records.map((rec: any) => rec.id));
+                    recordIds.push(
+                        ...r.records.map((rec: KintoneRecordPostResponse) => Number(rec.id))
+                    );
                 }
             }
             Logger.success(`合計${recordIds.length}件の生産日報データを登録しました`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // 生産日報データのキャッシュを無効化
+            KintoneApiService.invalidateCache("PRODUCTION_REPORT");
 
             const saveResults: KintoneSaveResults = {
                 ok: true,
@@ -579,20 +737,24 @@ export class KintoneApiService {
 
             return saveResults;
         } catch (error) {
-            console.error("生産日報データ登録エラー:", error);
+            ErrorHandler.logError("生産日報データ登録エラー", error, {
+                method: "saveProductionReportData",
+                appId: APP_IDS.PRODUCTION_REPORT,
+                recordCount: records.length,
+            });
             throw new kintoneApiFatalRegisterError(
-                `生産日報データの登録中にエラーが発生しました。:${error}`
+                `生産日報データの登録中にエラーが発生しました。:${error instanceof Error ? error.message : String(error)}`
             );
         }
     }
 
     /**
-     * マスタ機種データを登録する
+     * マスタ機種データを登録する（インスタンスメソッド）
      * @param records - 登録するレコード配列
      * @returns KintoneSaveResults 登録されたレコードID配列
      * @throws kintoneApiFatalRegisterError 登録失敗時のエラー
      */
-    static async saveMasterModelData(records: Record<string, any>[]): Promise<KintoneSaveResults> {
+    async saveMasterModelData(records: Record<string, unknown>[]): Promise<KintoneSaveResults> {
         try {
             Logger.debug(`${records.length}件のマスタ機種データを登録しています...`);
 
@@ -600,21 +762,23 @@ export class KintoneApiService {
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチに分割して並列で登録
-            const batches: Record<string, any>[][] = [];
+            const batches: Record<string, unknown>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
                 batches.push(records.slice(i, i + batchSize));
             }
 
-            const tasks = batches.map((batch) => async () => {
-                const batchRecords = batch.map((record) => ({
-                    fields: JSON.parse(JSON.stringify(record)),
-                }));
-                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
-                    app: APP_IDS.MASTER_MODEL,
-                    records: batchRecords,
-                });
-                Logger.debug(`${batchRecords.length}件のマスタ機種データを登録しました`);
-                return res;
+            const tasks = batches.map((batch): (() => Promise<KintoneRecordsPostResponse>) => {
+                return async (): Promise<KintoneRecordsPostResponse> => {
+                    const batchRecords = batch.map((record) => ({
+                        fields: JSON.parse(JSON.stringify(record)),
+                    }));
+                    const res = (await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                        app: APP_IDS.MASTER_MODEL,
+                        records: batchRecords,
+                    })) as KintoneRecordsPostResponse;
+                    Logger.debug(`${batchRecords.length}件のマスタ機種データを登録しました`);
+                    return res;
+                };
             });
 
             const responses = await this.executeBatchedRequests(tasks, 3, {
@@ -623,14 +787,16 @@ export class KintoneApiService {
             });
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
-                    recordIds.push(...r.records.map((rec: any) => rec.id));
+                    recordIds.push(
+                        ...r.records.map((rec: KintoneRecordPostResponse) => Number(rec.id))
+                    );
                 }
             }
 
             Logger.success(`合計${recordIds.length}件のマスタ機種データを登録しました`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // マスタ機種データのキャッシュを無効化
+            KintoneApiService.invalidateCache("MASTER_MODEL");
 
             const saveResults: KintoneSaveResults = {
                 ok: true,
@@ -651,20 +817,24 @@ export class KintoneApiService {
 
             return saveResults;
         } catch (error) {
-            Logger.error("マスタ機種データ登録エラー:", error);
+            ErrorHandler.logError("マスタ機種データ登録エラー", error, {
+                method: "saveMasterModelData",
+                appId: APP_IDS.MASTER_MODEL,
+                recordCount: records.length,
+            });
             throw new kintoneApiFatalRegisterError(
-                `マスタ機種データの登録中にエラーが発生しました。:${error}`
+                `マスタ機種データの登録中にエラーが発生しました。:${error instanceof Error ? error.message : String(error)}`
             );
         }
     }
 
     /**
-     * 祝日データを登録する
+     * 祝日データを登録する（インスタンスメソッド）
      * @param records - 登録するレコード配列
      * @returns KintoneSaveResults 登録されたレコードID配列
      * @throws kintoneApiFatalRegisterError 登録失敗時のエラー
      */
-    static async saveHolidayData(records: Record<string, any>[]): Promise<KintoneSaveResults> {
+    async saveHolidayData(records: Record<string, unknown>[]): Promise<KintoneSaveResults> {
         try {
             Logger.debug(`${records.length}件の祝日データを登録しています...`);
 
@@ -672,21 +842,23 @@ export class KintoneApiService {
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチに分割して並列で登録
-            const batches: Record<string, any>[][] = [];
+            const batches: Record<string, unknown>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
                 batches.push(records.slice(i, i + batchSize));
             }
 
-            const tasks = batches.map((batch) => async () => {
-                const batchRecords = batch.map((record) => ({
-                    fields: JSON.parse(JSON.stringify(record)),
-                }));
-                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
-                    app: APP_IDS.HOLIDAY,
-                    records: batchRecords,
-                });
-                Logger.debug(`${batchRecords.length}件の祝日データを登録しました`);
-                return res;
+            const tasks = batches.map((batch): (() => Promise<KintoneRecordsPostResponse>) => {
+                return async (): Promise<KintoneRecordsPostResponse> => {
+                    const batchRecords = batch.map((record) => ({
+                        fields: JSON.parse(JSON.stringify(record)),
+                    }));
+                    const res = (await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                        app: APP_IDS.HOLIDAY,
+                        records: batchRecords,
+                    })) as KintoneRecordsPostResponse;
+                    Logger.debug(`${batchRecords.length}件の祝日データを登録しました`);
+                    return res;
+                };
             });
 
             const responses = await this.executeBatchedRequests(tasks, 3, {
@@ -695,14 +867,16 @@ export class KintoneApiService {
             });
             for (const r of responses) {
                 if (r && Array.isArray(r.records)) {
-                    recordIds.push(...r.records.map((rec: any) => rec.id));
+                    recordIds.push(
+                        ...r.records.map((rec: KintoneRecordPostResponse) => Number(rec.id))
+                    );
                 }
             }
 
             Logger.success(`合計${recordIds.length}件の祝日データを登録しました`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // 祝日データのキャッシュを無効化
+            KintoneApiService.invalidateCache("HOLIDAY");
 
             const saveResults: KintoneSaveResults = {
                 ok: true,
@@ -723,25 +897,29 @@ export class KintoneApiService {
 
             return saveResults;
         } catch (error) {
-            Logger.error("祝日データ登録エラー:", error);
+            ErrorHandler.logError("祝日データ登録エラー", error, {
+                method: "saveHolidayData",
+                appId: APP_IDS.HOLIDAY,
+                recordCount: records.length,
+            });
             throw new kintoneApiFatalRegisterError(
-                `祝日データの登録中にエラーが発生しました。:${error}`
+                `祝日データの登録中にエラーが発生しました。:${error instanceof Error ? error.message : String(error)}`
             );
         }
     }
 
     /**
-     * 単一レコードを更新する
+     * 単一レコードを更新する（インスタンスメソッド）
      * @param appId - アプリID
      * @param recordId - レコードID
      * @param record - 更新するデータ
      * @returns 更新結果
      */
-    static async updateRecord(
+    async updateRecord(
         appId: number,
         recordId: number,
-        record: Record<string, any>
-    ): Promise<any> {
+        record: Record<string, unknown>
+    ): Promise<unknown> {
         try {
             Logger.debug(`レコードを更新しています (AppID: ${appId}, RecordID: ${recordId})`);
 
@@ -753,46 +931,59 @@ export class KintoneApiService {
 
             Logger.success(`レコードを更新しました (RecordID: ${recordId})`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // 該当アプリのキャッシュを無効化
+            const appType = KintoneApiService.getAppTypeFromId(appId);
+            if (appType) {
+                KintoneApiService.invalidateCache(appType);
+            } else {
+                // アプリタイプが特定できない場合は全キャッシュをクリア（フォールバック）
+                PerformanceUtil.clearCache();
+                Logger.warn(`未知のアプリIDのため全キャッシュをクリアしました: ${appId}`);
+            }
 
             return response;
         } catch (error) {
-            Logger.error("レコード更新エラー:", error);
+            ErrorHandler.logError("レコード更新エラー", error, {
+                method: "updateRecord",
+                appId,
+                recordId,
+            });
             throw error;
         }
     }
 
     /**
-     * 複数レコードを更新する
+     * 複数レコードを更新する（インスタンスメソッド）
      * @param appId - アプリID
      * @param records - 更新するレコードデータ配列（idを含む）
      * @returns 更新結果
      */
-    static async updateRecords(appId: number, records: Record<string, any>[]): Promise<any> {
+    async updateRecords(appId: number, records: Record<string, unknown>[]): Promise<unknown> {
         try {
             Logger.debug(`${records.length}件のレコードを更新しています (AppID: ${appId})`);
 
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
-            const updateData = [];
+            const updateData: unknown[] = [];
 
             // バッチに分割して並列で更新
-            const batches: Record<string, any>[][] = [];
+            const batches: Record<string, unknown>[][] = [];
             for (let i = 0; i < records.length; i += batchSize) {
                 batches.push(records.slice(i, i + batchSize));
             }
 
-            const tasks = batches.map((batch) => async () => {
-                const batchRecords = batch.map((record) => ({
-                    id: record.id,
-                    record: record.data || record,
-                }));
-                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", {
-                    app: appId,
-                    records: batchRecords,
-                });
-                Logger.debug(`${batchRecords.length}件のレコードを更新しました`);
-                return res;
+            const tasks = batches.map((batch): (() => Promise<unknown>) => {
+                return async (): Promise<unknown> => {
+                    const batchRecords = batch.map((record) => ({
+                        id: record.id,
+                        record: record.data || record,
+                    }));
+                    const res = await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", {
+                        app: appId,
+                        records: batchRecords,
+                    });
+                    Logger.debug(`${batchRecords.length}件のレコードを更新しました`);
+                    return res;
+                };
             });
 
             const responses = await this.executeBatchedRequests(tasks, 3, {
@@ -800,30 +991,47 @@ export class KintoneApiService {
                 action: "updateRecords",
             });
             for (const r of responses) {
-                if (r && Array.isArray(r.records)) {
-                    updateData.push(...r.records);
+                if (
+                    r &&
+                    typeof r === "object" &&
+                    "records" in r &&
+                    Array.isArray((r as { records: unknown[] }).records)
+                ) {
+                    const records = (r as { records: unknown[] }).records;
+                    updateData.push(...(records as Array<{ id: string; revision: string }>));
                 }
             }
 
             Logger.success(`合計${updateData.length}件のレコードを更新しました`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // 該当アプリのキャッシュを無効化
+            const appType = KintoneApiService.getAppTypeFromId(appId);
+            if (appType) {
+                KintoneApiService.invalidateCache(appType);
+            } else {
+                // アプリタイプが特定できない場合は全キャッシュをクリア（フォールバック）
+                PerformanceUtil.clearCache();
+                Logger.warn(`未知のアプリIDのため全キャッシュをクリアしました: ${appId}`);
+            }
 
             return updateData;
         } catch (error) {
-            Logger.error("レコード一括更新エラー:", error);
+            ErrorHandler.logError("レコード一括更新エラー", error, {
+                method: "updateRecords",
+                appId,
+                recordCount: records.length,
+            });
             throw error;
         }
     }
 
     /**
-     * レコードを削除する
+     * レコードを削除する（インスタンスメソッド）
      * @param appId - アプリID
      * @param recordIds - 削除するレコードID配列
      * @returns 削除結果
      */
-    static async deleteRecords(appId: number, recordIds: number[]): Promise<any> {
+    async deleteRecords(appId: number, recordIds: number[]): Promise<{ deletedCount: number }> {
         try {
             Logger.debug(`${recordIds.length}件のレコードを削除しています (AppID: ${appId})`);
 
@@ -835,25 +1043,42 @@ export class KintoneApiService {
                 batches.push(recordIds.slice(i, i + batchSize));
             }
 
-            const tasks = batches.map((batch) => async () => {
-                const res = await kintone.api(kintone.api.url("/k/v1/records", true), "DELETE", {
-                    app: appId,
-                    ids: batch,
-                });
-                Logger.debug(`${batch.length}件のレコードを削除しました`);
-                return res;
+            const tasks = batches.map((batch): (() => Promise<unknown>) => {
+                return async (): Promise<unknown> => {
+                    const res = await kintone.api(
+                        kintone.api.url("/k/v1/records", true),
+                        "DELETE",
+                        {
+                            app: appId,
+                            ids: batch,
+                        }
+                    );
+                    Logger.debug(`${batch.length}件のレコードを削除しました`);
+                    return res;
+                };
             });
 
             await this.executeBatchedRequests(tasks, 3, { appId: appId, action: "deleteRecords" });
 
             Logger.success(`合計${recordIds.length}件のレコードを削除しました`);
 
-            // キャッシュをクリア
-            PerformanceUtil.clearCache();
+            // 該当アプリのキャッシュを無効化
+            const appType = KintoneApiService.getAppTypeFromId(appId);
+            if (appType) {
+                KintoneApiService.invalidateCache(appType);
+            } else {
+                // アプリタイプが特定できない場合は全キャッシュをクリア（フォールバック）
+                PerformanceUtil.clearCache();
+                Logger.warn(`未知のアプリIDのため全キャッシュをクリアしました: ${appId}`);
+            }
 
             return { deletedCount: recordIds.length };
         } catch (error) {
-            Logger.error("レコード削除エラー:", error);
+            ErrorHandler.logError("レコード削除エラー", error, {
+                method: "deleteRecords",
+                appId,
+                recordIdCount: recordIds.length,
+            });
             throw error;
         }
     }
@@ -863,22 +1088,23 @@ export class KintoneApiService {
     // ========================================
 
     /**
-     * 指定フィールドの値が既存レコードと重複しているか確認する
+     * 指定フィールドの値が既存レコードと重複しているか確認する（インスタンスメソッド）
      * @param appId - アプリID
      * @param record - 確認するレコードデータ
      * @param fieldNames - 確認対象フィールド名（単数 or 複数）
      * @returns 重複レコード情報。重複がない場合はnull
      * @example
      * ```typescript
+     * const apiService = new KintoneApiService();
      * // 単一フィールドで確認
-     * const duplicate = await KintoneApiService.checkDuplicateRecords(
+     * const duplicate = await apiService.checkDuplicateRecords(
      *   APP_IDS.PL_MONTHLY,
      *   { year_month: { type: "SINGLE_LINE_TEXT", value: "2024_06" } },
      *   "year_month"
      * );
      *
      * // 複数フィールドで確認（AND条件）
-     * const duplicates = await KintoneApiService.checkDuplicateRecords(
+     * const duplicates = await apiService.checkDuplicateRecords(
      *   APP_IDS.PRODUCTION_REPORT,
      *   {
      *     date: { type: "DATE", value: "2024-06-01" },
@@ -889,11 +1115,11 @@ export class KintoneApiService {
      * );
      * ```
      */
-    static async checkDuplicateRecords(
+    async checkDuplicateRecords(
         appId: number,
-        record: Record<string, any>,
+        record: Record<string, unknown>,
         fieldNames: string | string[]
-    ): Promise<any[] | null> {
+    ): Promise<KintoneRecord[] | null> {
         try {
             // fieldNamesを配列に統一
             const fieldsToCheck = Array.isArray(fieldNames) ? fieldNames : [fieldNames];
@@ -914,8 +1140,10 @@ export class KintoneApiService {
                     // kintoneフィールドフォーマットから値を抽出
                     // { value: "..." } または直接値の形式に対応
                     const value =
-                        typeof fieldValue === "object" && fieldValue.value !== undefined
-                            ? fieldValue.value
+                        typeof fieldValue === "object" &&
+                        fieldValue &&
+                        (fieldValue as { value?: unknown }).value !== undefined
+                            ? (fieldValue as { value: unknown }).value
                             : fieldValue;
 
                     // 値のタイプに応じてクエリを構築
@@ -960,20 +1188,25 @@ export class KintoneApiService {
             Logger.debug(`重複レコードなし (AppID: ${appId})`);
             return null;
         } catch (error) {
-            Logger.error("重複確認エラー:", error);
+            ErrorHandler.logError("重複確認エラー", error, {
+                method: "checkDuplicateRecords",
+                appId,
+                fieldNames: Array.isArray(fieldNames) ? fieldNames.join(", ") : fieldNames,
+            });
             throw error;
         }
     }
 
     /**
-     * 複数のレコードについて一括で重複確認を実行
+     * 複数のレコードについて一括で重複確認を実行（インスタンスメソッド）
      * @param appId - アプリID
      * @param records - 確認するレコード配列
      * @param fieldNames - 確認対象フィールド名（単数 or 複数）
      * @returns 重複情報を含む結果配列 { record, isDuplicate, duplicates }
      * @example
      * ```typescript
-     * const results = await KintoneApiService.checkBatchDuplicateRecords(
+     * const apiService = new KintoneApiService();
+     * const results = await apiService.checkBatchDuplicateRecords(
      *   APP_IDS.PL_DAILY,
      *   [
      *     { date: { type: "DATE", value: "2024-06-01" }, ... },
@@ -989,33 +1222,35 @@ export class KintoneApiService {
      * });
      * ```
      */
-    static async checkBatchDuplicateRecords(
+    async checkBatchDuplicateRecords(
         appId: number,
-        records: Record<string, any>[],
+        records: Record<string, unknown>[],
         fieldNames: string | string[]
     ): Promise<
         Array<{
-            record: Record<string, any>;
+            record: Record<string, unknown>;
             isDuplicate: boolean;
-            duplicates: any[] | null;
+            duplicates: KintoneRecord[] | null;
         }>
     > {
         Logger.debug(`一括重複確認を開始します (件数: ${records.length}, AppID: ${appId})`);
 
         const results: Array<{
-            record: Record<string, any>;
+            record: Record<string, unknown>;
             isDuplicate: boolean;
-            duplicates: any[] | null;
+            duplicates: KintoneRecord[] | null;
         }> = [];
 
         // 正規化されたフィールド配列
         const fieldsArray = Array.isArray(fieldNames) ? fieldNames : [fieldNames];
 
         // 値抽出ユーティリティ
-        const extractValue = (fieldValue: any) =>
-            typeof fieldValue === "object" && fieldValue && fieldValue.value !== undefined
-                ? fieldValue.value
-                : fieldValue;
+        const extractValue = (fieldValue: unknown): unknown => {
+            if (typeof fieldValue === "object" && fieldValue !== null && "value" in fieldValue) {
+                return (fieldValue as { value: unknown }).value;
+            }
+            return fieldValue;
+        };
 
         // 単一フィールドの場合は in 演算子でまとめて検索（高速）
         if (fieldsArray.length === 1) {
@@ -1062,15 +1297,19 @@ export class KintoneApiService {
                 }
 
                 // マッチする既存レコードを一括取得
-                const existing = await this.fetchAllRecords<any>(appId, fieldsArray, query);
+                const existing = await this.fetchAllRecords<KintoneRecord>(
+                    appId,
+                    fieldsArray,
+                    query
+                );
 
-                const existingSet = new Set(existing.map((r: any) => extractValue(r[field])));
+                const existingSet = new Set(existing.map((r) => extractValue(r[field])));
 
                 for (const rec of chunk) {
                     const v = extractValue(rec[field]);
                     const isDup = v !== undefined && existingSet.has(v);
                     const duplicates = isDup
-                        ? existing.filter((r: any) => extractValue(r[field]) === v)
+                        ? existing.filter((r) => extractValue(r[field]) === v)
                         : null;
                     results.push({ record: rec, isDuplicate: isDup, duplicates });
                 }
@@ -1113,13 +1352,17 @@ export class KintoneApiService {
 
                 const query = orClauses.join(" or ");
 
-                const existing = await this.fetchAllRecords<any>(appId, fieldsArray, query);
+                const existing = await this.fetchAllRecords<KintoneRecord>(
+                    appId,
+                    fieldsArray,
+                    query
+                );
 
                 // 既存レコードを複合キーでマッピング
-                const keyOf = (obj: any) =>
+                const keyOf = (obj: KintoneRecord | Record<string, unknown>): string =>
                     fieldsArray.map((f) => String(extractValue(obj[f]) ?? "")).join("|::|");
 
-                const existingMap = new Map<string, any[]>();
+                const existingMap = new Map<string, KintoneRecord[]>();
                 for (const e of existing) {
                     const k = keyOf(e);
                     const arr = existingMap.get(k) || [];

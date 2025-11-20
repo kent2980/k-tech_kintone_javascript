@@ -5,7 +5,7 @@
 
 import { KintoneApiService } from "../services";
 import { FilterConfig } from "../types";
-import { Logger, PerformanceUtil } from "../utils";
+import { ErrorHandler, Logger, PerformanceUtil } from "../utils";
 
 /// <reference path="../fields/monthly_fields.d.ts" />
 /// <reference path="../fields/daily_fields.d.ts" />
@@ -39,6 +39,16 @@ export class DataFetcher {
     };
 
     private listeners: Array<(state: DataFetcherState) => void> = [];
+
+    private apiService: KintoneApiService;
+
+    /**
+     * コンストラクタ
+     * @param apiService - KintoneApiServiceのインスタンス（オプション、渡されない場合は内部で作成）
+     */
+    constructor(apiService?: KintoneApiService) {
+        this.apiService = apiService || new KintoneApiService();
+    }
 
     /**
      * 状態変更を通知
@@ -75,14 +85,14 @@ export class DataFetcher {
         this.setState({ loading: true, error: null });
 
         try {
-            const data = await KintoneApiService.fetchMasterModelData();
+            const data = await this.apiService.fetchMasterModelData();
             this.setState({ masterModelData: data, loading: false });
             Logger.info(`マスタモデルデータを取得: ${data.length}件`);
             return data;
         } catch (error) {
             const errorMessage = `マスタデータ取得エラー: ${error}`;
             this.setState({ error: errorMessage, loading: false });
-            Logger.error(errorMessage, error);
+            ErrorHandler.logError(errorMessage, error, { method: "fetchMasterModelData" });
             return [];
         }
     }
@@ -94,14 +104,18 @@ export class DataFetcher {
         this.setState({ loading: true, error: null });
 
         try {
-            const data = await KintoneApiService.fetchPLMonthlyData(year, month);
+            const data = await this.apiService.fetchPLMonthlyData(year, month);
             this.setState({ plMonthlyData: data, loading: false });
             Logger.info(`PL月次データを取得: ${year}/${month}`);
             return data;
         } catch (error) {
             const errorMessage = `PL月次データ取得エラー: ${error}`;
             this.setState({ error: errorMessage, loading: false });
-            Logger.error(errorMessage, error);
+            ErrorHandler.logError(errorMessage, error, {
+                method: "fetchPLMonthlyData",
+                year,
+                month,
+            });
             return null;
         }
     }
@@ -113,14 +127,18 @@ export class DataFetcher {
         this.setState({ loading: true, error: null });
 
         try {
-            const data = await KintoneApiService.fetchPLDailyData(year, month);
+            const data = await this.apiService.fetchPLDailyData(year, month);
             this.setState({ dailyReportData: data, loading: false });
             Logger.info(`PL日次データを取得: ${data.length}件`);
             return data;
         } catch (error) {
             const errorMessage = `PL日次データ取得エラー: ${error}`;
             this.setState({ error: errorMessage, loading: false });
-            Logger.error(errorMessage, error);
+            ErrorHandler.logError(errorMessage, error, {
+                method: "fetchPLDailyData",
+                year,
+                month,
+            });
             return [];
         }
     }
@@ -132,14 +150,17 @@ export class DataFetcher {
         this.setState({ loading: true, error: null });
 
         try {
-            const data = await KintoneApiService.fetchProductionReportData(filterConfig);
+            const data = await this.apiService.fetchProductionReportData(filterConfig);
             this.setState({ productionReportData: data, loading: false });
             Logger.info(`生産報告データを取得: ${data.length}件`);
             return data;
         } catch (error) {
             const errorMessage = `生産報告データ取得エラー: ${error}`;
             this.setState({ error: errorMessage, loading: false });
-            Logger.error(errorMessage, error);
+            ErrorHandler.logError(errorMessage, error, {
+                method: "fetchProductionReportData",
+                filterConfig,
+            });
             return [];
         }
     }

@@ -28,8 +28,10 @@
         "chg",
         "cybozu",
         "dashbord",
+        "datalabels",
         "datatables",
         "deflist",
+        "defval",
         "dts",
         "eslint",
         "fieldTypes",
@@ -37,9 +39,12 @@
         "iuwp",
         "jsdom",
         "kintone",
+        "lintstagedrc",
         "prettier",
         "VITE",
         "wpzdj"
     ],
-    "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"]
+    "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"],
+    "cursor.chat.language": "ja",
+    "cursor.commitMessage.language": "ja"
 }

@@ -14,20 +14,52 @@ module.exports = {
 
     // カバレッジ設定
     collectCoverageFrom: [
-        "src/**/*.{ts,tsx}",
-        "!src/**/*.d.ts",
-        "!src/setupTests.ts",
-        "!src/**/*.test.{ts,tsx}",
-        "!src/**/*.spec.{ts,tsx}",
+        "src/BOX/PL_dashboard/**/*.{ts,tsx}",
+        "!src/BOX/PL_dashboard/**/*.d.ts",
+        "!src/BOX/PL_dashboard/**/__tests__/**",
+        "!src/BOX/PL_dashboard/**/__mocks__/**",
+        "!src/BOX/PL_dashboard/**/*.test.{ts,tsx}",
+        "!src/BOX/PL_dashboard/**/*.spec.{ts,tsx}",
+        "!src/BOX/PL_dashboard/fields/**",
+        "!src/BOX/PL_dashboard/generated/**",
+        "!src/BOX/PL_dashboard/scripts/**",
+        "!src/BOX/PL_dashboard/**/index.ts", // exportのみのファイルを除外
     ],
 
     // カバレッジ出力
     coverageDirectory: "coverage",
     coverageReporters: ["text", "lcov", "html"],
+    coverageThreshold: {
+        global: {
+            branches: 70,
+            functions: 70,
+            lines: 70,
+            statements: 70,
+        },
+        "src/BOX/PL_dashboard/services/**/*.ts": {
+            branches: 70,
+            functions: 70,
+            lines: 70,
+            statements: 70,
+        },
+        "src/BOX/PL_dashboard/utils/**/*.ts": {
+            branches: 70,
+            functions: 70,
+            lines: 70,
+            statements: 70,
+        },
+        "src/BOX/PL_dashboard/components/**/*.ts": {
+            branches: 70,
+            functions: 70,
+            lines: 70,
+            statements: 70,
+        },
+    },
 
     // モック設定
     moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
+        "^dompurify$": "<rootDir>/src/BOX/PL_dashboard/__mocks__/dompurify.ts",
     },
 
     // グローバル変数（kintone環境をモック）

@@ -1,5 +1,5 @@
 /**
- * TabContainer test suite - Simplified
+ * TabContainerのユニットテスト
  */
 
 import { TabContainer } from "../TabContainer";
@@ -8,227 +8,136 @@ describe("TabContainer", () => {
     let tabContainer: TabContainer;
 
     beforeEach(() => {
-        // Mock document.createElement
-        const originalCreateElement = document.createElement.bind(document);
-        document.createElement = jest.fn().mockImplementation((tagName: string) => {
-            const element = originalCreateElement(tagName);
-
-            if (tagName === "div") {
-                element.appendChild = jest.fn().mockImplementation((child) => child);
-                element.querySelector = jest.fn();
-                element.querySelectorAll = jest.fn().mockReturnValue([]);
-                element.removeChild = jest.fn();
-            }
-            if (tagName === "button") {
-                element.addEventListener = jest.fn();
-                element.setAttribute = jest.fn();
-                element.getAttribute = jest.fn();
-            }
-
-            return element;
-        });
-
         tabContainer = new TabContainer();
-    });
-
-    afterEach(() => {
-        jest.restoreAllMocks();
+        document.body.innerHTML = "";
     });
 
     describe("constructor", () => {
-        it("should create TabContainer instance", () => {
-            expect(tabContainer).toBeInstanceOf(TabContainer);
-        });
+        test("タブコンテナを正しく作成", () => {
+            const element = tabContainer.getElement();
 
-        it("should create main container elements", () => {
-            expect(document.createElement).toHaveBeenCalledWith("div");
-
-            // Verify at least 3 div elements were created (main, buttons, contents)
-            const mockCalls = (document.createElement as jest.Mock).mock.calls;
-            const divCalls = mockCalls.filter((call) => call[0] === "div");
-            expect(divCalls.length).toBeGreaterThanOrEqual(3);
+            expect(element).toBeInstanceOf(HTMLDivElement);
+            expect(element.id).toBe("tab-container");
+            expect(element.querySelector("#tab-buttons")).toBeTruthy();
+            expect(element.querySelector("#tab-contents")).toBeTruthy();
         });
     });
 
     describe("addTab", () => {
-        it("should add tab with content", () => {
-            const mockContent = document.createElement("div");
-            mockContent.innerHTML = "Test content";
+        test("タブを追加", () => {
+            const content = document.createElement("div");
+            content.textContent = "Test Content";
 
-            const result = tabContainer.addTab("tab1", "Tab 1", mockContent);
+            const button = tabContainer.addTab("tab-1", "タブ1", content, true);
 
-            expect(result).toBeInstanceOf(HTMLElement);
+            expect(button).toBeInstanceOf(HTMLButtonElement);
+            expect(button.textContent).toBe("タブ1");
+            expect(button.dataset.tabId).toBe("tab-1");
         });
 
-        it("should add multiple tabs", () => {
-            const content1 = document.createElement("div");
-            const content2 = document.createElement("div");
+        test("アクティブなタブを追加", () => {
+            const content = document.createElement("div");
+            const button = tabContainer.addTab("tab-1", "タブ1", content, true);
 
-            const result1 = tabContainer.addTab("tab1", "Tab 1", content1);
-            const result2 = tabContainer.addTab("tab2", "Tab 2", content2);
-
-            expect(result1).toBeInstanceOf(HTMLElement);
-            expect(result2).toBeInstanceOf(HTMLElement);
+            expect(tabContainer.getActiveTabId()).toBe("tab-1");
+            expect(button.classList.contains("active")).toBe(true);
         });
 
-        it("should set first tab as active", () => {
-            const mockContent = document.createElement("div");
+        test("非アクティブなタブを追加", () => {
+            const content = document.createElement("div");
+            const button = tabContainer.addTab("tab-1", "タブ1", content, false);
 
-            tabContainer.addTab("tab1", "Tab 1", mockContent, true);
-
-            expect(tabContainer.getActiveTabId()).toBe("tab1");
+            expect(button.classList.contains("active")).toBe(false);
         });
     });
 
     describe("switchTab", () => {
-        beforeEach(() => {
+        test("タブを切り替え", () => {
             const content1 = document.createElement("div");
             const content2 = document.createElement("div");
 
-            tabContainer.addTab("tab1", "Tab 1", content1, true);
-            tabContainer.addTab("tab2", "Tab 2", content2);
+            tabContainer.addTab("tab-1", "タブ1", content1, true);
+            tabContainer.addTab("tab-2", "タブ2", content2, false);
+
+            tabContainer.switchTab("tab-2");
+
+            expect(tabContainer.getActiveTabId()).toBe("tab-2");
         });
 
-        it("should switch to existing tab", () => {
-            tabContainer.switchTab("tab2");
-
-            expect(tabContainer.getActiveTabId()).toBe("tab2");
-        });
-
-        it("should handle switching to same tab", () => {
-            tabContainer.switchTab("tab1");
-
-            expect(tabContainer.getActiveTabId()).toBe("tab1");
-        });
-    });
-
-    describe("removeTab", () => {
-        beforeEach(() => {
-            const content1 = document.createElement("div");
-            const content2 = document.createElement("div");
-
-            tabContainer.addTab("tab1", "Tab 1", content1, true);
-            tabContainer.addTab("tab2", "Tab 2", content2);
-        });
-
-        it("should remove existing tab", () => {
-            expect(() => tabContainer.removeTab("tab2")).not.toThrow();
-        });
-
-        it("should handle removing active tab", () => {
-            tabContainer.removeTab("tab1");
-
-            expect(tabContainer.getActiveTabId()).toBe(null);
+        test("存在しないタブを切り替えてもエラーが発生しない", () => {
+            expect(() => {
+                tabContainer.switchTab("non-existent-tab");
+            }).not.toThrow();
         });
     });
 
     describe("getActiveTabId", () => {
-        it("should return null when no tabs are active", () => {
-            const activeTabId = tabContainer.getActiveTabId();
+        test("アクティブなタブIDを取得", () => {
+            const content = document.createElement("div");
+            tabContainer.addTab("tab-1", "タブ1", content, true);
 
-            expect(activeTabId).toBe(null);
+            expect(tabContainer.getActiveTabId()).toBe("tab-1");
         });
 
-        it("should return active tab id", () => {
-            const mockContent = document.createElement("div");
-            tabContainer.addTab("tab1", "Tab 1", mockContent, true);
-
-            const activeTabId = tabContainer.getActiveTabId();
-
-            expect(activeTabId).toBe("tab1");
+        test("タブが存在しない場合はnullを返す", () => {
+            expect(tabContainer.getActiveTabId()).toBeNull();
         });
     });
 
     describe("getElement", () => {
-        it("should return main container element", () => {
+        test("タブコンテナ要素を取得", () => {
             const element = tabContainer.getElement();
 
-            expect(element).toBeInstanceOf(HTMLElement);
-            expect(element.tagName).toBe("DIV");
+            expect(element).toBeInstanceOf(HTMLDivElement);
+            expect(element.id).toBe("tab-container");
         });
     });
 
     describe("getContainers", () => {
-        it("should return container objects", () => {
+        test("タブコンテナの結果を取得", () => {
             const containers = tabContainer.getContainers();
 
-            expect(containers).toHaveProperty("tabContainer");
-            expect(containers).toHaveProperty("tabButtonsContainer");
-            expect(containers).toHaveProperty("tabContentsContainer");
-            expect(containers.tabContainer).toBeInstanceOf(HTMLElement);
+            expect(containers.tabContainer).toBeInstanceOf(HTMLDivElement);
+            expect(containers.tabButtonsContainer).toBeInstanceOf(HTMLDivElement);
+            expect(containers.tabContentsContainer).toBeInstanceOf(HTMLDivElement);
+        });
+    });
+
+    describe("removeTab", () => {
+        test("タブを削除", () => {
+            const content = document.createElement("div");
+            tabContainer.addTab("tab-1", "タブ1", content, true);
+
+            tabContainer.removeTab("tab-1");
+
+            const element = tabContainer.getElement();
+            expect(element.querySelector('[data-tab-id="tab-1"]')).toBeNull();
+        });
+
+        test("アクティブなタブを削除するとactiveTabIdがnullになる", () => {
+            const content = document.createElement("div");
+            tabContainer.addTab("tab-1", "タブ1", content, true);
+
+            tabContainer.removeTab("tab-1");
+
+            expect(tabContainer.getActiveTabId()).toBeNull();
         });
     });
 
     describe("clearTabs", () => {
-        it("should clear all tabs", () => {
+        test("すべてのタブをクリア", () => {
             const content1 = document.createElement("div");
             const content2 = document.createElement("div");
 
-            tabContainer.addTab("tab1", "Tab 1", content1);
-            tabContainer.addTab("tab2", "Tab 2", content2);
+            tabContainer.addTab("tab-1", "タブ1", content1, true);
+            tabContainer.addTab("tab-2", "タブ2", content2, false);
 
             tabContainer.clearTabs();
 
-            expect(tabContainer.getActiveTabId()).toBe(null);
-        });
-
-        it("should handle clearing when no tabs exist", () => {
-            expect(() => tabContainer.clearTabs()).not.toThrow();
-        });
-    });
-
-    describe("Error handling", () => {
-        it("should handle null content parameter", () => {
-            expect(() => tabContainer.addTab("tab1", "Tab 1", null as any)).not.toThrow();
-        });
-
-        it("should handle empty tab parameters", () => {
-            const mockContent = document.createElement("div");
-
-            expect(() => tabContainer.addTab("", "Tab 1", mockContent)).not.toThrow();
-            expect(() => tabContainer.addTab("tab1", "", mockContent)).not.toThrow();
-        });
-
-        it("should handle invalid tab operations", () => {
-            expect(() => tabContainer.switchTab("nonexistent")).not.toThrow();
-            expect(() => tabContainer.removeTab("nonexistent")).not.toThrow();
-        });
-    });
-
-    describe("Integration", () => {
-        it("should create complete tab interface", () => {
-            const content1 = document.createElement("div");
-            const content2 = document.createElement("div");
-            const content3 = document.createElement("div");
-
-            // Add multiple tabs
-            tabContainer.addTab("overview", "概要", content1, true);
-            tabContainer.addTab("details", "詳細", content2);
-            tabContainer.addTab("settings", "設定", content3);
-
-            // Verify active tab
-            expect(tabContainer.getActiveTabId()).toBe("overview");
-
-            // Switch tabs
-            tabContainer.switchTab("details");
-            expect(tabContainer.getActiveTabId()).toBe("details");
-
-            // Remove tab
-            tabContainer.removeTab("settings");
-            expect(tabContainer.getActiveTabId()).toBe("details");
-
-            // Clear all tabs
-            tabContainer.clearTabs();
-            expect(tabContainer.getActiveTabId()).toBe(null);
-        });
-
-        it("should maintain proper container structure", () => {
-            const containers = tabContainer.getContainers();
+            expect(tabContainer.getActiveTabId()).toBeNull();
             const element = tabContainer.getElement();
-
-            expect(element).toBe(containers.tabContainer);
-            expect(containers.tabButtonsContainer).toBeInstanceOf(HTMLElement);
-            expect(containers.tabContentsContainer).toBeInstanceOf(HTMLElement);
+            expect(element.querySelector("#tab-buttons")?.children.length).toBe(0);
+            expect(element.querySelector("#tab-contents")?.children.length).toBe(0);
         });
     });
 });

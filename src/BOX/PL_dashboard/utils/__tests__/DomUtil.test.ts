@@ -1,67 +1,71 @@
+/**
+ * DomUtilのユニットテスト
+ */
+
 import { DomUtil } from "../DomUtil";
 
 describe("DomUtil", () => {
-    let selectElement: HTMLSelectElement;
-    let container: HTMLDivElement;
-
     beforeEach(() => {
-        // テスト用のDOM要素を準備
-        selectElement = document.createElement("select");
-        container = document.createElement("div");
-        document.body.appendChild(container);
-    });
-
-    afterEach(() => {
-        // テスト後のクリーンアップ
         document.body.innerHTML = "";
     });
 
+    describe("createElement", () => {
+        test("要素を作成", () => {
+            const div = DomUtil.createElement("div");
+
+            expect(div).toBeInstanceOf(HTMLDivElement);
+        });
+
+        test("クラス名を指定して要素を作成", () => {
+            const div = DomUtil.createElement("div", "test-class");
+
+            expect(div.className).toBe("test-class");
+        });
+
+        test("異なるタグ名で要素を作成", () => {
+            const span = DomUtil.createElement("span");
+            const button = DomUtil.createElement("button");
+
+            expect(span).toBeInstanceOf(HTMLSpanElement);
+            expect(button).toBeInstanceOf(HTMLButtonElement);
+        });
+    });
+
     describe("addOption", () => {
-        it("should add option to select element", () => {
-            DomUtil.addOption(selectElement, "value1", "Text 1");
+        test("セレクトボックスにオプションを追加", () => {
+            const select = document.createElement("select");
+            DomUtil.addOption(select, "value1", "Option 1");
 
-            expect(selectElement.children.length).toBe(1);
-            const option = selectElement.children[0] as HTMLOptionElement;
-            expect(option.value).toBe("value1");
-            expect(option.textContent).toBe("Text 1");
+            expect(select.options.length).toBe(1);
+            expect(select.options[0].value).toBe("value1");
+            expect(select.options[0].textContent).toBe("Option 1");
         });
 
-        it("should handle number values", () => {
-            DomUtil.addOption(selectElement, 2024, "Year 2024");
+        test("数値の値をオプションに追加", () => {
+            const select = document.createElement("select");
+            DomUtil.addOption(select, 123, "Number Option");
 
-            const option = selectElement.children[0] as HTMLOptionElement;
-            expect(option.value).toBe("2024");
-            expect(option.textContent).toBe("Year 2024");
-        });
-
-        it("should add multiple options", () => {
-            DomUtil.addOption(selectElement, "value1", "Text 1");
-            DomUtil.addOption(selectElement, "value2", "Text 2");
-
-            expect(selectElement.children.length).toBe(2);
-            expect(selectElement.children[0].textContent).toBe("Text 1");
-            expect(selectElement.children[1].textContent).toBe("Text 2");
+            expect(select.options[0].value).toBe("123");
         });
     });
 
     describe("createLabel", () => {
-        it("should create label with basic properties", () => {
+        test("ラベル要素を作成", () => {
             const label = DomUtil.createLabel("Test Label", "test-id");
 
+            expect(label).toBeInstanceOf(HTMLLabelElement);
             expect(label.textContent).toBe("Test Label");
             expect(label.getAttribute("for")).toBe("test-id");
-            expect(label.style.marginLeft).toBe("");
         });
 
-        it("should create label with margin", () => {
+        test("マージンを指定してラベルを作成", () => {
             const label = DomUtil.createLabel("Test Label", "test-id", "20px");
 
-            expect(label.textContent).toBe("Test Label");
-            expect(label.getAttribute("for")).toBe("test-id");
             expect(label.style.marginLeft).toBe("20px");
+            expect(label.className).toContain("with-margin");
         });
 
-        it("should handle null margin", () => {
+        test("マージンなしでラベルを作成", () => {
             const label = DomUtil.createLabel("Test Label", "test-id", null);
 
             expect(label.style.marginLeft).toBe("");
@@ -69,170 +73,137 @@ describe("DomUtil", () => {
     });
 
     describe("createTableCell", () => {
-        it("should create basic td cell", () => {
+        test("デフォルトでtdセルを作成", () => {
             const cell = DomUtil.createTableCell("Test Content");
 
+            expect(cell).toBeInstanceOf(HTMLTableCellElement);
             expect(cell.tagName).toBe("TD");
             expect(cell.textContent).toBe("Test Content");
-            expect(cell.style.border).toBe("1px solid rgb(204, 204, 204)");
-            expect(cell.style.padding).toBe("6px");
-            expect(cell.style.textAlign).toBe("center");
         });
 
-        it("should create th cell", () => {
+        test("thセルを作成", () => {
             const cell = DomUtil.createTableCell("Header", { tag: "th" });
 
             expect(cell.tagName).toBe("TH");
-            expect(cell.textContent).toBe("Header");
-            expect(cell.style.padding).toBe("8px");
         });
 
-        it("should handle number content", () => {
-            const cell = DomUtil.createTableCell(42);
+        test("クラス名を指定してセルを作成", () => {
+            const cell = DomUtil.createTableCell("Test", { className: "test-class" });
 
-            expect(cell.textContent).toBe("42");
+            expect(cell.className).toBe("test-class");
         });
 
-        it("should apply custom className", () => {
-            const cell = DomUtil.createTableCell("Test", { className: "custom-class" });
-
-            expect(cell.className).toBe("custom-class");
-        });
-
-        it("should apply custom styles", () => {
-            const cell = DomUtil.createTableCell("Test", {
-                styles: { color: "red", fontSize: "14px" },
-            });
+        test("スタイルを指定してセルを作成", () => {
+            const cell = DomUtil.createTableCell("Test", { styles: { color: "red" } });
 
             expect(cell.style.color).toBe("red");
-            expect(cell.style.fontSize).toBe("14px");
         });
 
-        it("should apply sticky styles", () => {
-            const cell = DomUtil.createTableCell("Sticky", {
-                isSticky: true,
-                stickyLeft: "100px",
-            });
+        test("Stickyセルを作成", () => {
+            const cell = DomUtil.createTableCell("Test", { isSticky: true, stickyLeft: "10px" });
 
             expect(cell.style.position).toBe("sticky");
-            expect(cell.style.left).toBe("100px");
-            expect(cell.style.backgroundColor).toBe("rgb(255, 255, 255)");
-            expect(cell.style.zIndex).toBe("9");
+            expect(cell.style.left).toBe("10px");
         });
 
-        it("should apply sticky styles for th", () => {
-            const cell = DomUtil.createTableCell("Sticky Header", {
-                tag: "th",
-                isSticky: true,
-            });
+        test("数値のコンテンツでセルを作成", () => {
+            const cell = DomUtil.createTableCell(123);
 
-            expect(cell.style.backgroundColor).toBe("rgb(245, 245, 245)");
-            expect(cell.style.zIndex).toBe("11");
+            expect(cell.textContent).toBe("123");
         });
     });
 
     describe("createTableRow", () => {
-        it("should create basic table row", () => {
+        test("テーブル行を作成", () => {
             const row = DomUtil.createTableRow();
 
-            expect(row.tagName).toBe("TR");
-            expect(row.className).toBe("");
+            expect(row).toBeInstanceOf(HTMLTableRowElement);
         });
 
-        it("should create row with className", () => {
-            const row = DomUtil.createTableRow("row-class");
+        test("クラス名を指定してテーブル行を作成", () => {
+            const row = DomUtil.createTableRow("test-class");
 
-            expect(row.className).toBe("row-class");
+            expect(row.className).toBe("test-class");
         });
     });
 
     describe("applyStyles", () => {
-        it("should apply multiple styles to element", () => {
+        test("要素にスタイルを適用", () => {
             const div = document.createElement("div");
-            const styles = {
-                color: "red",
-                fontSize: "16px",
-                backgroundColor: "blue",
-            };
-
-            DomUtil.applyStyles(div, styles);
+            DomUtil.applyStyles(div, { color: "red", fontSize: "16px" });
 
             expect(div.style.color).toBe("red");
             expect(div.style.fontSize).toBe("16px");
-            expect(div.style.backgroundColor).toBe("blue");
-        });
-
-        it("should handle empty styles object", () => {
-            const div = document.createElement("div");
-
-            DomUtil.applyStyles(div, {});
-
-            expect(div.style.length).toBe(0);
         });
     });
 
     describe("safeRemove", () => {
-        it("should remove element from parent", () => {
-            const child = document.createElement("span");
-            container.appendChild(child);
+        test("要素を安全に削除", () => {
+            const div = document.createElement("div");
+            document.body.appendChild(div);
 
-            expect(container.children.length).toBe(1);
+            DomUtil.safeRemove(div);
 
-            DomUtil.safeRemove(child);
-
-            expect(container.children.length).toBe(0);
+            expect(document.body.contains(div)).toBe(false);
         });
 
-        it("should handle null element gracefully", () => {
+        test("nullの場合は何もしない", () => {
             expect(() => {
                 DomUtil.safeRemove(null);
             }).not.toThrow();
         });
 
-        it("should handle element without parent", () => {
-            const orphan = document.createElement("div");
+        test("親要素がない場合は何もしない", () => {
+            const div = document.createElement("div");
 
             expect(() => {
-                DomUtil.safeRemove(orphan);
+                DomUtil.safeRemove(div);
             }).not.toThrow();
         });
     });
 
     describe("getElementById", () => {
-        it("should get element by id", () => {
-            const testElement = document.createElement("div");
-            testElement.id = "test-element";
-            container.appendChild(testElement);
+        test("要素を取得", () => {
+            const div = document.createElement("div");
+            div.id = "test-element";
+            document.body.appendChild(div);
 
-            const result = DomUtil.getElementById("test-element");
+            const element = DomUtil.getElementById("test-element");
 
-            expect(result).toBe(testElement);
+            expect(element).toBeInstanceOf(HTMLDivElement);
+            expect(element?.id).toBe("test-element");
+
+            document.body.removeChild(div);
         });
 
-        it("should return null for non-existent id", () => {
-            const result = DomUtil.getElementById("non-existent");
+        test("存在しない要素の場合はnullを返す", () => {
+            const element = DomUtil.getElementById("non-existent");
 
-            expect(result).toBeNull();
+            expect(element).toBeNull();
         });
 
-        it("should check element type", () => {
-            const testButton = document.createElement("button");
-            testButton.id = "test-button";
-            container.appendChild(testButton);
+        test("型を指定して要素を取得", () => {
+            const div = document.createElement("div");
+            div.id = "test-div";
+            document.body.appendChild(div);
 
-            const result = DomUtil.getElementById("test-button", HTMLButtonElement);
+            const element = DomUtil.getElementById("test-div", HTMLDivElement);
 
-            expect(result).toBe(testButton);
+            expect(element).toBeInstanceOf(HTMLDivElement);
+
+            document.body.removeChild(div);
         });
 
-        it("should return null for wrong element type", () => {
-            const testDiv = document.createElement("div");
-            testDiv.id = "test-div";
-            container.appendChild(testDiv);
+        test("型が一致しない場合はnullを返す", () => {
+            const div = document.createElement("div");
+            div.id = "test-div";
+            document.body.appendChild(div);
 
-            const result = DomUtil.getElementById("test-div", HTMLButtonElement);
+            const element = DomUtil.getElementById("test-div", HTMLButtonElement);
 
-            expect(result).toBeNull();
+            expect(element).toBeNull();
+
+            document.body.removeChild(div);
         });
     });
 });

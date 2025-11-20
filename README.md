@@ -24,15 +24,66 @@ npm install
 
 ### 3. 環境変数の設定
 
-`.env`ファイルをプロジェクトルートに作成し、以下の内容を設定してください：
+`.env.example`ファイルをコピーして`.env`ファイルを作成し、実際の値を設定してください：
+
+```bash
+# Windowsの場合
+copy .env.example .env
+
+# macOS/Linuxの場合
+cp .env.example .env
+```
+
+`.env`ファイルに以下の内容を設定してください：
 
 ```env
+# kintone認証情報（アップロード時に使用）
 KINTONE_BASE_URL=https://your-subdomain.cybozu.com
 KINTONE_USERNAME=your-username
 KINTONE_PASSWORD=your-password
+
+# アプリID設定（VITE_プレフィックスが必要）
+# クライアント側のコードで使用する環境変数はVITE_で始める必要があります
+VITE_APP_ID_PRODUCTION_REPORT=22
+VITE_APP_ID_MASTER_MODEL=25
+VITE_APP_ID_PL_DAILY=32
+VITE_APP_ID_PL_MONTHLY=39
+VITE_APP_ID_HOLIDAY=44
+
+# その他の設定
+NODE_ENV=development
 ```
 
+**重要**: 
+- クライアント側（ブラウザ）で使用する環境変数は`VITE_`プレフィックスが必要です
+- `VITE_`プレフィックスが付いていない環境変数は、サーバー側（ビルド時）でのみ使用可能です
+- `.env`ファイルは`.gitignore`に含まれているため、Gitにコミットされません
+
 ## 開発手順
+
+### APIドキュメントの生成
+
+TypeDocを使用してAPIドキュメントを生成できます。
+
+#### ドキュメントの生成
+
+```bash
+npm run docs
+```
+
+生成されたドキュメントは `docs/api` ディレクトリに出力されます。
+
+#### ドキュメントの監視モード
+
+ファイル変更を監視して自動的にドキュメントを再生成します：
+
+```bash
+npm run docs:watch
+```
+
+#### ドキュメントの確認
+
+生成されたドキュメントは `docs/api/index.html` をブラウザで開いて確認できます。
 
 ### ビルド方法
 
@@ -123,15 +174,36 @@ console.error('エラー情報:', error);
 ├── src/
 │   └── BOX/
 │       └── PL_dashboard/
-│           ├── PL_dashboard.ts      # メインのTypeScriptファイル
-│           ├── PL_dashboard.css     # スタイルファイル
-│           └── fields/                 # アプリ固有のフィールド定義
-├── dist/                               # ビルド出力フォルダ
-├── fields/                             # 共通のkintoneフィールド型定義
-├── customize-manifest*.json            # 各アプリのカスタマイズ設定
-├── vite.config.ts                      # Vite設定ファイル（複数エントリー対応）
-├── tsconfig.json                       # TypeScript設定ファイル
-└── package.json                        # npm設定ファイル
+│           ├── PL_dashboard.ts          # メインのTypeScriptファイル（デスクトップ版）
+│           ├── PL_dashboard.mobile.ts    # モバイル版TypeScriptファイル
+│           ├── components/               # UIコンポーネント
+│           │   ├── tables/               # テーブル管理コンポーネント
+│           │   │   ├── BaseTableManager.ts
+│           │   │   └── PLDashboardTableManager.ts
+│           │   ├── graphs/               # グラフ管理コンポーネント
+│           │   │   ├── BaseGraphManager.ts
+│           │   │   └── PLDashboardGraphBuilder.ts
+│           │   ├── dom/                  # DOM構築コンポーネント
+│           │   │   ├── BaseDomBuilder.ts
+│           │   │   ├── PLDomBuilder.ts
+│           │   │   └── PLHeaderContainer.ts
+│           │   ├── FilterContainer.ts
+│           │   └── TabContainer.ts
+│           ├── services/                # ビジネスロジック・API呼び出し
+│           ├── utils/                   # ユーティリティ関数
+│           ├── types/                   # TypeScript型定義
+│           ├── config/                  # 設定ファイル
+│           ├── store/                   # 状態管理
+│           ├── hooks/                   # カスタムフック
+│           ├── importers/               # ファイルインポーター
+│           ├── fields/                  # アプリ固有のフィールド定義
+│           └── styles/                  # スタイルシート
+├── dist/                                # ビルド出力フォルダ
+├── fields/                              # 共通のkintoneフィールド型定義
+├── customize-manifest*.json             # 各アプリのカスタマイズ設定
+├── vite.config.ts                       # Vite設定ファイル（複数エントリー対応）
+├── tsconfig.json                        # TypeScript設定ファイル
+└── package.json                         # npm設定ファイル
 ```
 
 ## kintoneアプリのフィールド管理
@@ -264,6 +336,21 @@ declare namespace daily {
 | `npm run deploy:app43` | アプリ43に特化したデプロイ            |
 
 ## 更新履歴
+
+### 2025年1月（最新）
+
+#### アーキテクチャの改善
+
+- **親子クラス構造の導入**: 基底クラス（BaseTableManager, BaseGraphManager, BaseDomBuilder）と派生クラスによる責務分離
+- **コンポーネントの再構成**: components/をtables/, graphs/, dom/に細分化
+- **テーブル作成の3層構造**: データ変換・レンダリング・DataTables統合を専用メソッドに分離
+- **クラス名の明確化**: 親子関係が分かる命名規則（Base* → PL*）
+
+#### コード品質の向上
+
+- **静的メソッドの削減**: インスタンス化可能なクラスへの移行
+- **状態管理の改善**: 各マネージャークラスが自身の状態を管理
+- **依存関係の整理**: 循環依存の解消とモジュール構造の最適化
 
 ### 2025年11月9日
 

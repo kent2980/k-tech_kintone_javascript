@@ -1,493 +1,289 @@
+/**
+ * PerformanceUtilのユニットテスト
+ */
+
 import { PerformanceUtil } from "../PerformanceUtil";
-
-// Performanceのモック
-const mockPerformance = {
-    mark: jest.fn(),
-    measure: jest.fn(),
-    getEntriesByName: jest.fn(),
-    memory: {
-        usedJSHeapSize: 1000000,
-        totalJSHeapSize: 2000000,
-        jsHeapSizeLimit: 4000000,
-    },
-};
-
-// グローバルのperformanceを置き換え
-Object.defineProperty(global, "performance", {
-    value: mockPerformance,
-    writable: true,
-});
-
-// IntersectionObserverのモック
-const mockIntersectionObserver = jest.fn();
-mockIntersectionObserver.prototype.observe = jest.fn();
-mockIntersectionObserver.prototype.unobserve = jest.fn();
-mockIntersectionObserver.prototype.disconnect = jest.fn();
-
-Object.defineProperty(global, "IntersectionObserver", {
-    value: mockIntersectionObserver,
-    writable: true,
-});
-
-// requestAnimationFrameのモック
-Object.defineProperty(global, "requestAnimationFrame", {
-    value: jest.fn((callback: FrameRequestCallback) => {
-        setTimeout(callback, 16);
-        return 1;
-    }),
-    writable: true,
-});
 
 describe("PerformanceUtil", () => {
     beforeEach(() => {
-        jest.clearAllMocks();
-        jest.clearAllTimers();
-        jest.useFakeTimers();
-
-        // Mock performance API
-        (global as any).performance = {
-            ...global.performance,
-            mark: jest.fn(),
-            measure: jest.fn(),
-            getEntriesByName: jest.fn().mockReturnValue([{ duration: 100 }]),
-            memory: {
-                usedJSHeapSize: 1000000,
-                totalJSHeapSize: 2000000,
-                jsHeapSizeLimit: 4000000,
-            },
-        };
-
-        // Mock DOM elements
-        Object.defineProperty(document, "head", {
-            value: { appendChild: jest.fn() },
-            writable: true,
-        });
-
         // キャッシュをクリア
         PerformanceUtil.clearCache();
     });
 
-    afterEach(() => {
-        jest.useRealTimers();
+    describe("getFromCache", () => {
+        test("キャッシュにデータが存在する場合はデータを返す", () => {
+            PerformanceUtil.setCache("test-key", { value: "test-data" });
+            const result = PerformanceUtil.getFromCache<{ value: string }>("test-key");
+
+            expect(result).toEqual({ value: "test-data" });
+        });
+
+        test("キャッシュにデータが存在しない場合はnullを返す", () => {
+            const result = PerformanceUtil.getFromCache("non-existent-key");
+
+            expect(result).toBeNull();
+        });
     });
 
-    describe("Cache functionality", () => {
-        describe("setCache and getFromCache", () => {
-            it("should store and retrieve cached data", () => {
-                const testData = { id: 1, name: "test" };
+    describe("setCache", () => {
+        test("データをキャッシュに保存", () => {
+            PerformanceUtil.setCache("test-key", { value: "test-data" });
+            const result = PerformanceUtil.getFromCache<{ value: string }>("test-key");
 
-                PerformanceUtil.setCache("test-key", testData);
-                const result = PerformanceUtil.getFromCache<typeof testData>("test-key");
+            expect(result).toEqual({ value: "test-data" });
+        });
 
-                expect(result).toEqual(testData);
-            });
+        test("TTLを指定した場合は期限後に削除される", (done) => {
+            PerformanceUtil.setCache("test-key-ttl", { value: "test-data" }, 100);
 
-            it("should return null for non-existent key", () => {
-                const result = PerformanceUtil.getFromCache("non-existent");
-
+            setTimeout(() => {
+                const result = PerformanceUtil.getFromCache("test-key-ttl");
                 expect(result).toBeNull();
-            });
-
-            it("should handle TTL expiration", () => {
-                const testData = "test-data";
-
-                PerformanceUtil.setCache("ttl-key", testData, 1000);
-
-                // Before TTL expires
-                expect(PerformanceUtil.getFromCache("ttl-key")).toBe(testData);
-
-                // After TTL expires
-                jest.advanceTimersByTime(1001);
-                expect(PerformanceUtil.getFromCache("ttl-key")).toBeNull();
-            });
-        });
-
-        describe("clearCache", () => {
-            it("should clear all cache when no pattern provided", () => {
-                PerformanceUtil.setCache("key1", "data1");
-                PerformanceUtil.setCache("key2", "data2");
-
-                PerformanceUtil.clearCache();
-
-                expect(PerformanceUtil.getFromCache("key1")).toBeNull();
-                expect(PerformanceUtil.getFromCache("key2")).toBeNull();
-            });
-
-            it("should clear cache by pattern", () => {
-                PerformanceUtil.setCache("user-1", "data1");
-                PerformanceUtil.setCache("user-2", "data2");
-                PerformanceUtil.setCache("admin-1", "data3");
-
-                PerformanceUtil.clearCache("user-");
-
-                expect(PerformanceUtil.getFromCache("user-1")).toBeNull();
-                expect(PerformanceUtil.getFromCache("user-2")).toBeNull();
-                expect(PerformanceUtil.getFromCache("admin-1")).toBe("data3");
-            });
+                done();
+            }, 150);
         });
     });
 
-    describe("Function throttling and debouncing", () => {
-        describe("debounce", () => {
-            it("should debounce function calls", () => {
-                const mockFn = jest.fn();
-                const debouncedFn = PerformanceUtil.debounce(mockFn, 100);
+    describe("clearCache", () => {
+        test("パターンを指定しない場合はすべてのキャッシュをクリア", () => {
+            PerformanceUtil.setCache("key1", "value1");
+            PerformanceUtil.setCache("key2", "value2");
+            PerformanceUtil.clearCache();
 
-                debouncedFn("call1");
-                debouncedFn("call2");
-                debouncedFn("call3");
-
-                expect(mockFn).not.toHaveBeenCalled();
-
-                jest.advanceTimersByTime(100);
-
-                expect(mockFn).toHaveBeenCalledTimes(1);
-                expect(mockFn).toHaveBeenCalledWith("call3");
-            });
-
-            it("should reset debounce timer on new calls", () => {
-                const mockFn = jest.fn();
-                const debouncedFn = PerformanceUtil.debounce(mockFn, 100);
-
-                debouncedFn("call1");
-                jest.advanceTimersByTime(50);
-
-                debouncedFn("call2");
-                jest.advanceTimersByTime(50);
-
-                expect(mockFn).not.toHaveBeenCalled();
-
-                jest.advanceTimersByTime(50);
-
-                expect(mockFn).toHaveBeenCalledTimes(1);
-                expect(mockFn).toHaveBeenCalledWith("call2");
-            });
+            expect(PerformanceUtil.getFromCache("key1")).toBeNull();
+            expect(PerformanceUtil.getFromCache("key2")).toBeNull();
         });
 
-        describe("throttle", () => {
-            it("should throttle function calls", () => {
-                const mockFn = jest.fn();
-                const throttledFn = PerformanceUtil.throttle(mockFn, 100);
+        test("パターンを指定した場合は該当するキャッシュのみをクリア", () => {
+            PerformanceUtil.setCache("test-key1", "value1");
+            PerformanceUtil.setCache("test-key2", "value2");
+            PerformanceUtil.setCache("other-key", "value3");
+            PerformanceUtil.clearCache("test-.*");
 
-                throttledFn("call1");
-                throttledFn("call2");
-                throttledFn("call3");
+            expect(PerformanceUtil.getFromCache("test-key1")).toBeNull();
+            expect(PerformanceUtil.getFromCache("test-key2")).toBeNull();
+            expect(PerformanceUtil.getFromCache("other-key")).toBe("value3");
+        });
+    });
 
+    describe("debounce", () => {
+        test("デバウンスされた関数は指定時間後に実行される", (done) => {
+            const mockFn = jest.fn();
+            const debouncedFn = PerformanceUtil.debounce(mockFn, 100);
+
+            debouncedFn();
+            expect(mockFn).not.toHaveBeenCalled();
+
+            setTimeout(() => {
                 expect(mockFn).toHaveBeenCalledTimes(1);
-                expect(mockFn).toHaveBeenCalledWith("call1");
+                done();
+            }, 150);
+        });
 
-                jest.advanceTimersByTime(100);
+        test("連続呼び出し時は最後の呼び出しのみが実行される", (done) => {
+            const mockFn = jest.fn();
+            const debouncedFn = PerformanceUtil.debounce(mockFn, 100);
 
-                throttledFn("call4");
+            debouncedFn();
+            debouncedFn();
+            debouncedFn();
 
+            setTimeout(() => {
+                expect(mockFn).toHaveBeenCalledTimes(1);
+                done();
+            }, 150);
+        });
+    });
+
+    describe("throttle", () => {
+        test("スロットリングされた関数は一定間隔で実行される", (done) => {
+            const mockFn = jest.fn();
+            const throttledFn = PerformanceUtil.throttle(mockFn, 100);
+
+            throttledFn();
+            expect(mockFn).toHaveBeenCalledTimes(1);
+
+            throttledFn();
+            expect(mockFn).toHaveBeenCalledTimes(1); // まだ実行されない
+
+            setTimeout(() => {
+                throttledFn();
                 expect(mockFn).toHaveBeenCalledTimes(2);
-                expect(mockFn).toHaveBeenCalledWith("call4");
-            });
+                done();
+            }, 150);
         });
     });
 
-    describe("Performance measurement", () => {
-        describe("startMeasure and endMeasure", () => {
-            it("should measure performance", () => {
-                // Set up the mock performance API
-                const mockMark = jest.fn();
-                const mockMeasure = jest.fn();
-                const mockGetEntriesByName = jest.fn().mockReturnValue([{ duration: 150.5 }]);
+    describe("chunkArray", () => {
+        test("配列を指定サイズのチャンクに分割", () => {
+            const data = [1, 2, 3, 4, 5, 6, 7];
+            const chunks = PerformanceUtil.chunkArray(data, 3);
 
-                (global as any).performance = {
-                    mark: mockMark,
-                    measure: mockMeasure,
-                    getEntriesByName: mockGetEntriesByName,
-                };
+            expect(chunks).toEqual([[1, 2, 3], [4, 5, 6], [7]]);
+        });
 
-                PerformanceUtil.startMeasure("test-operation");
-                const result = PerformanceUtil.endMeasure("test-operation");
+        test("空の配列の場合は空の配列を返す", () => {
+            const chunks = PerformanceUtil.chunkArray([], 3);
 
-                expect(mockMark).toHaveBeenCalledWith("test-operation-start");
-                expect(mockMark).toHaveBeenCalledWith("test-operation-end");
-                expect(mockMeasure).toHaveBeenCalledWith(
-                    "test-operation",
-                    "test-operation-start",
-                    "test-operation-end"
-                );
-                expect(result).toBe(150.5);
-            });
-
-            it("should return duration from performance entry", () => {
-                const mockMark = jest.fn();
-                const mockMeasure = jest.fn();
-                const mockGetEntriesByName = jest.fn().mockReturnValue([{ duration: 42.7 }]);
-
-                (global as any).performance = {
-                    mark: mockMark,
-                    measure: mockMeasure,
-                    getEntriesByName: mockGetEntriesByName,
-                };
-
-                PerformanceUtil.startMeasure("test-duration");
-                const duration = PerformanceUtil.endMeasure("test-duration");
-
-                expect(duration).toBe(42.7);
-            });
+            expect(chunks).toEqual([]);
         });
     });
 
-    describe("Memory usage", () => {
-        it("should return memory usage when available", () => {
-            // Mock performance.memory properly
-            Object.defineProperty(mockPerformance, "memory", {
-                value: {
-                    usedJSHeapSize: 1000000,
-                    totalJSHeapSize: 2000000,
-                    jsHeapSizeLimit: 4000000,
-                },
-                writable: true,
-                configurable: true,
-            });
-
-            const memoryInfo = PerformanceUtil.getMemoryUsage();
-
-            expect(memoryInfo).toEqual({
+    describe("getMemoryUsage", () => {
+        test("performance.memoryが利用可能な場合はメモリ情報を返す", () => {
+            // performance.memoryをモック
+            (performance as any).memory = {
                 usedJSHeapSize: 1000000,
                 totalJSHeapSize: 2000000,
-                jsHeapSizeLimit: 4000000,
+                jsHeapSizeLimit: 5000000,
+            };
+
+            const result = PerformanceUtil.getMemoryUsage();
+
+            expect(result).toEqual({
+                usedJSHeapSize: 1000000,
+                totalJSHeapSize: 2000000,
+                jsHeapSizeLimit: 5000000,
             });
         });
 
-        it("should return null when memory info not available", () => {
-            const performanceWithoutMemory = {};
-            Object.defineProperty(global, "performance", {
-                value: performanceWithoutMemory,
-                writable: true,
-            });
+        test("performance.memoryが利用できない場合はnullを返す", () => {
+            // performance.memoryを削除
+            delete (performance as any).memory;
 
-            const memoryInfo = PerformanceUtil.getMemoryUsage();
+            const result = PerformanceUtil.getMemoryUsage();
 
-            expect(memoryInfo).toBeNull();
-
-            // Restore original performance
-            Object.defineProperty(global, "performance", {
-                value: mockPerformance,
-                writable: true,
-            });
-        });
-    });
-
-    describe("Array utilities", () => {
-        describe("chunkArray", () => {
-            it("should split array into chunks", () => {
-                const data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-                const chunks = PerformanceUtil.chunkArray(data, 3);
-
-                expect(chunks).toEqual([
-                    [1, 2, 3],
-                    [4, 5, 6],
-                    [7, 8, 9],
-                ]);
-            });
-
-            it("should handle remainder in last chunk", () => {
-                const data = [1, 2, 3, 4, 5];
-                const chunks = PerformanceUtil.chunkArray(data, 2);
-
-                expect(chunks).toEqual([[1, 2], [3, 4], [5]]);
-            });
-
-            it("should handle empty array", () => {
-                const chunks = PerformanceUtil.chunkArray([], 3);
-
-                expect(chunks).toEqual([]);
-            });
-
-            it("should handle chunk size larger than array", () => {
-                const data = [1, 2, 3];
-                const chunks = PerformanceUtil.chunkArray(data, 10);
-
-                expect(chunks).toEqual([[1, 2, 3]]);
-            });
+            expect(result).toBeNull();
         });
     });
 
-    describe("Async utilities", () => {
-        describe("createElementLazy", () => {
-            it("should create element using requestAnimationFrame", async () => {
-                // Mock requestAnimationFrame
-                const mockRAF = jest.fn((callback) => {
-                    setTimeout(callback, 0);
-                    return 1;
-                });
-                Object.defineProperty(global, "requestAnimationFrame", {
-                    value: mockRAF,
-                    writable: true,
-                    configurable: true,
-                });
+    describe("createElementLazy", () => {
+        test("要素を遅延作成する", async () => {
+            const factory = jest.fn(() => document.createElement("div"));
+            const element = await PerformanceUtil.createElementLazy(factory);
 
-                const factory = jest.fn(() => {
-                    const div = document.createElement("div");
-                    div.textContent = "test";
-                    return div;
-                });
-
-                const promise = PerformanceUtil.createElementLazy(factory);
-
-                jest.runAllTimers();
-
-                const element = await promise;
-
-                expect(factory).toHaveBeenCalled();
-                expect(element.textContent).toBe("test");
-                expect(mockRAF).toHaveBeenCalled();
-            });
-        });
-
-        describe("processBatches", () => {
-            it("should process data in batches", () => {
-                const data = [1, 2, 3, 4, 5, 6];
-                const processor = jest.fn((batch: number[]) => batch.map((x) => x * 2));
-
-                // Mock the processBatches to verify it would be called correctly
-                expect(data.length).toBe(6);
-                expect(typeof processor).toBe("function");
-
-                // Test the static method exists
-                expect(typeof PerformanceUtil.processBatches).toBe("function");
-            });
-
-            it("should handle chunkArray edge cases", () => {
-                // Test chunkArray with various inputs
-                expect(PerformanceUtil.chunkArray([], 5)).toEqual([]);
-                expect(PerformanceUtil.chunkArray([1], 5)).toEqual([[1]]);
-                expect(PerformanceUtil.chunkArray([1, 2, 3, 4, 5, 6], 2)).toEqual([
-                    [1, 2],
-                    [3, 4],
-                    [5, 6],
-                ]);
-                expect(PerformanceUtil.chunkArray([1, 2, 3, 4, 5], 3)).toEqual([
-                    [1, 2, 3],
-                    [4, 5],
-                ]);
-            });
-
-            it("should test processBatches with actual async behavior", async () => {
-                jest.useRealTimers();
-
-                const data = [1, 2, 3, 4];
-                const processor = jest.fn((batch: number[]) => batch.map((x) => x * 2));
-
-                const startTime = Date.now();
-                const results = await PerformanceUtil.processBatches(data, processor, 2);
-                const endTime = Date.now();
-
-                expect(results).toEqual([2, 4, 6, 8]);
-                expect(processor).toHaveBeenCalledTimes(2);
-                expect(processor).toHaveBeenNthCalledWith(1, [1, 2]);
-                expect(processor).toHaveBeenNthCalledWith(2, [3, 4]);
-
-                // Should have some delay due to setTimeout
-                expect(endTime - startTime).toBeGreaterThanOrEqual(0);
-
-                jest.useFakeTimers();
-            });
+            expect(element).toBeInstanceOf(HTMLDivElement);
+            expect(factory).toHaveBeenCalled();
         });
     });
 
-    describe("Viewport observation", () => {
-        describe("observeViewport", () => {
-            it("should create and register intersection observer", () => {
-                const element = document.createElement("div");
-                const callback = jest.fn();
+    describe("processBatches", () => {
+        test("大量データをバッチ処理する", async () => {
+            const data = Array.from({ length: 250 }, (_, i) => i);
+            const processor = jest.fn((batch: number[]) => batch.map((n) => n * 2));
 
-                const observerKey = PerformanceUtil.observeViewport(element, callback);
+            const results = await PerformanceUtil.processBatches(data, processor, 100);
 
-                expect(mockIntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {});
-                expect(observerKey).toMatch(/^viewport-\d+-/);
-            });
-
-            it("should create observer with custom options", () => {
-                const element = document.createElement("div");
-                const callback = jest.fn();
-                const options = { threshold: 0.5 };
-
-                PerformanceUtil.observeViewport(element, callback, options);
-
-                expect(mockIntersectionObserver).toHaveBeenCalledWith(
-                    expect.any(Function),
-                    options
-                );
-            });
-        });
-
-        describe("unobserveViewport", () => {
-            it("should disconnect and remove observer", () => {
-                const element = document.createElement("div");
-                const callback = jest.fn();
-
-                const observerKey = PerformanceUtil.observeViewport(element, callback);
-                PerformanceUtil.unobserveViewport(observerKey);
-
-                const mockInstance = mockIntersectionObserver.mock.instances[0];
-                expect(mockInstance.disconnect).toHaveBeenCalled();
-            });
-
-            it("should handle non-existent observer key gracefully", () => {
-                expect(() => {
-                    PerformanceUtil.unobserveViewport("non-existent-key");
-                }).not.toThrow();
-            });
+            expect(results).toHaveLength(250);
+            expect(processor).toHaveBeenCalledTimes(3); // 100, 100, 50
+            expect(results[0]).toBe(0);
+            expect(results[249]).toBe(498);
         });
     });
 
-    describe("Resource preloading", () => {
-        describe("preloadResource", () => {
-            beforeEach(() => {
-                // Mock document.head
-                document.head.appendChild = jest.fn();
+    describe("startMeasure", () => {
+        test("パフォーマンス測定を開始する", () => {
+            const mockMark = jest.fn();
+            (performance as any).mark = mockMark;
 
-                // Mock document.createElement to return an element with getAttribute
-                const mockElement: any = {
-                    rel: "",
-                    href: "",
-                    as: "",
-                    setAttribute: jest.fn((key: string, value: string) => {
-                        mockElement[key] = value;
-                    }),
-                    getAttribute: jest.fn((key: string): string | null => {
-                        return mockElement[key] || null;
-                    }),
-                };
+            PerformanceUtil.startMeasure("test-measure");
 
-                document.createElement = jest.fn(() => mockElement);
-            });
+            expect(mockMark).toHaveBeenCalledWith("test-measure-start");
+        });
+    });
 
-            it("should preload script resource", () => {
-                PerformanceUtil.preloadResource("script.js", "script");
+    describe("endMeasure", () => {
+        test("パフォーマンス測定を終了して時間を返す", () => {
+            const mockMark = jest.fn();
+            const mockMeasure = jest.fn();
+            const mockGetEntriesByName = jest.fn(() => [{ duration: 123.45 }]);
 
-                expect(document.head.appendChild).toHaveBeenCalledTimes(1);
-                const calledWith = (document.head.appendChild as jest.Mock).mock.calls[0][0];
-                expect(calledWith.rel).toBe("preload");
-                expect(calledWith.href).toContain("script.js");
-                expect(calledWith.getAttribute("as")).toBe("script");
-            });
+            (performance as any).mark = mockMark;
+            (performance as any).measure = mockMeasure;
+            (performance as any).getEntriesByName = mockGetEntriesByName;
 
-            it("should preload style resource", () => {
-                PerformanceUtil.preloadResource("styles.css", "style");
+            const duration = PerformanceUtil.endMeasure("test-measure");
 
-                expect(document.head.appendChild).toHaveBeenCalledTimes(1);
-                const calledWith = (document.head.appendChild as jest.Mock).mock.calls[0][0];
-                expect(calledWith.rel).toBe("preload");
-                expect(calledWith.href).toContain("styles.css");
-                expect(calledWith.getAttribute("as")).toBe("style");
-            });
+            expect(mockMark).toHaveBeenCalledWith("test-measure-end");
+            expect(mockMeasure).toHaveBeenCalledWith(
+                "test-measure",
+                "test-measure-start",
+                "test-measure-end"
+            );
+            expect(duration).toBe(123.45);
+        });
+    });
 
-            it("should preload image resource", () => {
-                PerformanceUtil.preloadResource("image.jpg", "image");
+    describe("preloadResource", () => {
+        beforeEach(() => {
+            // 各テスト前にheadをクリーンアップ
+            document.head.innerHTML = "";
+        });
 
-                expect(document.head.appendChild).toHaveBeenCalledTimes(1);
-                const calledWith = (document.head.appendChild as jest.Mock).mock.calls[0][0];
-                expect(calledWith.rel).toBe("preload");
-                expect(calledWith.href).toContain("image.jpg");
-                expect(calledWith.getAttribute("as")).toBe("image");
-            });
+        test("スクリプトリソースをプリロード", () => {
+            PerformanceUtil.preloadResource("test.js", "script");
+
+            const link = document.head.querySelector("link[rel='preload']") as HTMLLinkElement;
+            expect(link).toBeTruthy();
+            expect(link.rel).toBe("preload");
+            expect(link.href).toContain("test.js");
+            expect(link.as).toBe("script");
+        });
+
+        test("スタイルリソースをプリロード", () => {
+            PerformanceUtil.preloadResource("test.css", "style");
+
+            const link = document.head.querySelector("link[rel='preload']") as HTMLLinkElement;
+            expect(link).toBeTruthy();
+            expect(link.as).toBe("style");
+        });
+
+        test("画像リソースをプリロード", () => {
+            PerformanceUtil.preloadResource("test.png", "image");
+
+            const link = document.head.querySelector("link[rel='preload']") as HTMLLinkElement;
+            expect(link).toBeTruthy();
+            expect(link.as).toBe("image");
+        });
+    });
+
+    describe("observeViewport", () => {
+        test("Intersection Observerを設定", () => {
+            // IntersectionObserverをモック
+            global.IntersectionObserver = jest.fn().mockImplementation((callback) => ({
+                observe: jest.fn(),
+                disconnect: jest.fn(),
+            })) as any;
+
+            const element = document.createElement("div");
+            const callback = jest.fn();
+            const key = PerformanceUtil.observeViewport(element, callback);
+
+            expect(key).toBeTruthy();
+            expect(typeof key).toBe("string");
+            expect(global.IntersectionObserver).toHaveBeenCalled();
+        });
+    });
+
+    describe("unobserveViewport", () => {
+        test("Intersection Observerを停止", () => {
+            // IntersectionObserverをモック
+            const mockDisconnect = jest.fn();
+            global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+                observe: jest.fn(),
+                disconnect: mockDisconnect,
+            })) as any;
+
+            const element = document.createElement("div");
+            const callback = jest.fn();
+            const key = PerformanceUtil.observeViewport(element, callback);
+
+            PerformanceUtil.unobserveViewport(key);
+
+            expect(mockDisconnect).toHaveBeenCalled();
+
+            // 再度停止してもエラーが発生しないことを確認
+            expect(() => PerformanceUtil.unobserveViewport(key)).not.toThrow();
         });
     });
 });

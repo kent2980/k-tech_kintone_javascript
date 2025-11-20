@@ -5,6 +5,8 @@
 
 /**
  * 損益計算の結果を格納するインターフェース
+ *
+ * @category Services
  */
 export interface ProfitCalculationResult {
     /** 直行経費 */

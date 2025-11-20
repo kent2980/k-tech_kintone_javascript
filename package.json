@@ -1,8 +1,7 @@
 {
     "name": "k-tech_kintone_javascript",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
+    "description": "K-Tech Kintone JavaScript",
     "scripts": {
         "generate:fields": "node src/BOX/PL_dashboard/scripts/generate-fields.js",
         "prebuild": "npm run generate:fields",
@@ -25,6 +24,8 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "type-check": "tsc --noEmit",
+        "docs": "typedoc",
+        "docs:watch": "typedoc --watch",
         "quality": "npm run lint && npm run format:check && npm run type-check && npm run test",
         "prepare": "husky"
     },
@@ -32,8 +33,13 @@
         "type": "git",
         "url": "git+https://github.com/kent2980/kintone_PL-.git"
     },
-    "keywords": [],
-    "author": "",
+    "keywords": [
+        "kintone",
+        "javascript",
+        "typescript",
+        "vite"
+    ],
+    "author": "KentaroYoshida",
     "license": "ISC",
     "type": "commonjs",
     "bugs": {
@@ -63,10 +69,12 @@
         "ts-jest": "^29.4.5",
         "ts-morph": "^27.0.2",
         "ts-node": "^10.9.2",
+        "typedoc": "^0.27.9",
         "typescript": "^5.9.3",
         "vite": "^6.4.1"
     },
     "dependencies": {
+        "@types/dompurify": "^3.0.5",
         "@types/jquery": "^3.5.33",
         "chart.js": "^4.5.1",
         "chartjs-plugin-datalabels": "^2.2.0",
@@ -75,6 +83,7 @@
         "datatables.net-buttons-dt": "^3.2.5",
         "datatables.net-dt": "^2.3.4",
         "dayjs": "^1.11.19",
+        "dompurify": "^3.3.0",
         "jquery": "^3.7.1",
         "xlsx": "^0.18.5"
     }

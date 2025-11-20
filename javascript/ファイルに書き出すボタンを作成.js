@@ -68,7 +68,7 @@
 
                 // 新しいURL形式を生成
                 // ?view=20#q=...&sort_0=...&order_0=DESC
-                let newSearch = `?view=${view}`;
+                const newSearch = `?view=${view}`;
                 let newHash = "#";
 
                 if (q) {

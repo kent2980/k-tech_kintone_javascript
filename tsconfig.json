@@ -1,9 +1,9 @@
 {
     // Visit https://aka.ms/tsconfig to read more about this file
     "compilerOptions": {
-        "target": "ES2019",
+        "target": "ES2020",
         "module": "ESNext",
-        "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "strict": true,
         "allowJs": true,
         "checkJs": true,
@@ -14,6 +14,12 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
     },
-    "include": ["./**/*.js", "./**/*.ts", "kintone.d.ts", "*_fields.d.ts"],
+    "include": [
+        "./**/*.js",
+        "./**/*.ts",
+        "kintone.d.ts",
+        "*_fields.d.ts",
+        "./src/BOX/PL_dashboard/__mocks__/**/*.d.ts"
+    ],
     "exclude": ["node_modules", "dist", "coverage"]
 }

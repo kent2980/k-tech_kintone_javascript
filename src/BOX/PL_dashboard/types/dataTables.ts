@@ -2,6 +2,11 @@
  * DataTables型定義
  */
 
+/**
+ * DataTables設定オプション
+ *
+ * @category Types
+ */
 export interface DataTablesOptions {
     paging?: boolean;
     pageLength?: number;
@@ -36,6 +41,11 @@ export interface DataTablesColumnDef {
     type?: string;
 }
 
+/**
+ * DataTables API
+ *
+ * @category Types
+ */
 export interface DataTablesApi {
     clear: () => DataTablesApi;
     rows: {
@@ -44,6 +54,35 @@ export interface DataTablesApi {
     draw: () => DataTablesApi;
     destroy: () => void;
 }
+
+// DataTables設定オブジェクトの型定義
+export interface DataTablesSettings {
+    aoColumns?: unknown[];
+    aoData?: unknown[];
+    oFeatures?: {
+        bPaginate?: boolean;
+        bLengthChange?: boolean;
+        bFilter?: boolean;
+        bInfo?: boolean;
+        bAutoWidth?: boolean;
+    };
+    [key: string]: unknown;
+}
+
+// DataTables JSONレスポンスの型定義
+export interface DataTablesJsonResponse {
+    draw?: number;
+    recordsTotal?: number;
+    recordsFiltered?: number;
+    data?: unknown[];
+    [key: string]: unknown;
+}
+
+// DataTables initCompleteコールバックの型定義
+export type DataTablesInitCompleteCallback = (
+    settings: DataTablesSettings,
+    json: DataTablesJsonResponse
+) => void;
 
 export interface ExcelCell {
     v: string | number | boolean | Date;

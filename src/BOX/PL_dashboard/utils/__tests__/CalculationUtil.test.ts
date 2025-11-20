@@ -1,112 +1,138 @@
+/**
+ * CalculationUtilのユニットテスト
+ */
+
 import { CalculationUtil } from "../CalculationUtil";
 
 describe("CalculationUtil", () => {
     describe("calculateOvertimeCost", () => {
-        it("should calculate overtime cost with 1.25 multiplier", () => {
+        test("残業コストを正しく計算", () => {
             const result = CalculationUtil.calculateOvertimeCost(10, 1000);
+
             expect(result).toBe(12500); // 10 * 1000 * 1.25
         });
 
-        it("should handle zero hours", () => {
+        test("残業時間が0の場合は0を返す", () => {
             const result = CalculationUtil.calculateOvertimeCost(0, 1000);
+
             expect(result).toBe(0);
         });
     });
 
     describe("calculateProfitRate", () => {
-        it("should calculate profit rate correctly", () => {
-            const result = CalculationUtil.calculateProfitRate(25, 100);
-            expect(result).toBe("25.00%");
+        test("利益率を正しく計算", () => {
+            const result = CalculationUtil.calculateProfitRate(500, 1000);
+
+            expect(result).toBe("50.00%");
         });
 
-        it("should handle zero revenue", () => {
-            const result = CalculationUtil.calculateProfitRate(25, 0);
+        test("売上が0の場合は0%を返す", () => {
+            const result = CalculationUtil.calculateProfitRate(500, 0);
+
             expect(result).toBe("0%");
         });
 
-        it("should handle negative revenue", () => {
-            const result = CalculationUtil.calculateProfitRate(25, -100);
+        test("売上が負の値の場合は0%を返す", () => {
+            const result = CalculationUtil.calculateProfitRate(500, -100);
+
             expect(result).toBe("0%");
         });
     });
 
     describe("safeNumber", () => {
-        it("should convert valid string to number", () => {
+        test("数値文字列を数値に変換", () => {
             expect(CalculationUtil.safeNumber("123")).toBe(123);
             expect(CalculationUtil.safeNumber("123.45")).toBe(123.45);
         });
 
-        it("should return default value for invalid input", () => {
-            expect(CalculationUtil.safeNumber("")).toBe(0);
-            expect(CalculationUtil.safeNumber(null)).toBe(0);
+        test("数値をそのまま返す", () => {
+            expect(CalculationUtil.safeNumber(123)).toBe(123);
+            expect(CalculationUtil.safeNumber(123.45)).toBe(123.45);
+        });
+
+        test("undefinedの場合はデフォルト値を返す", () => {
             expect(CalculationUtil.safeNumber(undefined)).toBe(0);
-            expect(CalculationUtil.safeNumber("invalid")).toBe(0);
+            expect(CalculationUtil.safeNumber(undefined, 100)).toBe(100);
         });
 
-        it("should return custom default value", () => {
-            expect(CalculationUtil.safeNumber("", 999)).toBe(999);
-            expect(CalculationUtil.safeNumber(null, -1)).toBe(-1);
+        test("nullの場合はデフォルト値を返す", () => {
+            expect(CalculationUtil.safeNumber(null)).toBe(0);
+            expect(CalculationUtil.safeNumber(null, 100)).toBe(100);
         });
 
-        it("should handle number input", () => {
-            expect(CalculationUtil.safeNumber(42)).toBe(42);
-            expect(CalculationUtil.safeNumber(0)).toBe(0);
-        });
-    });
-
-    describe("roundNumber", () => {
-        it("should round to whole number by default", () => {
-            expect(CalculationUtil.roundNumber(3.14159)).toBe(3);
-            expect(CalculationUtil.roundNumber(3.6)).toBe(4);
+        test("空文字列の場合はデフォルト値を返す", () => {
+            expect(CalculationUtil.safeNumber("")).toBe(0);
+            expect(CalculationUtil.safeNumber("", 100)).toBe(100);
         });
 
-        it("should round to specified decimal places", () => {
-            expect(CalculationUtil.roundNumber(3.14159, 2)).toBe(3.14);
-            expect(CalculationUtil.roundNumber(3.14659, 2)).toBe(3.15);
+        test("数値に変換できない文字列の場合はデフォルト値を返す", () => {
+            expect(CalculationUtil.safeNumber("abc")).toBe(0);
+            expect(CalculationUtil.safeNumber("abc", 100)).toBe(100);
         });
     });
 
     describe("divideByThousand", () => {
-        it("should divide by 1000", () => {
+        test("数値を千単位で除算", () => {
+            expect(CalculationUtil.divideByThousand(1000)).toBe(1);
             expect(CalculationUtil.divideByThousand(5000)).toBe(5);
-            expect(CalculationUtil.divideByThousand(1500)).toBe(1.5);
+            expect(CalculationUtil.divideByThousand(1234)).toBe(1.234);
+        });
+
+        test("0の場合は0を返す", () => {
+            expect(CalculationUtil.divideByThousand(0)).toBe(0);
         });
     });
 
-    describe("sum", () => {
-        it("should calculate sum of array", () => {
-            expect(CalculationUtil.sum([1, 2, 3, 4, 5])).toBe(15);
-            expect(CalculationUtil.sum([])).toBe(0);
-            expect(CalculationUtil.sum([42])).toBe(42);
-        });
-    });
-
-    describe("average", () => {
-        it("should calculate average of array", () => {
-            expect(CalculationUtil.average([1, 2, 3, 4, 5])).toBe(3);
-            expect(CalculationUtil.average([10, 20])).toBe(15);
+    describe("roundNumber", () => {
+        test("数値を四捨五入", () => {
+            expect(CalculationUtil.roundNumber(123.456)).toBe(123);
+            expect(CalculationUtil.roundNumber(123.456, 1)).toBe(123.5);
+            expect(CalculationUtil.roundNumber(123.456, 2)).toBe(123.46);
         });
 
-        it("should return 0 for empty array", () => {
-            expect(CalculationUtil.average([])).toBe(0);
+        test("小数点以下桁数を指定しない場合は整数に丸める", () => {
+            expect(CalculationUtil.roundNumber(123.456)).toBe(123);
         });
     });
 
     describe("parsePercentage", () => {
-        it("should parse percentage string", () => {
+        test("パーセンテージ文字列を数値に変換", () => {
             expect(CalculationUtil.parsePercentage("50%")).toBe(50);
-            expect(CalculationUtil.parsePercentage("25.5%")).toBe(25.5);
+            expect(CalculationUtil.parsePercentage("123.45%")).toBe(123.45);
         });
 
-        it("should handle string without percentage sign", () => {
-            expect(CalculationUtil.parsePercentage("75")).toBe(75);
+        test("%記号がない場合も変換", () => {
+            expect(CalculationUtil.parsePercentage("50")).toBe(50);
         });
     });
 
     describe("toPercentageString", () => {
-        it("should convert number to percentage string", () => {
-            expect(CalculationUtil.toPercentageString(25)).toBe("25.00%");
-            expect(CalculationUtil.toPercentageString(33.333, 1)).toBe("33.3%");
+        test("数値をパーセンテージ文字列に変換", () => {
+            expect(CalculationUtil.toPercentageString(50)).toBe("50.00%");
+            expect(CalculationUtil.toPercentageString(50, 1)).toBe("50.0%");
+            expect(CalculationUtil.toPercentageString(50, 0)).toBe("50%");
+        });
+    });
+
+    describe("sum", () => {
+        test("配列の合計を計算", () => {
+            expect(CalculationUtil.sum([1, 2, 3])).toBe(6);
+            expect(CalculationUtil.sum([10, 20, 30])).toBe(60);
+        });
+
+        test("空配列の場合は0を返す", () => {
+            expect(CalculationUtil.sum([])).toBe(0);
+        });
+    });
+
+    describe("average", () => {
+        test("配列の平均を計算", () => {
+            expect(CalculationUtil.average([1, 2, 3])).toBe(2);
+            expect(CalculationUtil.average([10, 20, 30])).toBe(20);
+        });
+
+        test("空配列の場合は0を返す", () => {
+            expect(CalculationUtil.average([])).toBe(0);
         });
     });
 });

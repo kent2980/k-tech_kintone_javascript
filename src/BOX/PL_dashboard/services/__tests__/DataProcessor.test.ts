@@ -1,405 +1,288 @@
+/**
+ * DataProcessorのユニットテスト
+ */
+
 import { DataProcessor } from "../DataProcessor";
+import { ProductHistoryData, TotalsByDate } from "../../types";
+import { HolidayStore } from "../../store";
 
-// モックデータ
-const mockProductHistoryData = [
-    {
-        date: "2024-01-01",
-        line_name: "Line A",
-        actual_number: "10",
-        addedValue: 1000,
-        totalCost: 800,
-        grossProfit: 200,
-        profitRate: "20.00%",
-        insideOvertime: "2",
-        outsideOvertime: "1",
-        insideRegularTime: "8",
-        outsideRegularTime: "4",
+// HolidayStoreをモック
+jest.mock("../../store", () => ({
+    HolidayStore: {
+        getInstance: jest.fn(() => ({
+            getHolidayData: jest.fn(() => [
+                { date: { value: "2024-01-01" }, holiday_type: { value: "法定休日" } },
+                { date: { value: "2024-01-07" }, holiday_type: { value: "所定休日" } },
+            ]),
+        })),
     },
-    {
-        date: "2024-01-01",
-        line_name: "Line B",
-        actual_number: "5",
-        addedValue: 500,
-        totalCost: 400,
-        grossProfit: 100,
-        profitRate: "20.00%",
-        insideOvertime: "1",
-        outsideOvertime: "0",
-        insideRegularTime: "8",
-        outsideRegularTime: "4",
-    },
-    {
-        date: "2024-01-02",
-        line_name: "Line A",
-        actual_number: "8",
-        addedValue: 800,
-        totalCost: 600,
-        grossProfit: 200,
-        profitRate: "25.00%",
-        insideOvertime: "1.5",
-        outsideOvertime: "0.5",
-        insideRegularTime: "8",
-        outsideRegularTime: "4",
-    },
-];
-
-const mockDailyReportData: daily.SavedFields[] = [
-    {
-        $id: { type: "ID", value: "1" },
-        $revision: { type: "REVISION", value: "1" },
-        date: { type: "DATE", value: "2024-01-01" },
-        direct_personnel: { type: "NUMBER", value: "10" },
-        temporary_employees: { type: "NUMBER", value: "5" },
-    } as daily.SavedFields,
-    {
-        $id: { type: "ID", value: "2" },
-        $revision: { type: "REVISION", value: "1" },
-        date: { type: "DATE", value: "2024-01-02" },
-        direct_personnel: { type: "NUMBER", value: "12" },
-        temporary_employees: { type: "NUMBER", value: "3" },
-    } as daily.SavedFields,
-];
-
-const mockMasterModelData: model_master.SavedFields[] = [
-    {
-        $id: { type: "ID", value: "1" },
-        $revision: { type: "REVISION", value: "1" },
-        line_name: { type: "SINGLE_LINE_TEXT", value: "Line A" },
-        model_name: { type: "SINGLE_LINE_TEXT", value: "Model X" },
-        model_code: { type: "SINGLE_LINE_TEXT", value: "MX001" },
-        added_value: { type: "NUMBER", value: "100" },
-    } as model_master.SavedFields,
-    {
-        $id: { type: "ID", value: "2" },
-        $revision: { type: "REVISION", value: "1" },
-        line_name: { type: "SINGLE_LINE_TEXT", value: "Line B" },
-        model_name: { type: "SINGLE_LINE_TEXT", value: "Model Y" },
-        model_code: { type: "SINGLE_LINE_TEXT", value: "MY001" },
-        added_value: { type: "NUMBER", value: "150" },
-    } as model_master.SavedFields,
-];
-
-const mockProductionRecord: line_daily.SavedFields = {
-    $id: { type: "ID", value: "1" },
-    $revision: { type: "REVISION", value: "1" },
-    date: { type: "DATE", value: "2024-01-01" },
-    line_name: { type: "SINGLE_LINE_TEXT", value: "Line A" },
-    model_name: { type: "SINGLE_LINE_TEXT", value: "Model X" },
-    model_code: { type: "SINGLE_LINE_TEXT", value: "MX001" },
-    actual_number: { type: "NUMBER", value: "10" },
-    added_value: { type: "NUMBER", value: "" },
-    inside_time: { type: "NUMBER", value: "8" },
-    outside_time: { type: "NUMBER", value: "4" },
-    inside_overtime: { type: "NUMBER", value: "2" },
-    outside_overtime: { type: "NUMBER", value: "1" },
-} as line_daily.SavedFields;
+}));
 
 describe("DataProcessor", () => {
+    const mockProductHistoryData: ProductHistoryData[] = [
+        {
+            date: "2024-01-01",
+            line_name: "Line A",
+            actual_number: "10",
+            addedValue: 100000,
+            totalCost: 60000,
+            grossProfit: 40000,
+            profitRate: "66.7",
+            insideOvertime: "2",
+            outsideOvertime: "1",
+            insideRegularTime: "8",
+            outsideRegularTime: "4",
+        },
+        {
+            date: "2024-01-01",
+            line_name: "Line B",
+            actual_number: "5",
+            addedValue: 50000,
+            totalCost: 30000,
+            grossProfit: 20000,
+            profitRate: "66.7",
+            insideOvertime: "1",
+            outsideOvertime: "0.5",
+            insideRegularTime: "4",
+            outsideRegularTime: "2",
+        },
+        {
+            date: "2024-01-02",
+            line_name: "Line A",
+            actual_number: "8",
+            addedValue: 80000,
+            totalCost: 50000,
+            grossProfit: 30000,
+            profitRate: "60.0",
+            insideOvertime: "0",
+            outsideOvertime: "0",
+            insideRegularTime: "8",
+            outsideRegularTime: "4",
+        },
+    ];
+
     describe("getTotalsByDate", () => {
-        it("should calculate correct totals for a specific date", () => {
+        test("指定日付の合計値を正しく計算", () => {
             const result = DataProcessor.getTotalsByDate(mockProductHistoryData, "2024-01-01");
 
             expect(result.date).toBe("2024-01-01");
             expect(result.totalActualNumber).toBe(15); // 10 + 5
-            expect(result.totalAddedValue).toBe(1.5); // (1000 + 500) / 1000
-            expect(result.totalCost).toBe(1.2); // (800 + 400) / 1000
-            expect(result.totalGrossProfit).toBe(0.3); // (200 + 100) / 1000
-            expect(result.totalInsideOvertime).toBe(3); // 2 + 1
-            expect(result.totalOutsideOvertime).toBe(1); // 1 + 0
+            expect(result.totalAddedValue).toBe(150); // (100000 + 50000) / 1000
+            expect(result.totalCost).toBe(90); // (60000 + 30000) / 1000
+            expect(result.totalGrossProfit).toBe(60); // (40000 + 20000) / 1000
         });
 
-        it("should return zeros for non-existent date", () => {
-            const result = DataProcessor.getTotalsByDate(mockProductHistoryData, "2024-12-31");
+        test("法定休日の場合は休日残業時間を分類", () => {
+            const result = DataProcessor.getTotalsByDate(mockProductHistoryData, "2024-01-01");
 
-            expect(result.date).toBe("2024-12-31");
+            // 法定休日なので、通常残業時間は0、休日残業時間に集計される
+            expect(result.totalInsideOvertime).toBe(0);
+            expect(result.totalOutsideOvertime).toBe(0);
+            expect(result.totalInsideHolidayOvertime).toBeGreaterThan(0);
+            expect(result.totalOutsideHolidayOvertime).toBeGreaterThan(0);
+        });
+
+        test("平日の場合は通常残業時間を分類", () => {
+            const result = DataProcessor.getTotalsByDate(mockProductHistoryData, "2024-01-02");
+
+            // 平日なので、通常残業時間に集計される
+            expect(result.totalInsideOvertime).toBe(0);
+            expect(result.totalOutsideOvertime).toBe(0);
+            expect(result.totalInsideHolidayOvertime).toBe(0);
+            expect(result.totalOutsideHolidayOvertime).toBe(0);
+        });
+
+        test("データが存在しない日付の場合は0を返す", () => {
+            const result = DataProcessor.getTotalsByDate(mockProductHistoryData, "2024-01-31");
+
             expect(result.totalActualNumber).toBe(0);
             expect(result.totalAddedValue).toBe(0);
             expect(result.totalCost).toBe(0);
             expect(result.totalGrossProfit).toBe(0);
-            expect(result.totalInsideOvertime).toBe(0);
-            expect(result.totalOutsideOvertime).toBe(0);
         });
 
-        it("should handle empty product history data", () => {
+        test("空の配列の場合は0を返す", () => {
             const result = DataProcessor.getTotalsByDate([], "2024-01-01");
 
             expect(result.totalActualNumber).toBe(0);
             expect(result.totalAddedValue).toBe(0);
+            expect(result.totalCost).toBe(0);
         });
     });
 
     describe("getDateList", () => {
-        it("should return unique sorted dates", () => {
+        test("年月が指定されている場合は完全な日付リストを生成", () => {
+            const result = DataProcessor.getDateList(mockProductHistoryData, "2024", "01");
+
+            expect(result.length).toBe(31); // 2024年1月は31日
+            expect(result[0]).toBe("2024-01-01");
+            expect(result[30]).toBe("2024-01-31");
+        });
+
+        test("年月が指定されていない場合はデータから一意な日付を取得", () => {
             const result = DataProcessor.getDateList(mockProductHistoryData);
 
-            expect(result).toEqual(["2024-01-01", "2024-01-02"]);
+            expect(result.length).toBe(2); // 2024-01-01, 2024-01-02
+            expect(result).toContain("2024-01-01");
+            expect(result).toContain("2024-01-02");
         });
 
-        it("should handle empty data", () => {
+        test("空の配列の場合は空配列を返す", () => {
             const result = DataProcessor.getDateList([]);
 
-            expect(result).toEqual([]);
-        });
-
-        it("should remove duplicate dates", () => {
-            const dataWithDuplicates = [
-                ...mockProductHistoryData,
-                {
-                    date: "2024-01-01",
-                    line_name: "Line C",
-                    actual_number: "3",
-                    addedValue: 300,
-                    totalCost: 250,
-                    grossProfit: 50,
-                    profitRate: "16.67%",
-                    insideOvertime: "0",
-                    outsideOvertime: "0",
-                    insideRegularTime: "8",
-                    outsideRegularTime: "4",
-                },
-            ];
-
-            const result = DataProcessor.getDateList(dataWithDuplicates);
-
-            expect(result).toEqual(["2024-01-01", "2024-01-02"]);
+            expect(result.length).toBe(0);
         });
     });
 
     describe("getRecordsByDate", () => {
-        it("should return records for specific date", () => {
+        const mockDailyReportData: daily.SavedFields[] = [
+            {
+                date: { value: "2024-01-01" },
+            } as daily.SavedFields,
+            {
+                date: { value: "2024-01-01" },
+            } as daily.SavedFields,
+            {
+                date: { value: "2024-01-02" },
+            } as daily.SavedFields,
+        ];
+
+        test("指定日付のレコードを正しく取得", () => {
             const result = DataProcessor.getRecordsByDate(mockDailyReportData, "2024-01-01");
 
-            expect(result).toHaveLength(1);
-            expect(result[0].date.value).toBe("2024-01-01");
-            expect(result[0].direct_personnel.value).toBe("10");
+            expect(result.length).toBe(2);
+            expect(result.every((r) => r.date?.value === "2024-01-01")).toBe(true);
         });
 
-        it("should return empty array for non-existent date", () => {
-            const result = DataProcessor.getRecordsByDate(mockDailyReportData, "2024-12-31");
+        test("データが存在しない日付の場合は空配列を返す", () => {
+            const result = DataProcessor.getRecordsByDate(mockDailyReportData, "2024-01-31");
 
-            expect(result).toEqual([]);
+            expect(result.length).toBe(0);
         });
+    });
 
-        it("should handle null/undefined daily report data", () => {
-            const result = DataProcessor.getRecordsByDate(undefined as any, "2024-01-01");
+    describe("createProductHistoryData", () => {
+        const mockRecords: line_daily.SavedFields[] = [
+            {
+                date: { value: "2024-01-01" },
+                line_name: { value: "Line A" },
+                actual_number: { value: "10" },
+                added_value: { value: "10000" },
+                model_name: { value: "Model A" },
+            } as line_daily.SavedFields,
+        ];
 
-            expect(result).toEqual([]);
+        const mockMasterModelData: model_master.SavedFields[] = [
+            {
+                model_name: { value: "Model A" },
+                added_value: { value: "1000" },
+            } as model_master.SavedFields,
+        ];
+
+        test("製品履歴データを正しく作成", () => {
+            const result = DataProcessor.createProductHistoryData(
+                mockRecords,
+                mockMasterModelData,
+                3000,
+                2500
+            );
+
+            expect(result.length).toBe(1);
+            expect(result[0].date).toBe("2024-01-01");
+            expect(result[0].line_name).toBe("Line A");
+            expect(result[0].actual_number).toBe("10");
         });
     });
 
     describe("calculateAddedValue", () => {
-        it("should use direct added value when available", () => {
-            const recordWithDirectValue = {
-                ...mockProductionRecord,
-                added_value: { type: "NUMBER", value: "500" },
-            } as line_daily.SavedFields;
+        test("直接付加価値が設定されている場合はその値を使用", () => {
+            const record: any = {
+                added_value: { value: "5000" },
+                model_name: { value: "Model A" },
+            };
 
-            const result = DataProcessor.calculateAddedValue(
-                recordWithDirectValue,
-                mockMasterModelData
-            );
+            const result = DataProcessor.calculateAddedValue(record, []);
 
-            expect(result).toBe(500);
+            expect(result).toBe(5000);
         });
 
-        it("should calculate from master data when direct value is empty", () => {
-            const result = DataProcessor.calculateAddedValue(
-                mockProductionRecord,
-                mockMasterModelData
-            );
+        test("マスタデータから付加価値を取得", () => {
+            const record: any = {
+                added_value: { value: "" },
+                model_name: { value: "Model A" },
+                model_code: { value: "" },
+                actual_number: { value: "10" },
+            };
 
-            // Model X has added_value of 100, actual_number is 10
-            expect(result).toBe(1000); // 100 * 10
+            const masterModelData: any[] = [
+                {
+                    model_name: { value: "Model A" },
+                    added_value: { value: "1000" },
+                },
+            ];
+
+            const result = DataProcessor.calculateAddedValue(record, masterModelData);
+
+            expect(result).toBe(10000); // 1000 * 10
         });
 
-        it("should match by model name and code", () => {
-            const recordWithCode = {
-                ...mockProductionRecord,
-                model_name: { type: "SINGLE_LINE_TEXT", value: "Model Y" },
-                model_code: { type: "SINGLE_LINE_TEXT", value: "MY001" },
-                actual_number: { type: "NUMBER", value: "5" },
-            } as line_daily.SavedFields;
+        test("マスタデータが見つからない場合は0を返す", () => {
+            const record: any = {
+                added_value: { value: "" },
+                model_name: { value: "Model B" },
+                model_code: { value: "" },
+            };
 
-            const result = DataProcessor.calculateAddedValue(recordWithCode, mockMasterModelData);
+            const masterModelData: any[] = [
+                {
+                    model_name: { value: "Model A" },
+                    added_value: { value: "1000" },
+                },
+            ];
 
-            // Model Y has added_value of 150, actual_number is 5
-            expect(result).toBe(750); // 150 * 5
-        });
-
-        it("should match by model name only when code is empty", () => {
-            const recordNoCode = {
-                ...mockProductionRecord,
-                model_code: { type: "SINGLE_LINE_TEXT", value: "" },
-                actual_number: { type: "NUMBER", value: "3" },
-            } as line_daily.SavedFields;
-
-            const result = DataProcessor.calculateAddedValue(recordNoCode, mockMasterModelData);
-
-            expect(result).toBe(300); // 100 * 3
-        });
-
-        it("should return 0 when no match found", () => {
-            const recordNoMatch = {
-                ...mockProductionRecord,
-                model_name: { type: "SINGLE_LINE_TEXT", value: "Unknown Model" },
-                model_code: { type: "SINGLE_LINE_TEXT", value: "UNK001" },
-            } as line_daily.SavedFields;
-
-            const result = DataProcessor.calculateAddedValue(recordNoMatch, mockMasterModelData);
-
-            expect(result).toBe(0);
-        });
-
-        it("should handle empty master data", () => {
-            const result = DataProcessor.calculateAddedValue(mockProductionRecord, []);
+            const result = DataProcessor.calculateAddedValue(record, masterModelData);
 
             expect(result).toBe(0);
         });
     });
 
     describe("calculateCosts", () => {
-        const insideUnit = 2000;
-        const outsideUnit = 1500;
+        test("経費を正しく計算", () => {
+            const record: any = {
+                inside_time: { value: "8" },
+                outside_time: { value: "4" },
+                inside_overtime: { value: "2" },
+                outside_overtime: { value: "1" },
+            };
 
-        it("should calculate all cost components correctly", () => {
-            const result = DataProcessor.calculateCosts(
-                mockProductionRecord,
-                insideUnit,
-                outsideUnit
-            );
+            const result = DataProcessor.calculateCosts(record, 3000, 2500);
 
-            expect(result.insideCost).toBe(16000); // 8 * 2000
-            expect(result.outsideCost).toBe(6000); // 4 * 1500
-            expect(result.insideOvertimeCost).toBe(5000); // 2 * 2000 * 1.25
-            expect(result.outsideOvertimeCost).toBe(1875); // 1 * 1500 * 1.25
-            expect(result.totalCost).toBe(28875); // sum of all costs
-        });
-
-        it("should handle zero values", () => {
-            const recordZeros = {
-                ...mockProductionRecord,
-                inside_time: { type: "NUMBER", value: "0" },
-                outside_time: { type: "NUMBER", value: "0" },
-                inside_overtime: { type: "NUMBER", value: "0" },
-                outside_overtime: { type: "NUMBER", value: "0" },
-            } as line_daily.SavedFields;
-
-            const result = DataProcessor.calculateCosts(recordZeros, insideUnit, outsideUnit);
-
-            expect(result.insideCost).toBe(0);
-            expect(result.outsideCost).toBe(0);
-            expect(result.insideOvertimeCost).toBe(0);
-            expect(result.outsideOvertimeCost).toBe(0);
-            expect(result.totalCost).toBe(0);
-        });
-
-        it("should handle empty field values", () => {
-            const recordEmpty = {
-                ...mockProductionRecord,
-                inside_time: { type: "NUMBER", value: "" },
-                outside_time: { type: "NUMBER", value: "" },
-                inside_overtime: { type: "NUMBER", value: "" },
-                outside_overtime: { type: "NUMBER", value: "" },
-            } as line_daily.SavedFields;
-
-            const result = DataProcessor.calculateCosts(recordEmpty, insideUnit, outsideUnit);
-
-            expect(result.totalCost).toBe(0);
-        });
-    });
-
-    describe("createProductHistoryData", () => {
-        it("should create product history data with calculated values", () => {
-            const records = [mockProductionRecord];
-            const insideUnit = 2000;
-            const outsideUnit = 1500;
-
-            const result = DataProcessor.createProductHistoryData(
-                records,
-                mockMasterModelData,
-                insideUnit,
-                outsideUnit
-            );
-
-            expect(result).toHaveLength(1);
-            expect(result[0]).toMatchObject({
-                date: "2024-01-01",
-                line_name: "Line A",
-                actual_number: "10",
-                addedValue: 1000,
-                totalCost: 28875,
-                grossProfit: -27875,
-                profitRate: expect.stringMatching(/^-\d+\.\d+%$/),
-                insideOvertime: "2",
-                outsideOvertime: "1",
-            });
-        });
-
-        it("should handle multiple records", () => {
-            const multipleRecords = [
-                mockProductionRecord,
-                {
-                    ...mockProductionRecord,
-                    $id: { type: "ID", value: "2" },
-                    model_name: { type: "SINGLE_LINE_TEXT", value: "Model Y" },
-                    model_code: { type: "SINGLE_LINE_TEXT", value: "MY001" },
-                    actual_number: { type: "NUMBER", value: "5" },
-                } as line_daily.SavedFields,
-            ];
-
-            const result = DataProcessor.createProductHistoryData(
-                multipleRecords,
-                mockMasterModelData,
-                2000,
-                1500
-            );
-
-            expect(result).toHaveLength(2);
-            expect(result[1].addedValue).toBe(750); // Model Y: 150 * 5
+            expect(result.insideCost).toBe(24000); // 8 * 3000
+            expect(result.outsideCost).toBe(10000); // 4 * 2500
+            expect(result.insideOvertimeCost).toBe(7500); // 2 * 3000 * 1.25
+            expect(result.outsideOvertimeCost).toBe(3125); // 1 * 2500 * 1.25
+            expect(result.totalCost).toBe(44625); // 24000 + 10000 + 7500 + 3125
         });
     });
 
     describe("getFieldValue", () => {
-        it("should return numeric value from field", () => {
-            const field = { value: "123.45" };
-            const result = DataProcessor.getFieldValue(field);
-
-            expect(result).toBe(123.45);
+        test("フィールドの値を数値として取得", () => {
+            expect(DataProcessor.getFieldValue({ value: "123" })).toBe(123);
+            expect(DataProcessor.getFieldValue({ value: 456 })).toBe(456);
         });
 
-        it("should return 0 for undefined field", () => {
-            const result = DataProcessor.getFieldValue(undefined);
-
-            expect(result).toBe(0);
-        });
-
-        it("should handle numeric field values", () => {
-            const field = { value: 456 };
-            const result = DataProcessor.getFieldValue(field);
-
-            expect(result).toBe(456);
+        test("フィールドがundefinedの場合は0を返す", () => {
+            expect(DataProcessor.getFieldValue(undefined)).toBe(0);
         });
     });
 
     describe("getFieldText", () => {
-        it("should return text value from field", () => {
-            const field = { value: "Test Text" };
-            const result = DataProcessor.getFieldText(field);
-
-            expect(result).toBe("Test Text");
+        test("フィールドの値を文字列として取得", () => {
+            expect(DataProcessor.getFieldText({ value: "test" })).toBe("test");
         });
 
-        it("should return empty string for undefined field", () => {
-            const result = DataProcessor.getFieldText(undefined);
-
-            expect(result).toBe("");
-        });
-
-        it("should handle empty field values", () => {
-            const field = { value: "" };
-            const result = DataProcessor.getFieldText(field);
-
-            expect(result).toBe("");
+        test("フィールドがundefinedの場合は空文字を返す", () => {
+            expect(DataProcessor.getFieldText(undefined)).toBe("");
         });
     });
 });

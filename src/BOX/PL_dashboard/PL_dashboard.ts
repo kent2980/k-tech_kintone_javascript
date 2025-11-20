@@ -21,11 +21,16 @@ import {
     TotalsByDate,
 } from "./types";
 
-import { DateUtil, Logger, PerformanceUtil } from "./utils";
+import { DateUtil, Logger, MemoryLeakDetector, PerformanceUtil } from "./utils";
 
-import { BusinessCalculationService, KintoneApiService } from "./services";
+import { BusinessCalculationService, DataProcessor, KintoneApiService } from "./services";
 
-import { HeaderContainer, PLDashboardGraphBuilder, PLDashboardTableBuilder } from "./components";
+import {
+    PLDashboardGraphBuilder,
+    PLDashboardTableManager,
+    PLDomBuilder,
+    PLHeaderContainer,
+} from "./components";
 import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 (function () {
     "use strict";
@@ -39,7 +44,21 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
     let filteredRecords: line_daily.SavedFields[] = [];
     let lastActiveTabId: string = "production-tab";
 
-    // DOM構築関数は PLDashboardDomBuilder クラスに移動しました
+    // PLDashboardTableManager のインスタンスを作成
+    const tableManager = new PLDashboardTableManager({
+        stickyHeader: true,
+        enableDataTables: true,
+        holidayColoring: true,
+    });
+
+    // PLDashboardGraphBuilder のインスタンスを作成
+    const graphBuilder = new PLDashboardGraphBuilder();
+
+    // PLDomBuilder のインスタンスを作成
+    const domBuilder = new PLDomBuilder();
+
+    // KintoneApiService のインスタンスを作成
+    const apiService = new KintoneApiService();
 
     /**
      * 表示スペース切替ボタンを作成する
@@ -150,7 +169,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         year: string,
         month: string
     ): Promise<monthly.SavedFields | null> {
-        return await KintoneApiService.fetchPLMonthlyData(year, month);
+        return await apiService.fetchPLMonthlyData(year, month);
     }
 
     /**
@@ -160,7 +179,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
      * @returns レコードの配列
      */
     async function fetchPLDailyData(year: string, month: string): Promise<daily.SavedFields[]> {
-        return await KintoneApiService.fetchPLDailyData(year, month);
+        return await apiService.fetchPLDailyData(year, month);
     }
 
     /**生産日報報告書データを取得する関数
@@ -173,7 +192,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         month: string | null = null
     ): Promise<line_daily.SavedFields[]> {
         const filterConfig: FilterConfig = { year, month };
-        return await KintoneApiService.fetchProductionReportData(filterConfig);
+        return await apiService.fetchProductionReportData(filterConfig);
     }
 
     /**
@@ -181,7 +200,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
      * @returns レコードの配列
      */
     async function fetchMasterModelData(): Promise<model_master.SavedFields[]> {
-        return await KintoneApiService.fetchMasterModelData();
+        return await apiService.fetchMasterModelData();
     }
 
     /**
@@ -189,10 +208,10 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
      * @returns レコードの配列
      */
     async function fetchHolidayData(): Promise<holiday.SavedFields[]> {
-        return await KintoneApiService.fetchHolidayData();
+        return await apiService.fetchHolidayData();
     }
 
-    /**
+    /*
      * フィルター変更時の処理（デバウンス処理付き）
      */
     const debouncedHandleFilterChange = PerformanceUtil.debounce(
@@ -256,20 +275,24 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                     "production-performance-table"
                 );
                 if (existingProductionContainer) {
-                    // rebuild product_history_data and prepare DataTables row arrays
+                    // 再利用のため、product_history_dataを再構築
                     product_history_data = [];
+                    // テーブルデータを再構築
                     const prodRows: unknown[] = [];
+
                     filteredRecords.forEach((record) => {
+                        // 各種指標を計算
                         const metrics = BusinessCalculationService.calculateBusinessMetrics(
                             record,
                             plMonthlyData
                         );
-
+                        // 日付をフォーマット
                         const dateObj = new Date(record.date?.value);
+                        // YYYY/MM/DD(曜日)形式に変換
                         const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(
                             dateObj.getDate()
                         ).padStart(2, "0")}(${DateUtil.getDayOfWeek(dateObj)})`;
-
+                        // 行データを配列にまとめる
                         const row = [
                             formattedDate,
                             record.line_name?.value || "",
@@ -288,9 +311,9 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                             metrics.profit.grossProfit,
                             metrics.profit.profitRateString,
                         ];
-
+                        // 行データをprodRowsに追加
                         prodRows.push(row);
-
+                        // product_history_dataにも追加
                         const historyItem: ProductHistoryData = {
                             date: record.date?.value || "",
                             line_name: record.line_name?.value || "",
@@ -307,33 +330,42 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                         product_history_data.push(historyItem);
                     });
 
-                    // Update DataTables if initialized, otherwise rebuild container
+                    //
                     const productionTableElement = document.getElementById("production-table");
                     if (productionTableElement && (window as any).jQuery) {
-                        PLDashboardTableBuilder.updateTableData("production-table", prodRows);
+                        tableManager.updateTableData("production-table", prodRows);
                         tableContainer = existingProductionContainer as HTMLElement;
                     } else {
                         tableContainer = await PerformanceUtil.createElementLazy(() =>
-                            PLDashboardTableBuilder.createProductionPerformanceTable(
+                            tableManager.createProductionPerformanceTable(
+                                "production-table",
                                 filteredRecords,
                                 plMonthlyData,
                                 product_history_data,
-                                DateUtil.getDayOfWeek
+                                DateUtil.getDayOfWeek,
+                                {
+                                    holidayColoring: true,
+                                }
                             )
                         );
                     }
                 } else {
                     tableContainer = await PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createProductionPerformanceTable(
+                        tableManager.createProductionPerformanceTable(
+                            "production-table",
                             filteredRecords,
                             plMonthlyData,
                             product_history_data,
-                            DateUtil.getDayOfWeek
+                            DateUtil.getDayOfWeek,
+                            {
+                                holidayColoring: true,
+                            }
                         )
                     );
                 }
                 const profitTableContainer = await PerformanceUtil.createElementLazy(() =>
-                    PLDashboardTableBuilder.createProfitCalculationTable(
+                    tableManager.createProfitCalculationTable(
+                        "calculation-table",
                         dailyReportData,
                         filteredRecords,
                         plMonthlyData,
@@ -370,21 +402,20 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
                     const summaryTableElement = document.getElementById("revenue-summary-table");
                     if (summaryTableElement && (window as any).jQuery) {
-                        PLDashboardTableBuilder.updateTableData(
-                            "revenue-summary-table",
-                            summaryRows
-                        );
+                        tableManager.updateTableData("revenue-summary-table", summaryRows);
                         summaryTableContainer = existingSummaryContainer as HTMLElement;
                     } else {
                         summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
-                            PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                            tableManager.createRevenueAnalysisSummaryTable(
+                                "revenue-summary-table",
                                 RevenueAnalysisList
                             )
                         );
                     }
                 } else {
                     summaryTableContainer = await PerformanceUtil.createElementLazy(() =>
-                        PLDashboardTableBuilder.createRevenueAnalysisSummaryTable(
+                        tableManager.createRevenueAnalysisSummaryTable(
+                            "revenue-summary-table",
                             RevenueAnalysisList
                         )
                     );
@@ -393,14 +424,11 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
                 const existingCanvas = document.getElementById("mixed-chart");
                 if (existingCanvas) {
                     // update chart data only
-                    PLDashboardGraphBuilder.updateMixedChart("mixed-chart", RevenueAnalysisList);
+                    graphBuilder.updateMixedChart("mixed-chart", RevenueAnalysisList);
                     mixedChartContainer = existingCanvas.parentElement as HTMLElement;
                 } else {
                     mixedChartContainer = await PerformanceUtil.createElementLazy(() =>
-                        PLDashboardGraphBuilder.createMixedChartContainer(
-                            "mixed-chart",
-                            RevenueAnalysisList
-                        )
+                        graphBuilder.createMixedChartContainer("mixed-chart", RevenueAnalysisList)
                     );
                 }
 
@@ -465,103 +493,17 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * product_history_dataから指定した日付の合計値を取得する関数
+     * DataProcessorの静的メソッドを使用
      * @param date - 指定する日付（YYYY-MM-DD形式）
      * @returns 合計値のオブジェクト
      */
     function getTotalsByDate(date: string): TotalsByDate {
-        /** 合計値の初期化 */
-        let totalActualNumber = 0;
-        /** 付加価値の合計 */
-        let totalAddedValue = 0;
-        /** 総コストの合計 */
-        let totalCost = 0;
-        /** 総利益の合計 */
-        let totalGrossProfit = 0;
-        /** 社内平日残業時間の合計 */
-        let totalInsideOvertime = 0;
-        /** 社外平日残業時間の合計 */
-        let totalOutsideOvertime = 0;
-        /** 社内休日残業時間の合計 */
-        let totalInsideHolidayOvertime = 0;
-        /** 社外休日残業時間の合計 */
-        let totalOutsideHolidayOvertime = 0;
-        const details: string[] = [];
-
-        const holidayTypeCode = getHolidayTypeCode(date);
-        console.log(product_history_data.length);
-        product_history_data?.forEach((item, index) => {
-            if (item.date === date) {
-                // 各種合計値を加算
-                totalActualNumber += Number(item.actual_number); // 実績数の合計
-                totalAddedValue += Number(item.addedValue); // 付加価値の合計
-                totalCost += Number(item.totalCost); // 総コストの合計
-                totalGrossProfit += Number(item.grossProfit); // 総利益の合計
-                // 平日の場合
-                if (holidayTypeCode === 0) {
-                    totalInsideOvertime += Number(item.insideOvertime); // 社内残業時間の合計
-                    totalOutsideOvertime += Number(item.outsideOvertime); // 社外残業時間の合計
-                    // 法定休日の場合
-                } else if (holidayTypeCode === -1) {
-                    totalInsideHolidayOvertime += Number(item.insideRegularTime); // 社内休日残業時間の合計
-                    totalInsideHolidayOvertime += Number(item.insideOvertime); // 社内休日残業時間の合計
-                    totalOutsideHolidayOvertime += Number(item.outsideOvertime); // 社外休日残業時間の合計
-                    totalOutsideHolidayOvertime += Number(item.outsideRegularTime); // 社外休日残業時間の合計
-                    // 所定休日の場合
-                } else if (holidayTypeCode === -2) {
-                    totalInsideHolidayOvertime += Number(item.insideRegularTime); // 社内休日残業時間の合計
-                    totalInsideHolidayOvertime += Number(item.insideOvertime); // 社内休日残業時間の合計
-                    totalOutsideHolidayOvertime += Number(item.outsideRegularTime); // 社外休日残業時間の合計
-                    totalOutsideHolidayOvertime += Number(item.outsideOvertime); // 社外休日残業時間の合計
-                }
-
-                details.push(
-                    `  [${index}] ライン: ${item.line_name}, 付加価値: ${Number(item.addedValue).toFixed(2)}`
-                );
-            }
-        });
-
-        // 利益とコストを1000で除算
-        totalAddedValue /= 1000;
-        totalCost /= 1000;
-        totalGrossProfit /= 1000;
-
-        const profitRate = totalCost > 0 ? ((totalGrossProfit / totalCost) * 100).toFixed(2) : 0;
-        return {
-            date,
-            totalActualNumber,
-            totalAddedValue,
-            totalCost,
-            totalGrossProfit,
-            profitRate,
-            totalInsideOvertime,
-            totalOutsideOvertime,
-            totalInsideHolidayOvertime,
-            totalOutsideHolidayOvertime,
-        };
-    }
-
-    /**
-     * 指定された月の全日付リストを取得する関数
-     * @param date - 基準となる日付（YYYY-MM形式）
-     * @returns 休日タイプに応じたコードの数値
-     */
-    function getHolidayTypeCode(date: string): number {
-        const holidayStore = HolidayStore.getInstance();
-        const holidayData = holidayStore.getHolidayData();
-        const holidayRecord = holidayData.find((item) => item.date?.value === date);
-        if (!holidayRecord) {
-            return 0; // 平日
-        } else if (holidayRecord.holiday_type?.value === "法定休日") {
-            return -1; // 法定休日
-        } else if (holidayRecord.holiday_type?.value === "所定休日") {
-            return -2; // 所定休日
-        } else {
-            return 0; // 平日
-        }
+        return DataProcessor.getTotalsByDate(product_history_data, date);
     }
 
     /**
      * 完全な日付リストを取得する関数（欠損日を0値で補完）
+     * DataProcessorの静的メソッドを使用
      * @return 日付リスト
      */
     function getDateList(): string[] {
@@ -572,35 +514,22 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         const selectedYear = yearSelect?.value;
         const selectedMonth = monthSelect?.value;
 
-        // 年月が選択されている場合は完全な日付リストを生成
-        if (selectedYear && selectedMonth) {
-            return DateUtil.generateMonthlyDateList(selectedYear, selectedMonth);
-        }
-
-        // フォールバック: 元データから日付を取得（従来の動作）
-        const dateSet = new Set<string>();
-        product_history_data?.forEach((item) => {
-            dateSet.add(item.date);
-        });
-        return Array.from(dateSet).sort();
+        // DataProcessorの静的メソッドを使用（年月が指定されている場合は完全な日付リストを生成）
+        return DataProcessor.getDateList(
+            product_history_data,
+            selectedYear || undefined,
+            selectedMonth || undefined
+        );
     }
 
     /**
      * dailyReportDataから指定した日付のレコードを取得する関数
+     * DataProcessorの静的メソッドを使用
      * @param date - 指定する日付（YYYY-MM-DD形式）
      * @returns レコードの配列
      */
     function getRecordsByDate(date: string): daily.SavedFields[] {
-        if (!dailyReportData) {
-            return [];
-        }
-
-        const filtered = dailyReportData.filter((item) => {
-            const itemDate = item.date?.value || "";
-            return itemDate === date;
-        });
-
-        return filtered;
+        return DataProcessor.getRecordsByDate(dailyReportData, date);
     }
 
     /**
@@ -699,6 +628,22 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         }
     }
 
+    // ページアンロード時のクリーンアップ処理
+    window.addEventListener("beforeunload", () => {
+        Logger.debug("ページアンロード: リソースをクリーンアップします");
+        tableManager.destroyAllTables();
+        graphBuilder.destroyAllCharts();
+        MemoryLeakDetector.disable();
+    });
+
+    // ページ非表示時のクリーンアップ処理（モバイル対応）
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            Logger.debug("ページ非表示: リソースをクリーンアップします");
+            // 必要に応じてクリーンアップ処理を実行
+        }
+    });
+
     // 一覧画面を表示したときにイベント発火
     kintone.events.on("app.record.index.show", async function (event) {
         // レコード一覧の上段スペースを取得
@@ -708,9 +653,25 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
             return event;
         }
 
+        // 既存のコンテンツをクリーンアップ（ページ再読み込み時のメモリリーク防止）
+        const existingContent = headerSpace.querySelector(".pl-dashboard-content");
+        if (existingContent) {
+            Logger.debug("既存のコンテンツをクリーンアップします");
+            // 既存のテーブルとグラフを破棄
+            tableManager.destroyAllTables();
+            graphBuilder.destroyAllCharts();
+            existingContent.remove();
+        }
+
         // ヘッダーコンテナを作成して追加
-        const headerContainer = HeaderContainer.create();
+        const headerContainerInstance = new PLHeaderContainer(domBuilder);
+        const headerContainer = headerContainerInstance.create();
         headerSpace.appendChild(headerContainer);
+
+        // 開発環境でメモリリーク検出を有効化
+        if (process.env.NODE_ENV === "development") {
+            MemoryLeakDetector.enable(60000); // 60秒ごとにチェック
+        }
 
         // 年選択セレクトボックスの変更イベント
         const yearSelect = document.getElementById("year-select") as HTMLSelectElement | null;
