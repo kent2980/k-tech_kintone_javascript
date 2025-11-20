@@ -223,14 +223,16 @@ export class PLExcelImporter {
                 line_name: {
                     value: String(item["ライン"]).replace("【", "").replace("】", ""),
                 },
-                outside_time: { value: item["派遣工数\r\n（h）"] },
+                outside_time: { value: String(item["派遣工数\r\n（h）"]).replace(",", ".") },
                 user_name: { value: "auto" },
-                added_value: { value: item["付加価値"] },
+                added_value: { value: String(item["付加価値"]).replace(",", ".") },
                 model_name: { value: item["機種名"] },
-                inside_overtime: { value: item["【社】残業工数\r\n（h）"] },
-                inside_time: { value: item["社員工数\r\n（h）"] },
-                actual_number: { value: item["台数"] },
-                outside_overtime: { value: item["派残業工数\r\n（h）"] },
+                inside_overtime: {
+                    value: String(item["【社】残業工数\r\n（h）"]).replace(",", "."),
+                },
+                inside_time: { value: String(item["社員工数\r\n（h）"]).replace(",", ".") },
+                actual_number: { value: String(item["台数"]).replace(",", ".") },
+                outside_overtime: { value: String(item["派残業工数\r\n（h）"]).replace(",", ".") },
                 // 必須フィールド
                 production_number: { value: "0" },
                 target_number: { value: "0" },

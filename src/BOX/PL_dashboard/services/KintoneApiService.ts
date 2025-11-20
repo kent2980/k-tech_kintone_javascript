@@ -145,7 +145,7 @@ export class KintoneApiService {
                 `${queryCondition} order by date asc, line_name asc, model_name asc`
             );
         } catch (error) {
-            Logger.error("生産日報データ取得エラー:", error);
+            Logger.error(`${APP_IDS.PRODUCTION_REPORT},生産日報データ取得エラー:`, error);
             return [];
         }
     }
@@ -536,6 +536,7 @@ export class KintoneApiService {
             }
 
             const tasks = batches.map((batch) => async () => {
+                console.log(batch);
                 const res = await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
                     app: APP_IDS.PRODUCTION_REPORT,
                     records: batch,

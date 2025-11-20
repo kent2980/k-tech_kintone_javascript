@@ -1,6 +1,6 @@
 {
     "title": "AOI修理情報入力(SMT)",
-    "app": "20",
+    "app": "11",
     "scope": "ALL",
     "desktop": {
         "js": ["javascript/AOI修理情報入力(SMT).js"],

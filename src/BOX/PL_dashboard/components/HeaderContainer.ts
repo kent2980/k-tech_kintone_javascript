@@ -33,7 +33,19 @@ export class HeaderContainer {
      */
     private static createSettingsLink(): HTMLAnchorElement {
         const thisAppId = kintone.app.getId();
-        const settingsHref = `https://d5wpzdj4iuwp.cybozu.com/k/admin/app/flow?app=${thisAppId}#section=form`;
+        // Vite環境変数からドメインを取得、未設定の場合は現在のドメインを使用
+        let baseUrl = location.origin;
+        // @ts-ignore - import.meta.envはViteビルド時に存在するが、Jest環境では存在しない可能性がある
+        try {
+            // @ts-ignore - import.meta.envはViteビルド時に存在する
+            if (import.meta && import.meta.env && import.meta.env.VITE_KINTONE_BASE_URL) {
+                // @ts-ignore - import.meta.envはViteビルド時に存在する
+                baseUrl = import.meta.env.VITE_KINTONE_BASE_URL as string;
+            }
+        } catch {
+            // import.metaが存在しない場合（Jest環境など）はlocation.originを使用
+        }
+        const settingsHref = `${baseUrl}/k/admin/app/flow?app=${thisAppId}#section=form`;
         const settingsLink = document.createElement("a");
         settingsLink.textContent = "⚙️ 設定";
         settingsLink.href = settingsHref;

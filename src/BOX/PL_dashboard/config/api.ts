@@ -4,8 +4,27 @@
 
 // 環境変数から APP_IDS を取得する関数
 function getAppIds(): Record<string, number> {
-    // Node.js/Jest環境の場合
-    const env = process.env;
+    // Vite環境の場合（ブラウザ実行時はimport.meta.envを使用）
+    // Jest環境ではprocess.envを使用（テスト時のみ）
+    let env: Record<string, string | undefined> = {};
+
+    // Vite環境（ブラウザ実行時）
+    // @ts-ignore - import.meta.envはViteビルド時に存在するが、Jest環境では存在しない可能性がある
+    try {
+        // @ts-ignore - import.meta.envはViteビルド時に存在する
+        if (import.meta && import.meta.env) {
+            // @ts-ignore - import.meta.envはViteビルド時に存在する
+            env = import.meta.env as Record<string, string | undefined>;
+        }
+    } catch {
+        // import.metaが存在しない場合（Jest環境など）
+    }
+
+    // Node.js環境（Jestテスト時）
+    if (typeof process !== "undefined" && process.env && Object.keys(env).length === 0) {
+        env = process.env as Record<string, string | undefined>;
+    }
+
     return {
         PRODUCTION_REPORT: parseInt(env.VITE_APP_ID_PRODUCTION_REPORT || "22", 10),
         MASTER_MODEL: parseInt(env.VITE_APP_ID_MASTER_MODEL || "25", 10),

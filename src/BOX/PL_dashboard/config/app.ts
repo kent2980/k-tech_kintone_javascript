@@ -20,7 +20,21 @@ export const APP_CONFIG = {
     },
 
     // デバッグ設定
-    DEBUG_MODE: process.env.NODE_ENV === "development",
+    DEBUG_MODE: (() => {
+        // @ts-ignore - import.meta.envはViteビルド時に存在するが、Jest環境では存在しない可能性がある
+        try {
+            // @ts-ignore - import.meta.envはViteビルド時に存在する
+            if (import.meta && import.meta.env && import.meta.env.MODE) {
+                // @ts-ignore - import.meta.envはViteビルド時に存在する
+                return import.meta.env.MODE === "development";
+            }
+        } catch {
+            // import.metaが存在しない場合（Jest環境など）
+        }
+        return typeof process !== "undefined" && process.env
+            ? process.env.NODE_ENV === "development"
+            : false;
+    })(),
     VERBOSE_LOGGING: false,
 
     // 表示設定

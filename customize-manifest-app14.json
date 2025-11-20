@@ -1,6 +1,6 @@
 {
     "title": "PLダッシュボードカスタマイズ",
-    "app": "43",
+    "app": "14",
     "scope": "ALL",
     "desktop": {
         "js": ["dist/PL_dashboard.js"],
