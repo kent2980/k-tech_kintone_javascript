@@ -21,5 +21,5 @@
         "*_fields.d.ts",
         "./src/BOX/PL_dashboard/__mocks__/**/*.d.ts"
     ],
-    "exclude": ["node_modules", "dist", "coverage"]
+    "exclude": ["node_modules", "dist", "coverage", "*.config.js"]
 }

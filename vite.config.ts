@@ -29,6 +29,11 @@ export default defineConfig(({ command, mode }) => {
                     format: "iife",
                     // jQueryの外部依存設定を削除 - すべてバンドルに含める
                 },
+                external: [
+                    // ネイティブモジュールを外部化
+                    "fsevents",
+                    /^fsevents/,
+                ],
             },
         },
         // 開発時の設定

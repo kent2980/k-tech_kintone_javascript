@@ -1,5 +1,10 @@
+// @ts-nocheck
+// @eslint/jsパッケージを読み込み（JavaScript用ESLint設定）
 const js = require("@eslint/js");
+
+// @typescript-eslintパッケージを読み込み（TypeScript用ESLintプラグインおよびパーサー）
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
+// 型宣言が見つからないエラーが出る場合、@typescript-eslint/parserパッケージがインストールされているか確認すること
 const tsParser = require("@typescript-eslint/parser");
 
 module.exports = [
@@ -34,7 +39,7 @@ module.exports = [
             "@typescript-eslint/no-explicit-any": "error",
             "@typescript-eslint/no-unused-vars": "warn",
             "@typescript-eslint/no-inferrable-types": "off",
-            "no-console": "warn",
+            // "no-console": "warn",    // console.logを使用する場合はここをコメントアウト
             "prefer-const": "error",
             "no-var": "error",
             "no-undef": "off", // kintoneのグローバル変数があるため一時的に無効化
