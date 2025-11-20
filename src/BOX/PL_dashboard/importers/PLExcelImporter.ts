@@ -116,6 +116,7 @@ export class PLExcelImporter extends ExcelImporter {
             ): number => {
                 if (typeof val === "number") return val;
                 if (typeof val === "string") {
+                    val.replace(",", ".");
                     const num = Number(val);
                     return isNaN(num) ? 0 : num;
                 }
