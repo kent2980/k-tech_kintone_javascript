@@ -1,6 +1,6 @@
 {
     "title": "マスタ機種一覧(BOX)",
-    "app": "25",
+    "app": "24",
     "scope": "ALL",
     "desktop": {
         "js": ["javascript/全レコード削除ボタンとファイルから読み込むボタン.js"],

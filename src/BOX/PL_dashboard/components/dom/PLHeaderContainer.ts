@@ -2,12 +2,7 @@
 
 import { PLExcelImporter } from "../../importers/index";
 import { KintoneApiService } from "../../services/KintoneApiService";
-import {
-    UploadStartEvent,
-    UploadProgressEvent,
-    UploadCompleteEvent,
-    UploadErrorEvent,
-} from "../../types";
+import { UploadProgressEvent, UploadStartEvent } from "../../types";
 import { DomUtil, ErrorHandler, Logger, XssProtection } from "../../utils";
 import { BaseDomBuilder, BaseDomElementInfo } from "./BaseDomBuilder";
 import { PLDomBuilder } from "./PLDomBuilder";
@@ -95,7 +90,8 @@ export class PLHeaderContainer extends BaseDomBuilder {
      */
     private createSettingsLink(): HTMLAnchorElement {
         const thisAppId = kintone.app.getId();
-        const settingsHref = `https://d5wpzdj4iuwp.cybozu.com/k/admin/app/flow?app=${thisAppId}#section=form`;
+        const base_url = location.origin;
+        const settingsHref = `${base_url}/k/admin/app/flow?app=${thisAppId}#section=form`;
         const settingsLink = document.createElement("a");
         settingsLink.textContent = "⚙️ 設定";
         settingsLink.href = settingsHref;

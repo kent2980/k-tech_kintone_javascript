@@ -24,13 +24,40 @@ npm install
 
 ### 3. 環境変数の設定
 
-`.env`ファイルをプロジェクトルートに作成し、以下の内容を設定してください：
+`.env.example`ファイルをコピーして`.env`ファイルを作成し、実際の値を設定してください：
+
+```bash
+# Windowsの場合
+copy .env.example .env
+
+# macOS/Linuxの場合
+cp .env.example .env
+```
+
+`.env`ファイルに以下の内容を設定してください：
 
 ```env
+# kintone認証情報（アップロード時に使用）
 KINTONE_BASE_URL=https://your-subdomain.cybozu.com
 KINTONE_USERNAME=your-username
 KINTONE_PASSWORD=your-password
+
+# アプリID設定（VITE_プレフィックスが必要）
+# クライアント側のコードで使用する環境変数はVITE_で始める必要があります
+VITE_APP_ID_PRODUCTION_REPORT=22
+VITE_APP_ID_MASTER_MODEL=25
+VITE_APP_ID_PL_DAILY=32
+VITE_APP_ID_PL_MONTHLY=39
+VITE_APP_ID_HOLIDAY=44
+
+# その他の設定
+NODE_ENV=development
 ```
+
+**重要**: 
+- クライアント側（ブラウザ）で使用する環境変数は`VITE_`プレフィックスが必要です
+- `VITE_`プレフィックスが付いていない環境変数は、サーバー側（ビルド時）でのみ使用可能です
+- `.env`ファイルは`.gitignore`に含まれているため、Gitにコミットされません
 
 ## 開発手順
 

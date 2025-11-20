@@ -4,7 +4,19 @@
 
 // 環境変数から APP_IDS を取得する関数
 function getAppIds(): Record<string, number> {
-    // Node.js/Jest環境の場合
+    // Vite環境（ブラウザ）の場合
+    if (typeof import.meta !== "undefined" && import.meta.env) {
+        const env = import.meta.env;
+        return {
+            PRODUCTION_REPORT: parseInt(env.VITE_APP_ID_PRODUCTION_REPORT || "22", 10),
+            MASTER_MODEL: parseInt(env.VITE_APP_ID_MASTER_MODEL || "25", 10),
+            PL_DAILY: parseInt(env.VITE_APP_ID_PL_DAILY || "32", 10),
+            PL_MONTHLY: parseInt(env.VITE_APP_ID_PL_MONTHLY || "39", 10),
+            HOLIDAY: parseInt(env.VITE_APP_ID_HOLIDAY || "44", 10),
+        };
+    }
+    
+    // Node.js/Jest環境の場合（フォールバック）
     const env = process.env;
     return {
         PRODUCTION_REPORT: parseInt(env.VITE_APP_ID_PRODUCTION_REPORT || "22", 10),

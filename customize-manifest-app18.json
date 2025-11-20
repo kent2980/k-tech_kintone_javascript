@@ -1,6 +1,6 @@
 {
     "title": "PL日次更新データ(BOX)",
-    "app": "32",
+    "app": "18",
     "scope": "ALL",
     "desktop": {
         "js": ["javascript/全レコード削除ボタンとファイルから読み込むボタン.js"],

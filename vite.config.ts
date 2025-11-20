@@ -1,6 +1,9 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ command, mode }) => {
+    // 環境変数を読み込む
+    const env = loadEnv(mode, process.cwd(), "");
+    
     // 環境変数でビルド対象を制御
     const buildTarget = process.env.BUILD_TARGET || "desktop";
 

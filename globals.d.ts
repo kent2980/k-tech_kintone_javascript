@@ -1,5 +1,21 @@
 // グローバル変数の型定義
 
+// Vite環境変数の型定義
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+    readonly VITE_APP_ID_PRODUCTION_REPORT?: string;
+    readonly VITE_APP_ID_MASTER_MODEL?: string;
+    readonly VITE_APP_ID_PL_DAILY?: string;
+    readonly VITE_APP_ID_PL_MONTHLY?: string;
+    readonly VITE_APP_ID_HOLIDAY?: string;
+    readonly NODE_ENV?: string;
+}
+
+interface ImportMeta {
+    readonly env: ImportMetaEnv;
+}
+
 // pdfMake
 declare const pdfMake: any;
 
