@@ -40,7 +40,7 @@ const ALLOWED_MIME_TYPES = [
 /**
  * 許可されるExcelファイルの拡張子
  */
-const ALLOWED_EXTENSIONS = ["xlsx", "xls"];
+const ALLOWED_EXTENSIONS = ["xlsx", "xls", "xlsm"];
 
 /**
  * ファイル検証ユーティリティクラス
@@ -55,7 +55,10 @@ export class FileValidator {
      * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
      * @returns 検証結果
      */
-    static validateExcelFile(file: File, maxSizeMB: number = this.DEFAULT_MAX_SIZE_MB): FileValidationResult {
+    static validateExcelFile(
+        file: File,
+        maxSizeMB: number = this.DEFAULT_MAX_SIZE_MB
+    ): FileValidationResult {
         const errors: string[] = [];
         const warnings: string[] = [];
 
@@ -321,4 +324,3 @@ export class FileValidator {
         };
     }
 }
-
