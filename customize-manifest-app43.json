@@ -1,0 +1,13 @@
+{
+    "title": "開発用アプリ",
+    "app": "43",
+    "scope": "ALL",
+    "desktop": {
+        "js": ["dist/plugin.js"],
+        "css": []
+    },
+    "mobile": {
+        "js": [],
+        "css": []
+    }
+}

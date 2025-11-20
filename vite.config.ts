@@ -3,19 +3,19 @@ import { defineConfig, loadEnv } from "vite";
 export default defineConfig(({ command, mode }) => {
     // 環境変数を読み込む
     const env = loadEnv(mode, process.cwd(), "");
-    
+
     // 環境変数でビルド対象を制御
     const buildTarget = process.env.BUILD_TARGET || "desktop";
 
     const inputMap = {
-        desktop: { PL_dashboard: "./src/BOX/PL_dashboard/PL_dashboard.ts" },
+        plugin: { plugin: "./src/plugin/main.ts" },
     };
 
     // 出力ディレクトリを分ける代わりに、emptyOutDirをfalseにして上書きを防ぐ
-    const selectedInput = inputMap[buildTarget as keyof typeof inputMap] || inputMap.desktop;
+    const selectedInput = inputMap[buildTarget as keyof typeof inputMap] || inputMap.plugin;
 
     // inputが空の場合はdesktopを使用
-    const finalInput = Object.keys(selectedInput).length > 0 ? selectedInput : inputMap.desktop;
+    const finalInput = Object.keys(selectedInput).length > 0 ? selectedInput : inputMap.plugin;
 
     return {
         build: {
