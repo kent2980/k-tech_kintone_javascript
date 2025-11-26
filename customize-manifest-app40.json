@@ -13,7 +13,10 @@
         "css": ["css/レコード編集ボタン.css", "css/生産日報報告書.css"]
     },
     "mobile": {
-        "js": [],
-        "css": []
+        "js": [
+            "javascript_mobile/テーブルシリアライズ.js",
+            "javascript_mobile/生産日報報告書_mobile.js"
+        ],
+        "css": ["css/生産日報報告書_mobile.css"]
     }
 }
