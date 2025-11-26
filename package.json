@@ -5,8 +5,9 @@
     "scripts": {
         "generate:fields": "node src/BOX/PL_dashboard/scripts/generate-fields.js",
         "prebuild": "npm run generate:fields",
-        "build": "npm run build:desktop",
+        "build": "npm run build:desktop && npm run build:system",
         "build:desktop": "cross-env BUILD_TARGET=desktop vite build",
+        "build:system": "cross-env BUILD_TARGET=system vite build",
         "watch": "vite build --watch",
         "upload": "sh -c 'for f in customize-manifest-app*.json; do echo \"Uploading $f\"; dotenv kintone-customize-uploader \"$f\" || exit $?; done'",
         "upload:app14": "dotenv kintone-customize-uploader customize-manifest-app14.json",

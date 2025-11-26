@@ -13,9 +13,13 @@ import { chromium } from "playwright";
     await page.fill("#password", password);
     await page.click("#login_button");
 
-    await page.goto("https://xxx.cybozu.com/k/admin/customize/");
-    await page.setInputFiles('input[type="file"]', "./dist/desktop.js");
+    await page.goto(`${baseUrl}/k/admin/customize/`);
+    // space3_desktop.js をアップロード
+    await page.setInputFiles('input[type="file"]', "./dist/space3_desktop.js");
     await page.click('button[type="submit"]');
-
+    // space3_mobile.js をアップロード
+    await page.setInputFiles('input[type="file"]', "./dist/space3_mobile.js");
+    await page.click('button[type="submit"]');
+    // アップロードが完了したらブラウザを閉じる
     await browser.close();
 })();

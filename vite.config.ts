@@ -11,7 +11,7 @@ export default defineConfig(({ command, mode }) => {
         desktop: { PL_dashboard: "./src/BOX/PL_dashboard/PL_dashboard.ts" },
         system: {
             space3_desktop: "./src/space/space3_desktop.ts",
-            space3_mobile: "./src/space/space3_mobile.ts",
+            // space3_mobile: "./src/space/space3_mobile.ts",
         },
     };
 
