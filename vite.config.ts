@@ -9,10 +9,8 @@ export default defineConfig(({ command, mode }) => {
 
     const inputMap = {
         desktop: { PL_dashboard: "./src/BOX/PL_dashboard/PL_dashboard.ts" },
-        system: {
-            space3_desktop: "./src/space/space3_desktop.ts",
-            // space3_mobile: "./src/space/space3_mobile.ts",
-        },
+        space_desktop: { space_desktop: "./src/system/space_desktop.ts" },
+        space_mobile: { space_mobile: "./src/system/space_mobile.ts" },
     };
 
     // 出力ディレクトリを分ける代わりに、emptyOutDirをfalseにして上書きを防ぐ
@@ -31,6 +29,7 @@ export default defineConfig(({ command, mode }) => {
                 output: {
                     entryFileNames: "[name].js",
                     format: "iife",
+                    inlineDynamicImports: true, // IIFE形式では動的インポートをインライン化する必要がある
                     // jQueryの外部依存設定を削除 - すべてバンドルに含める
                 },
             },
