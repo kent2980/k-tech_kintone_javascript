@@ -3,7 +3,7 @@ import { renderSpace3 } from "./space/space3_mobile";
 (function (): void {
     "use strict";
 
-    kintone.events.on("space.portal.show", function (event) {
+    kintone.events.on("mobile.space.portal.show", function (event) {
         const spaceId = event.spaceId;
 
         if (spaceId === "3") {

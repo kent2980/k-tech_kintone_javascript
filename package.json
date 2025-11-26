@@ -13,6 +13,7 @@
         "watch": "vite build --watch",
         "upload": "sh -c 'for f in customize-manifest-app*.json; do echo \"Uploading $f\"; dotenv kintone-customize-uploader \"$f\" || exit $?; done'",
         "upload:app14": "dotenv kintone-customize-uploader customize-manifest-app14.json",
+        "upload:app40": "dotenv kintone-customize-uploader customize-manifest-app40.json",
         "upload:space": "npm run build:space && dotenv node scripts/space_uploader.mjs",
         "deploy": "npm run build && npm run upload",
         "deploy:app14": "npm run build && npm run upload:app14",

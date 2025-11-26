@@ -15,8 +15,8 @@ function createSvgElement(svgString: string): SVGSVGElement {
  */
 export function renderSpace3(): void {
     const baseUrl = document.location.origin;
-    const root = document.getElementsByClassName("gaia-argoui-page-space-show-left")[0];
-    
+    const root = document.getElementsByClassName("gaia-mobile-v2-space-announcementtabcontents")[0];
+
     // divを作成
     const div = document.createElement("div");
     div.className = "gaia-argoui-widget gaia-argoui-space-spacebodywidget";
@@ -128,4 +128,3 @@ export function renderSpace3(): void {
     table.appendChild(tbody);
     div.appendChild(table);
 }
-
