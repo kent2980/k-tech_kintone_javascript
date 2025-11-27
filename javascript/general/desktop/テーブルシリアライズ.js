@@ -9,6 +9,10 @@
     ];
 
     // テーブルデータをシリアライズする関数
+    /**
+     * @param {any} tableData - テーブルデータ
+     * @returns {string} シリアライズされた文字列
+     */
     function serializeTable(tableData) {
         if (!tableData || !Array.isArray(tableData)) {
             return "";
@@ -27,7 +31,11 @@
                         value = fieldValue.value;
                     } else if (fieldValue.type === "FILE" && fieldValue.value) {
                         // ファイルフィールドの場合はファイル名を取得
-                        value = fieldValue.value.map((file) => file.name).join(",");
+                        /** @type {any[]} */
+                        const fileArray = Array.isArray(fieldValue.value) ? fieldValue.value : [];
+                        value = fileArray
+                            .map(/** @param {any} file */ (file) => file.name)
+                            .join(",");
                     }
                 } else {
                     value = fieldValue || "";
@@ -51,6 +59,10 @@
     }
 
     // すべてのペアに対してシリアライズ処理を適用
+    /**
+     * @param {any} record - レコードオブジェクト
+     * @returns {any} 処理後のレコードオブジェクト
+     */
     function processAllTablePairs(record) {
         tableFieldPairs.forEach((pair) => {
             const { tableField, stringField } = pair;
@@ -90,13 +102,15 @@
         } catch (error) {
             console.error("保存前シリアライズ処理でエラーが発生しました:", error);
             // エラーが発生した場合は保存を中止
-            event.error = "シリアライズ処理でエラーが発生しました: " + error.message;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            event.error = "シリアライズ処理でエラーが発生しました: " + errorMessage;
         }
 
         return event;
     });
 
     // テーブルフィールドの値が変更された時にもシリアライズ処理を実行
+    /** @type {string[]} */
     const tableChangeEvents = [];
     tableFieldPairs.forEach((pair) => {
         tableChangeEvents.push(`app.record.create.change.${pair.tableField}`);

@@ -49,6 +49,11 @@
             console.log("📤 ファイルに書き出すボタンがクリックされました");
 
             // URLパラメータを変換する関数
+            /**
+             * @param {string} search - 検索パラメータ
+             * @param {string} hash - ハッシュパラメータ
+             * @returns {string} 変換後のURLパラメータ
+             */
             function convertUrlParams(search, hash) {
                 const urlParams = new URLSearchParams(search.substring(1)); // ? を除去
                 const hashParams = new URLSearchParams(hash.substring(1)); // # を除去

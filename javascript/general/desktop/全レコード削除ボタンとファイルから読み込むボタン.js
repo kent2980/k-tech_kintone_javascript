@@ -65,6 +65,7 @@
                 console.log("📱 アプリID:", appId);
 
                 // 全レコードのIDを取得（最大500件ずつ）
+                /** @type {string[]} */
                 let allRecordIds = [];
                 let offset = 0;
                 const limit = 500;
@@ -86,7 +87,9 @@
                         break; // これ以上レコードがない
                     }
 
-                    const ids = response.records.map((record) => record.$id.value);
+                    const ids = response.records.map(
+                        /** @param {any} record */ (record) => record.$id.value
+                    );
                     allRecordIds = allRecordIds.concat(ids);
                     console.log(`✅ ${ids.length}件のレコードIDを取得しました`);
 
@@ -128,8 +131,9 @@
                 location.reload();
             } catch (error) {
                 console.error("❌ エラーが発生しました:", error);
+                const errorMessage = error instanceof Error ? error.message : String(error);
                 alert(
-                    `❌ エラーが発生しました: ${error.message}\n\n詳細はコンソールを確認してください`
+                    `❌ エラーが発生しました: ${errorMessage}\n\n詳細はコンソールを確認してください`
                 );
 
                 // ボタンを再度有効化

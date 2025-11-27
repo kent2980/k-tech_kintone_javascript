@@ -45,7 +45,7 @@
                 if (!recordId) {
                     // チェックボックスのvalue属性から取得
                     const checkbox = row.querySelector('input[type="checkbox"]');
-                    if (checkbox) {
+                    if (checkbox && checkbox instanceof HTMLInputElement) {
                         recordId = checkbox.value;
                     }
                 }

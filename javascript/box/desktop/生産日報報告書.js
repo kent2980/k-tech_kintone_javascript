@@ -3,8 +3,8 @@
 
     /**
      * レコード作成・編集画面表示時の処理
-     * @param {Object} event - kintoneイベントオブジェクト
-     * @returns {Object} event
+     * @param {any} event - kintoneイベントオブジェクト
+     * @returns {Promise<any>} event
      */
     async function handleRecordShow(event) {
         const appId = 24; // 🔁 他アプリのID
@@ -47,12 +47,15 @@
 
         // 重複を削除（Name.valueがユニークになるように）
         const seen = new Set();
-        const uniqueRecords = allRecords.filter((rec) => {
-            const val = rec.line_name.value;
-            if (seen.has(val)) return false;
-            seen.add(val);
-            return true;
-        });
+        /** @type {any[]} */
+        const uniqueRecords = allRecords.filter(
+            /** @param {any} rec */ (rec) => {
+                const val = rec.line_name.value;
+                if (seen.has(val)) return false;
+                seen.add(val);
+                return true;
+            }
+        );
 
         // --- 2️⃣ スペースフィールドにラベルとドロップダウン作成（まとめて生成） ---
         // ライン名ドロップダウンの生成
@@ -93,13 +96,13 @@
             });
 
             // --- 4️⃣ 選択時にレコードデータへ反映 ---
-            select.addEventListener("change", (changeEvent) => {
+            select.addEventListener("change", () => {
                 const record = kintone.app.record.get();
-                record.record[fieldCode].value = changeEvent.target.value;
+                record.record[fieldCode].value = select.value;
                 kintone.app.record.set(record);
 
                 // ライン名が変更されたら、モデル名ドロップダウンを更新
-                updateModelNameDropdown(changeEvent.target.value, allRecords);
+                updateModelNameDropdown(select.value, allRecords);
             });
         }
 
@@ -135,20 +138,24 @@
             select.appendChild(defaultOption);
 
             // 選択時にレコードデータへ反映
-            select.addEventListener("change", (changeEvent) => {
+            select.addEventListener("change", () => {
                 const record = kintone.app.record.get();
-                const target_values = changeEvent.target.value.split("_");
-                console.log(changeEvent.target.value);
-                record.record["model_name"].value = target_values[0];
-                record.record["model_code"].value = target_values[1];
-                kintone.app.record.set(record);
+                const target_values = select.value.split("_");
+                console.log(select.value);
+                if (target_values.length >= 2) {
+                    record.record["model_name"].value = target_values[0];
+                    record.record["model_code"].value = target_values[1];
+                    kintone.app.record.set(record);
+                }
             });
         }
 
         // --- 編集画面で既存値を反映（モデル名ドロップダウン生成後） ---
         if (event.record[fieldCode].value) {
             const lineNameSelect = document.getElementById("custom_dropdown");
-            if (lineNameSelect) {
+            // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
+            if (lineNameSelect && lineNameSelect.tagName === "SELECT") {
+                // @ts-ignore
                 lineNameSelect.value = event.record[fieldCode].value;
                 // 既存値がある場合、モデル名ドロップダウンも初期化
                 updateModelNameDropdown(event.record[fieldCode].value, allRecords);
@@ -160,7 +167,9 @@
         const modelCodeFieldCode = "model_code";
         if (event.record[modelFieldCode].value && event.record[modelCodeFieldCode].value) {
             const modelNameSelect = document.getElementById("model_dropdown");
-            if (modelNameSelect) {
+            // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
+            if (modelNameSelect && modelNameSelect.tagName === "SELECT") {
+                // @ts-ignore
                 modelNameSelect.value =
                     event.record[modelFieldCode].value +
                     "_" +
@@ -174,29 +183,39 @@
     /**
      * モデル名ドロップダウンを更新する関数
      * @param {string} lineName - 選択されたライン名
-     * @param {Array} allRecords - 全レコードデータ
+     * @param {any[]} allRecords - 全レコードデータ
      */
     function updateModelNameDropdown(lineName, allRecords) {
         // 入力された値に対応するモデルコードリストを作成
-        const matchedRecords = allRecords.filter((rec) => rec.line_name.value === lineName);
+        /** @type {any[]} */
+        const matchedRecords = allRecords.filter(
+            /** @param {any} rec */ (rec) => rec.line_name.value === lineName
+        );
 
         // 既存のドロップダウンを取得
         const select = document.getElementById("model_dropdown");
+        // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
         if (!select || select.tagName !== "SELECT") return;
 
         // 選択肢をクリア（デフォルトオプション以外）
+        // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
         while (select.options.length > 1) {
+            // @ts-ignore
             select.remove(1);
         }
 
         if (matchedRecords.length === 0) {
+            // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
             select.disabled = true;
+            // @ts-ignore
             select.options[0].textContent = "該当するモデルがありません";
             return;
         }
 
         // ドロップダウンを有効化
+        // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
         select.disabled = false;
+        // @ts-ignore
         select.options[0].textContent = "選択してください";
 
         // matchedRecordsをモデル名で並び替え
@@ -217,8 +236,8 @@
 
     /**
      * ライン名変更時の処理
-     * @param {Object} event - kintoneイベントオブジェクト
-     * @returns {Object} event
+     * @param {any} event - kintoneイベントオブジェクト
+     * @returns {any} event
      */
     function handleLineNameChange(event) {
         // キャッシュからデータを取得
@@ -239,8 +258,8 @@
 
     /**
      * テーブル変更・送信時の工数計算処理
-     * @param {Object} event - kintoneイベントオブジェクト
-     * @returns {Object} event
+     * @param {any} event - kintoneイベントオブジェクト
+     * @returns {any} event
      */
     function handleManHoursTableChange(event) {
         const record = event.record;
@@ -251,28 +270,30 @@
         let outsideOvertimeSum = 0;
 
         // 条件に合致する行だけ加算
-        table.forEach((row) => {
-            const work_type = row.value.work_type.value; // テーブル内フィールドコード
-            const personnel_type = row.value.personnel_type.value; // テーブル内フィールドコード
-            const man_hours = Number(row.value.man_hours.value || 0);
+        if (Array.isArray(table)) {
+            table.forEach((row) => {
+                const work_type = row.value.work_type.value; // テーブル内フィールドコード
+                const personnel_type = row.value.personnel_type.value; // テーブル内フィールドコード
+                const man_hours = Number(row.value.man_hours.value || 0);
 
-            if (work_type === "通常" && personnel_type === "社内") {
-                // ← ここが条件部分！
-                insideFixedTimeSum += man_hours;
-            }
-            if (work_type === "通常" && personnel_type === "社外") {
-                // ← ここが条件部分！
-                outsideFixedTimeSum += man_hours;
-            }
-            if (work_type === "残業" && personnel_type === "社内") {
-                // ← ここが条件部分！
-                insideOvertimeSum += man_hours;
-            }
-            if (work_type === "残業" && personnel_type === "社外") {
-                // ← ここが条件部分！
-                outsideOvertimeSum += man_hours;
-            }
-        });
+                if (work_type === "通常" && personnel_type === "社内") {
+                    // ← ここが条件部分！
+                    insideFixedTimeSum += man_hours;
+                }
+                if (work_type === "通常" && personnel_type === "社外") {
+                    // ← ここが条件部分！
+                    outsideFixedTimeSum += man_hours;
+                }
+                if (work_type === "残業" && personnel_type === "社内") {
+                    // ← ここが条件部分！
+                    insideOvertimeSum += man_hours;
+                }
+                if (work_type === "残業" && personnel_type === "社外") {
+                    // ← ここが条件部分！
+                    outsideOvertimeSum += man_hours;
+                }
+            });
+        }
 
         // フィールドが存在する場合のみ値を設定
         if (record.inside_time) {
