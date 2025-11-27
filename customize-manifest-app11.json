@@ -3,7 +3,7 @@
     "app": "11",
     "scope": "ALL",
     "desktop": {
-        "js": ["javascript/AOI修理情報入力(SMT).js"],
+        "js": ["javascript/smt/desktop/AOI修理情報入力(SMT).js"],
         "css": []
     },
     "mobile": {

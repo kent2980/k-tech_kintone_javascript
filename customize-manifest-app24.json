@@ -3,7 +3,7 @@
     "app": "24",
     "scope": "ALL",
     "desktop": {
-        "js": ["javascript/全レコード削除ボタンとファイルから読み込むボタン.js"],
+        "js": ["javascript/general/desktop/全レコード削除ボタンとファイルから読み込むボタン.js"],
         "css": []
     },
     "mobile": {

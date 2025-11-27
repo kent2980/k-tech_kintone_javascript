@@ -4,18 +4,18 @@
     "scope": "ALL",
     "desktop": {
         "js": [
-            "javascript/日付をユーザーが指定してレコードを絞り込むボタン.js",
-            "javascript/ファイルに書き出すボタンを作成.js",
-            "javascript/レコード編集ボタン.js",
-            "javascript/テーブルシリアライズ.js",
-            "javascript/生産日報報告書.js"
+            "javascript/general/desktop/日付をユーザーが指定してレコードを絞り込むボタン.js",
+            "javascript/general/desktop/ファイルに書き出すボタンを作成.js",
+            "javascript/general/desktop/レコード編集ボタン.js",
+            "javascript/general/desktop/テーブルシリアライズ.js",
+            "javascript/box/desktop/生産日報報告書.js"
         ],
         "css": ["css/レコード編集ボタン.css", "css/生産日報報告書.css"]
     },
     "mobile": {
         "js": [
-            "javascript_mobile/テーブルシリアライズ.js",
-            "javascript_mobile/生産日報報告書_mobile.js"
+            "javascript/general/mobile/テーブルシリアライズ.js",
+            "javascript/box/mobile/生産日報報告書_mobile.js"
         ],
         "css": ["css/生産日報報告書_mobile.css"]
     }
