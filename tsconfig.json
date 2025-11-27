@@ -17,9 +17,9 @@
     "include": [
         "./**/*.js",
         "./**/*.ts",
-        "kintone.d.ts",
         "*_fields.d.ts",
-        "./src/BOX/PL_dashboard/__mocks__/**/*.d.ts"
+        "./src/BOX/PL_dashboard/__mocks__/**/*.d.ts",
+        "./kintone.d.ts"
     ],
-    "exclude": ["node_modules", "dist", "coverage"]
+    "exclude": ["coverage"]
 }
