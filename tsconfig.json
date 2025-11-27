@@ -19,7 +19,8 @@
         "./**/*.ts",
         "*_fields.d.ts",
         "./src/BOX/PL_dashboard/__mocks__/**/*.d.ts",
-        "./kintone.d.ts"
+        // "./kintone.d.ts"
+        "node_modules/@kintone/dts-gen/kintone.d.ts"
     ],
     "exclude": ["coverage"]
 }

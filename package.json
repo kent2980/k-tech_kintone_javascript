@@ -61,7 +61,7 @@
         "@types/jest": "^30.0.0",
         "@types/node": "^24.10.0",
         "@typescript-eslint/eslint-plugin": "^8.46.3",
-        "@typescript-eslint/parser": "^8.46.3",
+        "@typescript-eslint/parser": "^8.48.0",
         "chokidar-cli": "^3.0.0",
         "cross-env": "^10.1.0",
         "dotenv-cli": "^11.0.0",
@@ -92,6 +92,7 @@
         "dayjs": "^1.11.19",
         "dompurify": "^3.3.0",
         "jquery": "^3.7.1",
+        "kintone-ui-component": "^1.23.1",
         "playwright": "^1.57.0",
         "xlsx": "^0.18.5"
     }

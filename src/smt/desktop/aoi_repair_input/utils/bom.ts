@@ -19,7 +19,6 @@ export function getRelatedAppId(): number | null {
  * 参照先アプリから指図で抽出したレコードを取得
  */
 export async function getReferenceAppRecords(appId: number, instruction: string): Promise<any[]> {
-    console.log("instruction:", instruction);
     const allRecords: any[] = [];
     let offset = 0;
     const limit = 100;
@@ -27,7 +26,6 @@ export async function getReferenceAppRecords(appId: number, instruction: string)
     while (true) {
         // クエリの構築（指図フィールドで検索）
         const query = `${FIELD_CODES.INSTRUCTION} = "${instruction.replace(/"/g, '\\"')}" limit ${limit} offset ${offset}`;
-        console.log("query:", query);
         const response = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", {
             app: appId,
             fields: [FIELD_CODES.MODEL_CODE, FIELD_CODES.REFERENCE, FIELD_CODES.INSTRUCTION],
@@ -63,7 +61,6 @@ export function extractModelCodeAndRef(record: any): ReferenceAppData | null {
  * 複数レコードからY番とリファレンスの配列を抽出
  */
 export function extractModelCodeAndRefList(records: any[]): ReferenceAppData[] {
-    console.log("records:", records);
     const result: ReferenceAppData[] = [];
 
     records.forEach((record) => {
@@ -80,8 +77,7 @@ export function extractModelCodeAndRefList(records: any[]): ReferenceAppData[] {
  * BOM構成部品アプリから部品データを取得
  */
 export async function getBomPartsData(modelCode: string, reference: string): Promise<PartsData[]> {
-    const bomAppId = import.meta.env.VITE_APP_ID_BOM_ITEM;
-    console.log("bomAppId:", bomAppId);
+    const bomAppId = Number(import.meta.env.VITE_APP_ID_BOM_ITEM);
     const allParts: PartsData[] = [];
     let offset = 0;
     const limit = 100;
@@ -90,24 +86,16 @@ export async function getBomPartsData(modelCode: string, reference: string): Pro
     const escapedModelCode = modelCode.replace(/"/g, '\\"');
     const escapedReference = reference.replace(/"/g, '\\"');
     const query = `${FIELD_CODES.MODEL_CODE} = "${escapedModelCode}" and ${FIELD_CODES.REFERENCE} = "${escapedReference}"`;
-
     while (true) {
         const response = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", {
             app: bomAppId,
-            fields: [
-                FIELD_CODES.PARTS_CODE,
-                FIELD_CODES.VERSION,
-                FIELD_CODES.MODEL_CODE,
-                FIELD_CODES.REFERENCE,
-            ],
-            query: `${query} limit ${limit} offset ${offset}`,
+            fields: [FIELD_CODES.PARTS_CODE, FIELD_CODES.VERSION, FIELD_CODES.REFERENCE],
+            query: `${query} order by ${FIELD_CODES.VERSION} desc limit ${limit} offset ${offset}`,
         });
-
         response.records.forEach((record: any) => {
             allParts.push({
                 parts_code: record[FIELD_CODES.PARTS_CODE]?.value || "",
                 version: record[FIELD_CODES.VERSION]?.value || "",
-                model_code: record[FIELD_CODES.MODEL_CODE]?.value || "",
                 reference: record[FIELD_CODES.REFERENCE]?.value || "",
             });
         });
@@ -117,7 +105,6 @@ export async function getBomPartsData(modelCode: string, reference: string): Pro
         }
         offset += limit;
     }
-
     return allParts;
 }
 
@@ -127,7 +114,7 @@ export async function getBomPartsData(modelCode: string, reference: string): Pro
 export async function createPartsDictionary(
     referenceDataList: ReferenceAppData[]
 ): Promise<PartsDictionary> {
-    const dictionary: PartsDictionary = {};
+    const dictionary: PartsDictionary = [];
 
     // 重複を除去
     const uniqueDataList = Array.from(
@@ -138,13 +125,19 @@ export async function createPartsDictionary(
 
     // 各Y番とリファレンスの組み合わせに対して部品データを取得
     for (const data of uniqueDataList) {
-        const key = `${data.model_code}_${data.reference}`;
         const partsData = await getBomPartsData(data.model_code, data.reference);
-        if (partsData.length > 0) {
-            dictionary[key] = partsData;
+        // 各部品データを新しい形式で配列に追加
+        for (const parts of partsData) {
+            const versionNumber = Number(parts.version);
+            if (!isNaN(versionNumber)) {
+                dictionary.push({
+                    reference: parts.reference,
+                    parts_code: parts.parts_code,
+                    version: versionNumber,
+                });
+            }
         }
     }
-    console.log("dictionary:", dictionary);
 
     return dictionary;
 }

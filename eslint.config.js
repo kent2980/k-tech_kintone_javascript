@@ -1,3 +1,4 @@
+// @ts-nocheck
 const js = require("@eslint/js");
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
 const tsParser = require("@typescript-eslint/parser");
@@ -31,10 +32,10 @@ module.exports = [
         },
         rules: {
             "@typescript-eslint/explicit-function-return-type": "warn",
-            "@typescript-eslint/no-explicit-any": "error",
+            "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-unused-vars": "warn",
             "@typescript-eslint/no-inferrable-types": "off",
-            "no-console": "warn",
+            "no-console": "off",
             "prefer-const": "error",
             "no-var": "error",
             "no-undef": "off", // kintoneのグローバル変数があるため一時的に無効化

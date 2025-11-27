@@ -11,16 +11,13 @@ function getColumnIndexes(table: HTMLTableElement): {
     modelCodeIndex: number | null;
     referenceIndex: number | null;
 } {
-    console.log("getColumnIndexes:start");
     const thead = table.querySelector("thead");
     if (!thead) {
-        console.log("thead:", thead);
         return { modelCodeIndex: null, referenceIndex: null };
     }
 
     const headerRow = thead.querySelector("tr");
     if (!headerRow) {
-        console.log("headerRow:", headerRow);
         return { modelCodeIndex: null, referenceIndex: null };
     }
 
@@ -47,8 +44,6 @@ function getColumnIndexes(table: HTMLTableElement): {
             referenceIndex = index;
         }
     });
-
-    console.log("getColumnIndexes:end");
 
     return { modelCodeIndex, referenceIndex };
 }
@@ -93,29 +88,26 @@ function createPartsNumberDropdown(
     partsList: PartsData[],
     currentValue: string | null
 ): HTMLSelectElement {
-    console.log("createPartsNumberDropdown:start");
     const select = document.createElement("select");
     select.style.width = "calc(100% - 8px)";
     select.style.padding = "4px 8px";
     select.style.margin = "4px";
     select.style.verticalAlign = "middle";
     select.style.boxSizing = "border-box";
-
-    // デフォルトオプション（空欄）
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "選択してください";
-    select.appendChild(defaultOption);
+    select.style.fontSize = "14px";
 
     // 部品データから選択肢を作成
-    partsList.forEach((parts) => {
+    partsList.forEach((parts, index) => {
         const option = document.createElement("option");
         const value = `${parts.parts_code}_${parts.version}`;
         option.value = value;
         option.textContent = `${parts.parts_code} (v${parts.version})`;
 
         // 既存値と一致する場合は選択状態にする
+        // 既存値がない場合は1番目の部品をデフォルトで選択
         if (currentValue && currentValue === value) {
+            option.selected = true;
+        } else if (!currentValue && index === 0) {
             option.selected = true;
         }
 
@@ -140,10 +132,12 @@ function addPartsNumberHeader(table: HTMLTableElement): void {
     }
 
     const th = document.createElement("th");
-    th.textContent = "部品番号";
-    th.style.padding = "8px";
-    th.style.textAlign = "left";
-    th.style.border = "1px solid #ddd";
+    th.className = "subtable-label-gaia subtable-label-single_line_text-gaia label-13457510";
+    th.style.minWidth = "300px";
+    const span = document.createElement("span");
+    span.textContent = "部品番号";
+    span.className = "subtable-label-inner-gaia";
+    th.appendChild(span);
     headerRow.appendChild(th);
 }
 
@@ -153,33 +147,23 @@ function addPartsNumberHeader(table: HTMLTableElement): void {
 function addPartsNumberCell(
     row: HTMLTableRowElement,
     partsDictionary: PartsDictionary,
-    currentValue: string | null,
-    modelCodeIndex: number | null,
-    referenceIndex: number | null
+    currentValue: string | null
 ): void {
-    const modelCodeAndRef = getModelCodeAndRefFromRow(row, modelCodeIndex, referenceIndex);
-    if (!modelCodeAndRef) {
-        // Y番とリファレンスが取得できない場合は空のセルを追加
-        const td = document.createElement("td");
-        td.textContent = "-";
-        td.style.padding = "8px";
-        td.style.border = "1px solid #ddd";
-        td.style.textAlign = "center";
-        row.appendChild(td);
-        return;
-    }
-
-    const key = `${modelCodeAndRef.model_code}_${modelCodeAndRef.reference}`;
-    const partsList = partsDictionary[key] || [];
+    // 新しい形式の辞書から、該当するreferenceの部品データをフィルタリング
 
     const td = document.createElement("td");
     td.style.padding = "8px";
     td.style.border = "1px solid #ddd";
     td.style.textAlign = "center";
 
-    console.log("partsList:", partsList);
-    if (partsList.length > 0) {
-        const select = createPartsNumberDropdown(partsList, currentValue);
+    if (partsDictionary.length > 0) {
+        // PartsData形式に変換してドロップダウンを作成
+        const partsDataList: PartsData[] = partsDictionary.map((parts) => ({
+            parts_code: parts.parts_code,
+            version: String(parts.version),
+            reference: parts.reference,
+        }));
+        const select = createPartsNumberDropdown(partsDataList, currentValue);
         td.appendChild(select);
     } else {
         td.textContent = "-";
@@ -195,16 +179,6 @@ export function addPartsNumberColumnToTable(
     table: HTMLTableElement,
     partsDictionary: PartsDictionary
 ): void {
-    console.log("partsDictionary:", partsDictionary);
-    console.log("table:", table);
-    // ヘッダーから列インデックスを取得
-    const { modelCodeIndex, referenceIndex } = getColumnIndexes(table);
-
-    // if (modelCodeIndex === null || referenceIndex === null) {
-    //     console.warn("Y番またはリファレンスの列が見つかりません");
-    //     return;
-    // }
-
     // ヘッダーに列を追加
     addPartsNumberHeader(table);
 
@@ -216,6 +190,6 @@ export function addPartsNumberColumnToTable(
         // 既存の部品番号値を取得（存在する場合）
         // 現在は既存値がない前提で実装（将来的に既存値取得機能を追加可能）
         const currentValue: string | null = null;
-        addPartsNumberCell(tableRow, partsDictionary, currentValue, modelCodeIndex, referenceIndex);
+        addPartsNumberCell(tableRow, partsDictionary, currentValue);
     });
 }

@@ -7,14 +7,12 @@ import { DROPDOWN_OPTIONS } from "../types";
 /**
  * ドロップダウンオプションを作成
  */
-function createDropdownOption(
-    value: string,
-    isSelected: boolean
-): HTMLOptionElement {
+function createDropdownOption(value: string, isSelected: boolean): HTMLOptionElement {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = value;
     option.selected = isSelected;
+    option.style.fontSize = "14px";
     return option;
 }
 
@@ -28,6 +26,7 @@ export function createDropdown(currentValue: string): HTMLSelectElement {
     select.style.margin = "4px";
     select.style.verticalAlign = "middle";
     select.style.boxSizing = "border-box";
+    select.style.fontSize = "14px";
 
     DROPDOWN_OPTIONS.forEach((optionValue) => {
         const isSelected =
@@ -73,4 +72,3 @@ export function addDropdownsToTable(table: HTMLTableElement): void {
         }
     });
 }
-

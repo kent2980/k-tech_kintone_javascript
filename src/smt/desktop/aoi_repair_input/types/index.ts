@@ -39,16 +39,17 @@ export interface ReferenceAppData {
 export interface PartsData {
     parts_code: string; // 部品コード
     version: string; // バージョン
-    model_code: string; // Y番（モデルコード）
     reference: string; // リファレンス
 }
 
 /**
- * 部品データ辞書（key: "model_code_reference"形式）
+ * 部品データ辞書（配列形式）
  */
-export interface PartsDictionary {
-    [key: string]: PartsData[];
-}
+export type PartsDictionary = Array<{
+    reference: string;
+    parts_code: string;
+    version: number;
+}>;
 
 /**
  * ドロップダウンオプション

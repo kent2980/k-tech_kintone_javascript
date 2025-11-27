@@ -41,7 +41,6 @@ function createAndAppendEditButton(): void {
  * レコード追加・編集画面表示時の処理
  */
 export function handleRecordShow(event: any): any {
-    console.log("handleRecordShow");
     createAndAppendEditButton();
     return event;
 }
@@ -52,25 +51,21 @@ export function handleRecordShow(event: any): any {
 async function handleEditButtonClick(): Promise<void> {
     const relatedRecordsWrapper = getRelatedRecordsWrapper();
     if (!relatedRecordsWrapper) {
-        console.warn("関連レコードエリアが取得できませんでした");
         return;
     }
 
     const relatedRecordsTableWrapper = getRelatedRecordsTableWrapper(relatedRecordsWrapper);
     if (!relatedRecordsTableWrapper) {
-        console.warn("関連レコードテーブルエリアが取得できませんでした");
         return;
     }
 
     const relatedRecordsTable = getRelatedRecordsTable(relatedRecordsTableWrapper);
     if (!relatedRecordsTable) {
-        console.warn("関連レコードテーブルが取得できませんでした");
         return;
     }
 
     const customTableArea = getCustomTableArea();
     if (!customTableArea) {
-        console.warn("カスタムテーブルエリアが取得できませんでした");
         return;
     }
 
@@ -85,16 +80,13 @@ async function handleEditButtonClick(): Promise<void> {
 
     // BOMデータの取得と処理
     try {
-        console.log("BOMデータの取得と処理を開始します");
         // 1. 関連レコード一覧の参照先アプリIDを取得
         const relatedAppId = getRelatedAppId();
-        console.log("参照先アプリID:", relatedAppId);
         if (!relatedAppId) {
-            console.warn("参照先アプリIDが取得できませんでした");
+            // 参照先アプリIDが取得できない場合は処理を終了
         } else {
             // 2. 現在のレコードの指図を取得
             const instruction = getCurrentInstruction();
-            console.log("指図:", instruction);
             if (instruction) {
                 // 3. 参照先アプリから指図で抽出したレコードを取得
                 const referenceRecords = await getReferenceAppRecords(relatedAppId, instruction);
@@ -109,8 +101,8 @@ async function handleEditButtonClick(): Promise<void> {
                 addPartsNumberColumnToTable(clonedTable, partsDictionary);
             }
         }
-    } catch (error) {
-        console.error("BOMデータの取得中にエラーが発生しました:", error);
+    } catch {
+        // エラーが発生した場合は処理を継続
     }
 
     // クローンしたテーブルをカスタムエリアに配置
