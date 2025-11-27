@@ -11,6 +11,9 @@ export default defineConfig(({ command, mode }) => {
         desktop: { PL_dashboard: "./src/BOX/PL_dashboard/PL_dashboard.ts" },
         space_desktop: { space_desktop: "./src/system/space_desktop.ts" },
         space_mobile: { space_mobile: "./src/system/space_mobile.ts" },
+        aoi_repair_input: {
+            aoi_repair_input: "./src/smt/desktop/aoi_repair_input/index.ts",
+        },
     };
 
     // 出力ディレクトリを分ける代わりに、emptyOutDirをfalseにして上書きを防ぐ
