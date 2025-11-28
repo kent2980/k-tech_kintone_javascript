@@ -30,3 +30,19 @@ button.recordlist-edit-gaia {
 .control-gaia.control-single_line_text-field-gaia.field-13458156 {
     display: none;
 }
+
+.lookup-selector-navi-gaia {
+    display: none;
+}
+
+.lookup-selector-gaia {
+    padding: 0;
+}
+
+.ocean-ui-dialog-buttons.gaia-argoui-dialog-buttons.gaia-argoui-dialog-buttons-general {
+    padding: 0;
+}
+
+.lookup-selector-table-frame {
+    height: 70vh !important;
+}

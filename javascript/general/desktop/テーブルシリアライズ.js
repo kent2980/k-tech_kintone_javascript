@@ -7,7 +7,34 @@
         { tableField: "chg_o_table", stringField: "chg_o_text" },
         { tableField: "deflist_table", stringField: "deflist_text" },
     ];
+    // 設定：テーブルとテキストボックスのフィールドコード
+    var TABLE_FIELD_CODE = "production_number"; // テーブルのフィールドコード
+    var TEXT_FIELD_CODE = "defect_name"; // テーブル内のテキストボックスのフィールドコード
 
+    // ----- 関数：テーブル内のテキストボックスを入力可能にする -----
+    function makeTableTextEditable(record) {
+        console.log("テーブル内のテキストボックスを入力可能にする");
+
+        // テーブルを取得
+        const tableElement = document.getElementsByClassName(
+            "subtable-gaia subtable-13457853 edit-subtable-gaia"
+        )[0];
+        console.log(tableElement);
+        // テーブルが存在しない場合は処理を終了
+        if (!tableElement) return;
+
+        // テーブル内のinput要素を全て取得
+        const inputElements = tableElement.querySelectorAll("input");
+
+        if (inputElements.length === 0) return;
+        // input要素を繰り返し処理
+        inputElements.forEach((inputElement) => {
+            console.log(inputElement);
+            // input要素のreadonly属性を削除
+            inputElement.removeAttribute("readonly");
+            inputElement.disabled = false; // 入力可能にする
+        });
+    }
     // テーブルデータをシリアライズする関数
     /**
      * @param {any} tableData - テーブルデータ
@@ -74,7 +101,6 @@
                 // 文字列フィールドが存在するかチェック
                 if (record[stringField]) {
                     record[stringField].value = serializedData;
-                    console.log(`${tableField} → ${stringField}: シリアライズ完了`);
                 } else {
                     console.log(`警告: ${stringField}フィールドが存在しません`);
                 }
@@ -90,15 +116,28 @@
     const currentAppId = kintone.app.getId();
     const currentDomain = location.hostname;
 
-    console.log(`アプリID: ${currentAppId}, ドメイン: ${currentDomain}`);
+    // ----- イベント：作成・編集画面表示時 -----
+    kintone.events.on(["app.record.create.show", "app.record.edit.show"], function (event) {
+        makeTableTextEditable(event.record);
+        return event;
+    });
+
+    // // ----- イベント：テーブル行が追加された時 -----
+    // kintone.events.on(
+    //     [
+    //         "app.record.create.change." + TABLE_FIELD_CODE,
+    //         "app.record.edit.change." + TABLE_FIELD_CODE,
+    //     ],
+    //     function (event) {
+    //         makeTableTextEditable(event.record);
+    //         return event;
+    //     }
+    // );
 
     // レコード保存前にシリアライズ処理を実行
     kintone.events.on(["app.record.create.submit", "app.record.edit.submit"], function (event) {
-        console.log("レコード保存前のシリアライズ処理を開始...");
-
         try {
             event.record = processAllTablePairs(event.record);
-            console.log("保存前シリアライズ処理が完了しました");
         } catch (error) {
             console.error("保存前シリアライズ処理でエラーが発生しました:", error);
             // エラーが発生した場合は保存を中止
@@ -118,19 +157,16 @@
     });
 
     kintone.events.on(tableChangeEvents, function (event) {
-        console.log("テーブルフィールドの変更を検知しました");
+        // テーブル内のテキストボックスを入力可能にする
+        makeTableTextEditable(event.record);
 
         try {
             event.record = processAllTablePairs(event.record);
             kintone.app.record.set(event);
-            console.log("リアルタイムシリアライズ処理が完了しました");
         } catch (error) {
             console.error("リアルタイムシリアライズ処理でエラーが発生しました:", error);
         }
 
         return event;
     });
-
-    console.log("テーブルシリアライズ機能が初期化されました");
-    console.log("対象ペア:", tableFieldPairs);
 })();
