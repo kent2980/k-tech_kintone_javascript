@@ -2,7 +2,7 @@
  * イベントハンドラー
  */
 
-/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+/// <reference path="../../../../app/AoiDefectFields.d.ts" />
 
 import { addPartsTypeColumnToTable } from "../builders/dropdown";
 import { addPartsNumberColumnToTable } from "../builders/partsColumn";

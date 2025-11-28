@@ -2,7 +2,7 @@
  * BOMデータ取得ユーティリティ
  */
 
-/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+/// <reference path="../../../../app/AoiDefectFields.d.ts" />
 
 import { FIELD_CODES, PartsData, PartsDictionary } from "../types";
 
