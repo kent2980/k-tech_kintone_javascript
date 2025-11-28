@@ -2,7 +2,9 @@
  * BOMデータ取得ユーティリティ
  */
 
-import { FIELD_CODES, PartsData, PartsDictionary, ReferenceAppData } from "../types";
+/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+
+import { FIELD_CODES, PartsData, PartsDictionary } from "../types";
 
 /**
  * 関連レコード一覧の参照先アプリIDを取得
@@ -17,22 +19,36 @@ export function getRelatedAppId(): number | null {
 
 /**
  * 参照先アプリから指図で抽出したレコードを取得
+ * @returns aoiDefect.SavedFields型のレコード配列
  */
-export async function getReferenceAppRecords(appId: number, instruction: string): Promise<any[]> {
-    const allRecords: any[] = [];
+export async function getReferenceAppRecords(
+    appId: number,
+    instruction: string
+): Promise<aoiDefect.SavedFields[]> {
+    const allRecords: aoiDefect.SavedFields[] = [];
     let offset = 0;
     const limit = 100;
 
     while (true) {
         // クエリの構築（指図フィールドで検索）
-        const query = `${FIELD_CODES.INSTRUCTION} = "${instruction.replace(/"/g, '\\"')}" limit ${limit} offset ${offset}`;
+        // kintoneのクエリ記法: 検索条件 -> order by -> limit -> offset
+        const query = `${FIELD_CODES.INSTRUCTION} = "${instruction.replace(/"/g, '\\"')}" order by current_board_index asc, defect_number asc limit ${limit} offset ${offset}`;
         const response = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", {
             app: appId,
-            fields: [FIELD_CODES.MODEL_CODE, FIELD_CODES.REFERENCE, FIELD_CODES.INSTRUCTION],
+            fields: [
+                FIELD_CODES.MODEL_CODE,
+                FIELD_CODES.REFERENCE,
+                FIELD_CODES.INSTRUCTION,
+                "current_board_index",
+                "defect_number",
+                "defect_name",
+                "defect_image",
+                "parts_type",
+            ],
             query: query,
         });
 
-        allRecords.push(...response.records);
+        allRecords.push(...(response.records as aoiDefect.SavedFields[]));
 
         if (response.records.length < limit) {
             break;
@@ -44,33 +60,17 @@ export async function getReferenceAppRecords(appId: number, instruction: string)
 }
 
 /**
- * レコードからY番とリファレンスを抽出
- */
-export function extractModelCodeAndRef(record: any): ReferenceAppData | null {
-    if (!record[FIELD_CODES.MODEL_CODE] || !record[FIELD_CODES.REFERENCE]) {
-        return null;
-    }
-
-    return {
-        model_code: record[FIELD_CODES.MODEL_CODE].value || "",
-        reference: record[FIELD_CODES.REFERENCE].value || "",
-    };
-}
-
-/**
  * 複数レコードからY番とリファレンスの配列を抽出
+ * @param records - aoiDefect.SavedFields型のレコード配列
+ * @returns aoiDefect.SavedFields型のレコード配列（必須フィールドが存在するもののみ）
  */
-export function extractModelCodeAndRefList(records: any[]): ReferenceAppData[] {
-    const result: ReferenceAppData[] = [];
-
-    records.forEach((record) => {
-        const data = extractModelCodeAndRef(record);
-        if (data) {
-            result.push(data);
-        }
+export function extractModelCodeAndRefList(
+    records: aoiDefect.SavedFields[]
+): aoiDefect.SavedFields[] {
+    return records.filter((record) => {
+        // 必須フィールド（model_codeとreference）が存在するかチェック
+        return record.model_code && record.reference;
     });
-
-    return result;
 }
 
 /**
@@ -110,36 +110,69 @@ export async function getBomPartsData(modelCode: string, reference: string): Pro
 
 /**
  * Y番とリファレンスのリストから部品データ辞書を作成
+ * @param referenceDataList - aoiDefect.SavedFields型のレコード配列
+ * @returns 部品データ辞書
  */
 export async function createPartsDictionary(
-    referenceDataList: ReferenceAppData[]
+    referenceDataList: aoiDefect.SavedFields[]
 ): Promise<PartsDictionary> {
-    const dictionary: PartsDictionary = [];
+    try {
+        const dictionary: PartsDictionary = [];
+        const bomAppId = Number(import.meta.env.VITE_APP_ID_BOM_ITEM);
 
-    // 重複を除去
-    const uniqueDataList = Array.from(
-        new Map(
-            referenceDataList.map((data) => [`${data.model_code}_${data.reference}`, data])
-        ).values()
-    );
+        // Y番とリファレンスの値を取得（重複を除去）
+        const modelCodeValues = Array.from(
+            new Set(
+                referenceDataList
+                    .map((record) => record.model_code?.value)
+                    .filter((value): value is string => !!value)
+            )
+        );
+        const referenceValues = Array.from(
+            new Set(
+                referenceDataList
+                    .map((record) => record.reference?.value)
+                    .filter((value): value is string => !!value)
+            )
+        );
 
-    // 各Y番とリファレンスの組み合わせに対して部品データを取得
-    for (const data of uniqueDataList) {
-        const partsData = await getBomPartsData(data.model_code, data.reference);
-        // 各部品データを新しい形式で配列に追加
-        for (const parts of partsData) {
-            const versionNumber = Number(parts.version);
-            if (!isNaN(versionNumber)) {
-                dictionary.push({
-                    reference: parts.reference,
-                    parts_code: parts.parts_code,
-                    version: versionNumber,
-                });
-            }
+        if (modelCodeValues.length === 0 || referenceValues.length === 0) {
+            return dictionary;
         }
-    }
 
-    return dictionary;
+        // クエリを構築（in演算子を使用、文字列値は引用符で囲む）
+        const escapedModelCodes = modelCodeValues
+            .map((value) => `"${value.replace(/"/g, '\\"')}"`)
+            .join(",");
+        const escapedReferences = referenceValues
+            .map((value) => `"${value.replace(/"/g, '\\"')}"`)
+            .join(",");
+
+        const query = `${FIELD_CODES.MODEL_CODE} in (${escapedModelCodes}) and ${FIELD_CODES.REFERENCE} in (${escapedReferences})`;
+        const response = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", {
+            app: bomAppId,
+            fields: [
+                FIELD_CODES.PARTS_CODE,
+                FIELD_CODES.VERSION,
+                FIELD_CODES.REFERENCE,
+                FIELD_CODES.MODEL_CODE,
+            ],
+            query: query,
+        });
+
+        response.records.forEach((record: any) => {
+            dictionary.push({
+                reference: record[FIELD_CODES.REFERENCE]?.value || "",
+                parts_code: record[FIELD_CODES.PARTS_CODE]?.value || "",
+                version: record[FIELD_CODES.VERSION]?.value || "",
+            });
+        });
+        console.log(dictionary);
+        return dictionary;
+    } catch (error) {
+        console.error("部品データ辞書作成エラー:", error);
+        return [];
+    }
 }
 
 /**

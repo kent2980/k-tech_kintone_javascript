@@ -2,6 +2,8 @@
  * 型定義
  */
 
+/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+
 /**
  * 更新対象レコード
  */
@@ -27,10 +29,15 @@ export interface RecordUpdateBody {
 
 /**
  * 参照先アプリのデータ
+ * @deprecated aoiDefect.SavedFieldsを直接使用してください
  */
 export interface ReferenceAppData {
     model_code: string; // Y番（モデルコード）
     reference: string; // リファレンス
+    current_board_index: number; // 現在の基板番号
+    defect_number: number; // 不良番号
+    defect_name: string; // 不良名
+    defect_image: string; // 不良画像（ファイルURL）
 }
 
 /**

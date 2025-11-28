@@ -2,7 +2,10 @@
  * ドロップダウン作成ユーティリティ
  */
 
+/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+
 import { DROPDOWN_OPTIONS } from "../types";
+import { getRecordIdFromRow } from "../utils/dom";
 
 /**
  * ドロップダウンオプションを作成
@@ -55,20 +58,128 @@ export function addDropdownToCell(cell: HTMLTableCellElement, currentValue: stri
 }
 
 /**
- * テーブルの各行の7列目にドロップダウンを追加
+ * テーブルヘッダーに部品タイプ列を追加
  */
-export function addDropdownsToTable(table: HTMLTableElement): void {
-    const rows = table.querySelectorAll("tbody tr");
+export function addPartsTypeHeader(table: HTMLTableElement): void {
+    const thead = table.querySelector("thead");
+    if (!thead) {
+        return;
+    }
 
-    rows.forEach((row: Element) => {
+    const headerRow = thead.querySelector("tr");
+    if (!headerRow) {
+        return;
+    }
+
+    // 既に部品タイプ列が存在するかチェック
+    const existingHeaders = headerRow.querySelectorAll("th");
+    for (let i = 0; i < existingHeaders.length; i++) {
+        const headerText = existingHeaders[i].textContent?.trim() || "";
+        if (headerText.includes("部品タイプ") || headerText.includes("parts_type")) {
+            return; // 既に存在する場合は追加しない
+        }
+    }
+
+    const th = document.createElement("th");
+    th.className = "subtable-label-gaia subtable-label-single_line_text-gaia";
+    th.style.minWidth = "150px";
+    const span = document.createElement("span");
+    span.textContent = "部品タイプ";
+    span.className = "subtable-label-inner-gaia";
+    th.appendChild(span);
+    headerRow.appendChild(th);
+}
+
+/**
+ * テーブル行に部品タイプセルを追加
+ */
+export function addPartsTypeCell(
+    row: HTMLTableRowElement,
+    currentValue: string | null
+): void {
+    const td = document.createElement("td");
+    td.className = "recordlist-cell-gaia";
+    td.style.padding = "8px";
+    td.style.border = "1px solid #ddd";
+    td.style.textAlign = "center";
+    td.style.verticalAlign = "middle";
+
+    // currentValueがnullの場合は空文字列を渡す（createDropdown内でデフォルト値が設定される）
+    const valueToUse = currentValue || "";
+    const select = createDropdown(valueToUse);
+    
+    // 初期値を明示的に設定（念のため）
+    if (currentValue && DROPDOWN_OPTIONS.includes(currentValue as any)) {
+        select.value = currentValue;
+    }
+    
+    td.appendChild(select);
+    row.appendChild(td);
+}
+
+/**
+ * テーブルに部品タイプ列を追加
+ * @param table - テーブル要素
+ * @param referenceRecords - 参照先アプリのレコード配列（parts_typeの初期値を取得するため）
+ */
+export function addPartsTypeColumnToTable(
+    table: HTMLTableElement,
+    referenceRecords?: aoiDefect.SavedFields[]
+): void {
+    // ヘッダーに列を追加
+    addPartsTypeHeader(table);
+
+    // 参照先アプリのレコードをレコードIDでマッピング
+    const recordMap = new Map<string, aoiDefect.SavedFields>();
+    if (referenceRecords) {
+        referenceRecords.forEach((record) => {
+            const recordId = record.$id?.value;
+            if (recordId) {
+                recordMap.set(recordId, record);
+            }
+        });
+    }
+
+    // 各行にセルを追加
+    const rows = table.querySelectorAll("tbody tr");
+    const rowsArray = Array.from(rows);
+
+    rowsArray.forEach((row: Element, index: number) => {
         const tableRow = row as HTMLTableRowElement;
         const cells = tableRow.querySelectorAll("td");
-
-        // 7列目（インデックス6）を取得
-        if (cells.length >= 7) {
-            const cell7 = cells[6] as HTMLTableCellElement;
-            const currentValue = cell7.textContent?.trim() || "";
-            addDropdownToCell(cell7, currentValue);
+        
+        // 既存の部品タイプ列の値を取得（存在する場合）
+        let currentValue: string | null = null;
+        
+        // まず、参照先アプリのレコードからparts_typeの値を取得
+        // 方法1: レコードIDでマッピング
+        const recordId = getRecordIdFromRow(tableRow);
+        if (recordId && recordMap.has(recordId)) {
+            const record = recordMap.get(recordId)!;
+            if (record.parts_type?.value) {
+                currentValue = record.parts_type.value;
+            }
         }
+        
+        // 方法2: インデックスベースでマッピング（レコードIDが取得できない場合のフォールバック）
+        if (!currentValue && referenceRecords && index < referenceRecords.length) {
+            const record = referenceRecords[index];
+            if (record.parts_type?.value) {
+                currentValue = record.parts_type.value;
+            }
+        }
+        
+        // 既存の部品タイプ列の値が取得できない場合、テーブル内の既存値を確認
+        if (!currentValue && cells.length >= 7) {
+            const cell7 = cells[6] as HTMLTableCellElement;
+            const select = cell7.querySelector("select");
+            if (select) {
+                currentValue = select.value;
+            } else {
+                currentValue = cell7.textContent?.trim() || null;
+            }
+        }
+
+        addPartsTypeCell(tableRow, currentValue);
     });
 }

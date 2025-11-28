@@ -65,3 +65,10 @@ export function exitEditMode(
     toggleEditButton(true);
 }
 
+/**
+ * ボタンエリアの表示/非表示を切り替え
+ */
+export function toggleButtonArea(buttonArea: HTMLElement, show: boolean): void {
+    buttonArea.style.display = show ? "block" : "none";
+}
+

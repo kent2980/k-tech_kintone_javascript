@@ -88,3 +88,22 @@ export function getRecordIdFromRow(row: HTMLTableRowElement): string | null {
     return extractRecordIdFromHref(href);
 }
 
+/**
+ * テーブル下のボタンエリアを取得または作成
+ */
+export function getOrCreateButtonArea(tableWrapper: HTMLElement): HTMLElement {
+    // 既存のボタンエリアを探す
+    let buttonArea = tableWrapper.querySelector(".custom-button-area") as HTMLElement | null;
+    
+    if (!buttonArea) {
+        // ボタンエリアが存在しない場合は作成
+        buttonArea = document.createElement("div");
+        buttonArea.className = "custom-button-area";
+        buttonArea.style.marginTop = "10px";
+        buttonArea.style.textAlign = "right";
+        tableWrapper.appendChild(buttonArea);
+    }
+    
+    return buttonArea;
+}
+
