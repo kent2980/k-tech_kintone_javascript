@@ -6,18 +6,14 @@
     // -----------------------------------------
 
     kintone.events.on("app.record.index.show", function (event) {
-        console.log("📋 一覧画面表示イベント開始");
-
         // ボタンが既に追加されている場合はスキップ
         if (document.getElementById("export-to-file-button")) {
-            console.log("⚠️ ボタンは既に追加されています");
             return event;
         }
 
         // ヘッダーのメニュースペースを取得
         const headerMenuSpace = kintone.app.getHeaderMenuSpaceElement();
         if (!headerMenuSpace) {
-            console.warn("⚠️ ヘッダーメニュースペースが見つかりません");
             return event;
         }
 
@@ -30,11 +26,6 @@
         const currentSearch = window.location.search; // ?view=20&q=... の部分
         const currentHash = window.location.hash; // #sort_0=... の部分
 
-        console.log("📱 アプリID:", appId);
-        console.log("🌐 ドメイン:", domain);
-        console.log("🔍 現在のクエリパラメータ:", currentSearch);
-        console.log("� 現在のハッシュ:", currentHash);
-
         // エクスポートボタンを作成
         const exportButton = document.createElement("button");
         exportButton.id = "export-to-file-button";
@@ -46,8 +37,6 @@
 
         // ボタンクリック時の処理
         exportButton.addEventListener("click", function () {
-            console.log("📤 ファイルに書き出すボタンがクリックされました");
-
             // URLパラメータを変換する関数
             /**
              * @param {string} search - 検索パラメータ
@@ -91,9 +80,6 @@
                 // ハッシュが空の場合は # を削除
                 if (newHash === "#") newHash = "";
 
-                console.log("🔄 変換前:", search + hash);
-                console.log("🔄 変換後:", newSearch + newHash);
-
                 return newSearch + newHash;
             }
 
@@ -102,7 +88,6 @@
 
             // エクスポート画面のURLを生成
             const exportUrl = `${protocol}//${domain}/k/${appId}/exportRecord${convertedParams}`;
-            console.log("🔗 エクスポート画面URL:", exportUrl);
 
             // 現在のページで遷移
             window.location.href = exportUrl;
@@ -110,7 +95,6 @@
 
         // ヘッダーメニュースペースにボタンを追加
         headerMenuSpace.appendChild(exportButton);
-        console.log("✅ ファイルに書き出すボタンを追加しました");
 
         return event;
     });

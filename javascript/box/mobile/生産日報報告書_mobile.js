@@ -193,7 +193,6 @@
         modelSelect.addEventListener("change", () => {
             const record = kintone.mobile.app.record.get();
             const target_values = modelSelect.value.split("_");
-            console.log(modelSelect.value);
             if (target_values.length >= 2) {
                 record.record["model_name"].value = target_values[0];
                 record.record["model_code"].value = target_values[1];

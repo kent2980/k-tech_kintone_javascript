@@ -4,9 +4,7 @@
 export class DomUtil {
     /**
      * 要素を作成する
-     * @param tagName - 作成するタグ名
-     * @param className - クラス名（オプション）
-     * @returns 作成された要素
+     * クラス名を指定可能（オプション）
      */
     static createElement<K extends keyof HTMLElementTagNameMap>(
         tagName: K,
@@ -21,9 +19,6 @@ export class DomUtil {
 
     /**
      * セレクトボックスにオプションを追加する
-     * @param selectElement - セレクトボックス要素
-     * @param value - オプションの値
-     * @param text - オプションの表示テキスト
      */
     static addOption(selectElement: HTMLSelectElement, value: string | number, text: string): void {
         const option = document.createElement("option");
@@ -34,10 +29,7 @@ export class DomUtil {
 
     /**
      * ラベル要素を作成する
-     * @param text - ラベルのテキスト
-     * @param forId - for属性の値
-     * @param marginLeft - 左マージン（オプション）
-     * @returns ラベル要素
+     * 左マージンを指定可能（オプション）
      */
     static createLabel(
         text: string,
@@ -56,9 +48,6 @@ export class DomUtil {
 
     /**
      * テーブルセルを作成する
-     * @param content - セルの内容
-     * @param options - セルのオプション
-     * @returns テーブルセル要素
      */
     static createTableCell(
         content: string | number,
@@ -107,8 +96,6 @@ export class DomUtil {
 
     /**
      * テーブル行を作成する
-     * @param className - 行のクラス名
-     * @returns テーブル行要素
      */
     static createTableRow(className: string = ""): HTMLTableRowElement {
         const row = document.createElement("tr");
@@ -120,8 +107,6 @@ export class DomUtil {
 
     /**
      * 要素にスタイルを一括適用する
-     * @param element - 対象要素
-     * @param styles - 適用するスタイル
      */
     static applyStyles(element: HTMLElement, styles: Record<string, string>): void {
         Object.assign(element.style, styles);
@@ -129,7 +114,6 @@ export class DomUtil {
 
     /**
      * 要素を安全に削除する
-     * @param element - 削除する要素
      */
     static safeRemove(element: HTMLElement | null): void {
         if (element && element.parentNode) {
@@ -139,9 +123,6 @@ export class DomUtil {
 
     /**
      * 指定されたIDの要素を取得する（型安全）
-     * @param id - 要素のID
-     * @param type - 要素の型
-     * @returns 要素またはnull
      */
     static getElementById<T extends HTMLElement>(id: string, type?: { new (): T }): T | null {
         const element = document.getElementById(id);

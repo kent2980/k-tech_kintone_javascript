@@ -11,8 +11,6 @@ export class CsvImporter<T> extends FileImporter<T> {
 
     /**
      * コンストラクタ
-     * @param mapper - CSVの行をオブジェクトに変換する関数
-     * @param options - オプション設定
      */
     constructor(
         mapper: (row: string[]) => T,
@@ -29,8 +27,7 @@ export class CsvImporter<T> extends FileImporter<T> {
 
     /**
      * CSVファイルをインポート
-     * @param file - CSVファイル
-     * @returns パース済みのデータ配列
+     * *  パース済みのデータ配列
      */
     async importFile(file: File): Promise<T[]> {
         // ファイル拡張子をチェック
@@ -54,8 +51,7 @@ export class CsvImporter<T> extends FileImporter<T> {
 
     /**
      * CSV文字列をパース
-     * @param content - CSVの内容
-     * @returns パース済みのデータ配列
+     * *  パース済みのデータ配列
      */
     private parseCSV(content: string): T[] {
         const lines = content.split(/\r?\n/).filter((line) => line.trim() !== "");
@@ -83,8 +79,7 @@ export class CsvImporter<T> extends FileImporter<T> {
 
     /**
      * CSV行をパース（ダブルクォートで囲まれた値も考慮）
-     * @param line - CSV行
-     * @returns パース済みの配列
+     * *  パース済みの配列
      */
     private parseLine(line: string): string[] {
         const result: string[] = [];

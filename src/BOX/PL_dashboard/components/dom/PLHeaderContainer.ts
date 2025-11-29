@@ -37,7 +37,7 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * コンストラクタ
-     * @param domBuilder - PLDomBuilderのインスタンス（オプション、渡されない場合は内部で作成）
+     * PLDomBuilderのインスタンスを指定可能（オプション、渡されない場合は内部で作成）
      */
     constructor(domBuilder?: PLDomBuilder) {
         super();
@@ -46,9 +46,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * ヘッダー要素情報を登録（Header固有の拡張）
-     * @param id - 要素ID
-     * @param element - DOM要素
-     * @param type - 要素の種類
      */
     protected registerElementWithType(
         id: string,
@@ -63,7 +60,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
     }
     /**
      * フィルターコンテナを作成する
-     * @returns フィルターコンテナ
      */
     private createFilterContainer(): HTMLDivElement {
         const container = document.createElement("div");
@@ -86,7 +82,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 設定リンクを作成する
-     * @returns 設定リンク
      */
     private createSettingsLink(): HTMLAnchorElement {
         const thisAppId = kintone.app.getId();
@@ -107,7 +102,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 過去データ読み込みボタンを作成する
-     * @returns 過去データ読み込みボタン
      */
     private createLoadPastDataButton(): HTMLButtonElement {
         // キントーンAPIサービスのインスタンスを作成
@@ -122,7 +116,7 @@ export class PLHeaderContainer extends BaseDomBuilder {
         const FILE_EVENT = "excelFileSelected";
 
         // progress overlay helpers
-        const ensureOverlay = () => {
+        const ensureOverlay = (): HTMLDivElement => {
             const el = document.getElementById("upload-progress-overlay");
             if (el) return el as HTMLDivElement;
             const overlay = document.createElement("div");
@@ -144,7 +138,7 @@ export class PLHeaderContainer extends BaseDomBuilder {
             return overlay;
         };
 
-        const showOverlay = (total: number) => {
+        const showOverlay = (total: number): void => {
             const o = ensureOverlay();
             o.style.display = "flex";
             const bar = document.getElementById("upload-progress-bar") as HTMLDivElement;
@@ -153,7 +147,7 @@ export class PLHeaderContainer extends BaseDomBuilder {
             if (text) text.textContent = `0 / ${total}`;
         };
 
-        const updateOverlay = (completed: number, total: number) => {
+        const updateOverlay = (completed: number, total: number): void => {
             const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
             const bar = document.getElementById("upload-progress-bar") as HTMLDivElement;
             const text = document.getElementById("upload-progress-text");
@@ -161,7 +155,7 @@ export class PLHeaderContainer extends BaseDomBuilder {
             if (text) text.textContent = `${completed} / ${total}`;
         };
 
-        const hideOverlay = () => {
+        const hideOverlay = (): void => {
             const o = document.getElementById("upload-progress-overlay");
             if (o) o.style.display = "none";
         };
@@ -254,20 +248,20 @@ export class PLHeaderContainer extends BaseDomBuilder {
                         const expenseData = importer.getExpenseCalculationData();
 
                         // progress event handlers
-                        const onStart = (e: UploadStartEvent) => {
+                        const onStart = (e: UploadStartEvent): void => {
                             const total = e.detail?.totalTasks || 0;
                             showOverlay(total);
                         };
-                        const onProgress = (e: UploadProgressEvent) => {
+                        const onProgress = (e: UploadProgressEvent): void => {
                             const completed = e.detail?.completed || 0;
                             const total = e.detail?.total || 0;
                             updateOverlay(completed, total);
                         };
-                        const onComplete = () => {
+                        const onComplete = (): void => {
                             updateOverlay(1, 1); // ensure full
                             hideOverlay();
                         };
-                        const onError = () => {
+                        const onError = (): void => {
                             hideOverlay();
                         };
 
@@ -334,7 +328,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * ヘッダーコンテナを作成する（フィルターと設定リンクを横並びに配置）
-     * @returns ヘッダーコンテナ
      */
     public create(): HTMLDivElement {
         if (this.headerContainer) {
@@ -370,7 +363,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * ヘッダーコンテナ要素を取得
-     * @returns ヘッダーコンテナ要素、作成されていない場合はnull
      */
     public getElement(): HTMLDivElement | null {
         return this.headerContainer;
@@ -378,7 +370,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * フィルターコンテナ要素を取得
-     * @returns フィルターコンテナ要素、作成されていない場合はnull
      */
     public getFilterContainer(): HTMLDivElement | null {
         return this.filterContainer;
@@ -386,7 +377,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 設定リンク要素を取得
-     * @returns 設定リンク要素、作成されていない場合はnull
      */
     public getSettingsLink(): HTMLAnchorElement | null {
         return this.settingsLink;
@@ -394,7 +384,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 過去データ読み込みボタン要素を取得
-     * @returns 過去データ読み込みボタン要素、作成されていない場合はnull
      */
     public getLoadPastDataButton(): HTMLButtonElement | null {
         return this.loadPastDataButton;
@@ -402,7 +391,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * データ登録中オーバーレイ表示
-     * @param parent - オーバーレイを追加する親要素
      */
     public showDataUploadingOverlay(parent: HTMLElement): void {
         try {
@@ -454,8 +442,8 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
             // 要素を登録
             this.registerElementWithType(overlay.id, overlay, "overlay");
-        } catch (e) {
-            console.error("データ登録中オーバーレイの作成に失敗しました。", e);
+        } catch {
+            // エラーは無視
         }
     }
 
@@ -473,8 +461,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 中央表示のモーダルアラートを作成して表示するヘルパー
-     * @param message - 表示するメッセージ
-     * @param autoCloseMs - 自動で閉じるまでの時間（ミリ秒）。省略または0以下の場合は自動で閉じない
      */
     public showCenteredAlert(message: string, autoCloseMs?: number): void {
         const overlay = document.createElement("div");
@@ -540,8 +526,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 静的メソッドとしての後方互換性のためのメソッド
-     * @param domBuilder - PLDomBuilderのインスタンス（オプション）
-     * @returns ヘッダーコンテナ
      */
     static create(domBuilder?: PLDomBuilder): HTMLDivElement {
         const instance = new PLHeaderContainer(domBuilder);
@@ -550,7 +534,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 静的メソッドとしての後方互換性のためのメソッド
-     * @param parent - オーバーレイを追加する親要素
      */
     static showDataUploadingOverlay(parent: HTMLElement): void {
         // グローバルインスタンスを使用（後方互換性のため）
@@ -569,8 +552,6 @@ export class PLHeaderContainer extends BaseDomBuilder {
 
     /**
      * 静的メソッドとしての後方互換性のためのメソッド
-     * @param message - 表示するメッセージ
-     * @param autoCloseMs - 自動で閉じるまでの時間（ミリ秒）
      */
     static showCenteredAlert(message: string, autoCloseMs?: number): void {
         // グローバルインスタンスを使用（後方互換性のため）

@@ -48,9 +48,9 @@ export interface ProfitCalculationResult {
 export class ProfitCalculationService {
     /**
      * 直行経費を計算
-     * @param directUnitPrice - 直行単価
-     * @param directPersonnel - 直行人員
-     * @returns 直行経費
+     *      * directUnitPrice: 直行単価
+     *      * directPersonnel: 直行人員
+     * *  直行経費
      */
     static calculateDirectCost(directUnitPrice: number, directPersonnel: number): number {
         return Math.round(((directUnitPrice * 8) / 1000) * directPersonnel);
@@ -58,9 +58,9 @@ export class ProfitCalculationService {
 
     /**
      * 派遣経費を計算
-     * @param dispatchUnitPrice - 派遣単価
-     * @param temporaryEmployees - 派遣社員数
-     * @returns 派遣経費
+     *      * dispatchUnitPrice: 派遣単価
+     *      * temporaryEmployees: 派遣社員数
+     * *  派遣経費
      */
     static calculateDispatchCost(dispatchUnitPrice: number, temporaryEmployees: number): number {
         return Math.round(((dispatchUnitPrice * 8) / 1000) * temporaryEmployees);
@@ -68,9 +68,9 @@ export class ProfitCalculationService {
 
     /**
      * 間接経費を計算
-     * @param indirectUnitPrice - 間接単価
-     * @param indirectPersonnel - 間接人員
-     * @returns 間接経費
+     *      * indirectUnitPrice: 間接単価
+     *      * indirectPersonnel: 間接人員
+     * *  間接経費
      */
     static calculateIndirectCost(indirectUnitPrice: number, indirectPersonnel: number): number {
         return Math.round(((indirectUnitPrice * 8) / 1000) * indirectPersonnel);
@@ -78,10 +78,10 @@ export class ProfitCalculationService {
 
     /**
      * 残業&休出経費を計算
-     * @param unitPrice - 基本単価
-     * @param overtimeHours - 残業時間
-     * @param holidayHours - 休出時間
-     * @returns 残業&休出経費
+     *      * unitPrice: 基本単価
+     *      * overtimeHours: 残業時間
+     *      * holidayHours: 休出時間
+     * *  残業&休出経費
      */
     static calculateOvertimeAndHolidayCost(
         unitPrice: number,
@@ -107,10 +107,10 @@ export class ProfitCalculationService {
 
     /**
      * 日次データから損益計算を実行
-     * @param firstRecord - 日報データ（該当日の最初のレコード）
-     * @param plMonthlyData - 月次データ
-     * @param totals - 日付別集計データ
-     * @returns 損益計算結果
+     *      * firstRecord: 日報データ
+     *      * plMonthlyData: 月次データ
+     *      * totals: 日付別集計データ
+     * *  損益計算結果
      */
     static calculateDailyProfit(
         firstRecord: daily.SavedFields | null,
@@ -235,10 +235,10 @@ export class ProfitCalculationService {
 
     /**
      * 収益分析データを作成
-     * @param totalAddedValue - 総付加価値
-     * @param totalPersonnelExpenses - 総人員/製造経費
-     * @param cumulativeData - 累積データ
-     * @returns 収益分析データ
+     *      * totalAddedValue: 総付加価値
+     *      * totalPersonnelExpenses: 総人員/製造経費
+     *      * cumulativeData: 累積データ
+     * *  収益分析データ
      */
     static createRevenueAnalysisData(
         totalAddedValue: number,

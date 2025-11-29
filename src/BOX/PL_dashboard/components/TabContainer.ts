@@ -39,10 +39,10 @@ export class TabContainer {
 
     /**
      * タブボタンを作成して追加する
-     * @param tabId - タブのID
-     * @param tabLabel - タブのラベル
-     * @param isActive - アクティブかどうか
-     * @returns 作成されたタブボタン
+     *      * tabId: タブのID
+     *      * tabLabel: タブのラベル
+     *      * isActive: アクティブかどうか
+     * *  作成されたタブボタン
      */
     addTab(
         tabId: string,
@@ -74,10 +74,10 @@ export class TabContainer {
 
     /**
      * タブボタンを作成する
-     * @param tabId - タブのID
-     * @param tabLabel - タブのラベル
-     * @param isActive - アクティブかどうか
-     * @returns タブボタン
+     *      * tabId: タブのID
+     *      * tabLabel: タブのラベル
+     *      * isActive: アクティブかどうか
+     * *  タブボタン
      */
     private createTabButton(
         tabId: string,
@@ -112,7 +112,7 @@ export class TabContainer {
 
     /**
      * タブボタンにホバー効果を追加する
-     * @param button - タブボタン
+     *      * button: タブボタン
      */
     private addHoverEffects(button: HTMLButtonElement): void {
         button.addEventListener("mouseenter", function () {
@@ -130,10 +130,10 @@ export class TabContainer {
 
     /**
      * タブコンテンツを作成する
-     * @param tabId - タブのID
-     * @param content - コンテンツ要素
-     * @param isActive - アクティブかどうか
-     * @returns タブコンテンツ
+     *      * tabId: タブのID
+     *      * content: コンテンツ要素
+     *      * isActive: アクティブかどうか
+     * *  タブコンテンツ
      */
     private createTabContent(
         tabId: string,
@@ -150,7 +150,7 @@ export class TabContainer {
 
     /**
      * タブを切り替える
-     * @param targetTabId - 切り替え先のタブID
+     *      * targetTabId: 切り替え先のタブID
      */
     switchTab(targetTabId: string): void {
         // すべてのタブボタンを非アクティブ化
@@ -194,7 +194,7 @@ export class TabContainer {
 
     /**
      * 現在アクティブなタブIDを取得する
-     * @returns アクティブなタブID
+     * *  アクティブなタブID
      */
     getActiveTabId(): string | null {
         return this.activeTabId;
@@ -202,7 +202,7 @@ export class TabContainer {
 
     /**
      * タブコンテナ要素を取得する
-     * @returns タブコンテナ要素
+     * *  タブコンテナ要素
      */
     getElement(): HTMLDivElement {
         return this.tabContainer;
@@ -210,7 +210,7 @@ export class TabContainer {
 
     /**
      * タブコンテナの結果を取得する（レガシー対応）
-     * @returns タブコンテナの結果
+     * *  タブコンテナの結果
      */
     getContainers(): TabContainerResult {
         return {
@@ -222,7 +222,7 @@ export class TabContainer {
 
     /**
      * タブを削除する
-     * @param tabId - 削除するタブのID
+     *      * tabId: 削除するタブのID
      */
     removeTab(tabId: string): void {
         const button = this.tabButtonsContainer.querySelector(

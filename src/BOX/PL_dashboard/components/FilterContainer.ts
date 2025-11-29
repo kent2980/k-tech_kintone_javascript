@@ -18,7 +18,7 @@ export class FilterContainer {
 
     /**
      * フィルターコンテナを作成する
-     * @returns フィルターコンテナ
+     * *  フィルターコンテナ
      */
     private createContainer(): HTMLDivElement {
         const container = document.createElement("div");
@@ -28,8 +28,8 @@ export class FilterContainer {
 
     /**
      * 年選択セレクトボックスを作成する
-     * @param yearCount - 過去何年分を表示するか
-     * @returns 年選択セレクトボックス
+     *      * yearCount: 過去何年分を表示するか
+     * *  年選択セレクトボックス
      */
     private createYearSelect(yearCount: number = 10): HTMLSelectElement {
         const yearSelect = document.createElement("select");
@@ -53,7 +53,7 @@ export class FilterContainer {
 
     /**
      * 月選択セレクトボックスを作成する
-     * @returns 月選択セレクトボックス
+     * *  月選択セレクトボックス
      */
     private createMonthSelect(): HTMLSelectElement {
         const monthSelect = document.createElement("select");
@@ -89,7 +89,7 @@ export class FilterContainer {
 
     /**
      * 年選択の変更イベントを設定する
-     * @param callback - 変更時のコールバック関数
+     *      * callback: 変更時のコールバック関数
      */
     public onYearChange(callback: (yearValue: string) => void): void {
         this.yearSelect.addEventListener("change", () => {
@@ -99,7 +99,7 @@ export class FilterContainer {
 
     /**
      * 月選択の変更イベントを設定する
-     * @param callback - 変更時のコールバック関数
+     *      * callback: 変更時のコールバック関数
      */
     public onMonthChange(callback: (monthValue: string) => void): void {
         this.monthSelect.addEventListener("change", () => {
@@ -109,7 +109,7 @@ export class FilterContainer {
 
     /**
      * フィルター値の変更イベントを設定する
-     * @param callback - 変更時のコールバック関数
+     *      * callback: 変更時のコールバック関数
      */
     public onFilterChange(callback: (yearValue: string, monthValue: string) => void): void {
         const handler = (): void => {
@@ -122,7 +122,7 @@ export class FilterContainer {
 
     /**
      * 選択された年を取得する
-     * @returns 選択された年
+     * *  選択された年
      */
     public getSelectedYear(): string {
         return this.yearSelect.value;
@@ -130,7 +130,7 @@ export class FilterContainer {
 
     /**
      * 選択された月を取得する
-     * @returns 選択された月
+     * *  選択された月
      */
     public getSelectedMonth(): string {
         return this.monthSelect.value;
@@ -138,7 +138,7 @@ export class FilterContainer {
 
     /**
      * フィルターコンテナ要素を取得する
-     * @returns フィルターコンテナ要素
+     * *  フィルターコンテナ要素
      */
     public getElement(): HTMLDivElement {
         return this.container;
@@ -146,7 +146,7 @@ export class FilterContainer {
 
     /**
      * 年を設定する
-     * @param year - 設定する年
+     *      * year: 設定する年
      */
     public setYear(year: string): void {
         this.yearSelect.value = year;
@@ -154,7 +154,7 @@ export class FilterContainer {
 
     /**
      * 月を設定する
-     * @param month - 設定する月
+     *      * month: 設定する月
      */
     public setMonth(month: string): void {
         this.monthSelect.value = month;

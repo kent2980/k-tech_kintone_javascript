@@ -55,7 +55,7 @@ export class ExcelImporter {
 
     /**
      * コンストラクタ
-     * @param file - インポートするExcelファイル
+     *      * file: インポートするExcelファイル
      */
     constructor(file: File) {
         this.file = file;
@@ -63,8 +63,8 @@ export class ExcelImporter {
 
     /**
      * ファイルを検証する
-     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
-     * @returns 検証結果
+     *      * maxSizeMB: 最大ファイルサイズ
+     * *  検証結果
      */
     async validateFile(maxSizeMB: number = 10): Promise<FileValidationResult> {
         // ファイル名の検証
@@ -95,8 +95,8 @@ export class ExcelImporter {
 
     /**
      * Excelファイルを読み込んで展開
-     * @param validateBeforeLoad - 読み込み前に検証を行うか（デフォルト: true）
-     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
+     *      * validateBeforeLoad: 読み込み前に検証を行うか
+     *      * maxSizeMB: 最大ファイルサイズ
      */
     async load(validateBeforeLoad: boolean = true, maxSizeMB: number = 10): Promise<void> {
         // 読み込み前に検証を実行
@@ -138,8 +138,8 @@ export class ExcelImporter {
 
     /**
      * 指定したシートが存在するか確認
-     * @param sheetName - シート名
-     * @returns 存在する場合はtrue、存在しない場合はfalse
+     *      * sheetName: シート名
+     * *  存在する場合はtrue、存在しない場合はfalse
      */
     hasSheet(sheetName: string): boolean {
         if (!this.workbook) {
@@ -150,7 +150,7 @@ export class ExcelImporter {
 
     /**
      * シート名の一覧を取得
-     * @returns シート名の配列
+     * *  シート名の配列
      */
     getSheetNames(): string[] {
         if (!this.workbook) {
@@ -161,8 +161,8 @@ export class ExcelImporter {
 
     /**
      * 指定したシートを取得
-     * @param sheetName - シート名（省略時は最初のシート）
-     * @returns シートオブジェクト
+     *      * sheetName: シート名
+     * *  シートオブジェクト
      */
     getSheet(sheetName?: string): XLSX.WorkSheet {
         if (!this.workbook) {
@@ -181,9 +181,9 @@ export class ExcelImporter {
 
     /**
      * 特定のセルの値を取得
-     * @param cellAddress - セルアドレス（例: "A1", "B5"）
-     * @param sheetName - シート名（省略時は最初のシート）
-     * @returns セルの値
+     *      * cellAddress: セルアドレス
+     *      * sheetName: シート名
+     * *  セルの値
      */
     getCellValue(cellAddress: string, sheetName?: string): ExcelCellValue {
         const sheet = this.getSheet(sheetName);
@@ -198,9 +198,9 @@ export class ExcelImporter {
 
     /**
      * 特定のセルの値を文字列として取得
-     * @param cellAddress - セルアドレス
-     * @param sheetName - シート名
-     * @returns セルの値（文字列）
+     *      * cellAddress: セルアドレス
+     *      * sheetName: シート名
+     * *  セルの値（文字列）
      */
     getCellValueAsString(cellAddress: string, sheetName?: string): string {
         const value = this.getCellValue(cellAddress, sheetName);
@@ -209,9 +209,9 @@ export class ExcelImporter {
 
     /**
      * 特定のセルの値を数値として取得
-     * @param cellAddress - セルアドレス
-     * @param sheetName - シート名
-     * @returns セルの値（数値）
+     *      * cellAddress: セルアドレス
+     *      * sheetName: シート名
+     * *  セルの値（数値）
      */
     getCellValueAsNumber(cellAddress: string, sheetName?: string): number {
         const value = this.getCellValue(cellAddress, sheetName);
@@ -221,9 +221,9 @@ export class ExcelImporter {
 
     /**
      * 特定のセルの値を日付として取得
-     * @param cellAddress - セルアドレス
-     * @param sheetName - シート名
-     * @returns セルの値（Date）
+     *      * cellAddress: セルアドレス
+     *      * sheetName: シート名
+     * *  セルの値（Date）
      */
     getCellValueAsDate(cellAddress: string, sheetName?: string): Date | null {
         const sheet = this.getSheet(sheetName);
@@ -245,9 +245,9 @@ export class ExcelImporter {
 
     /**
      * 範囲指定でセルの値を取得
-     * @param range - 範囲（例: "A1:C10"）
-     * @param sheetName - シート名
-     * @returns 2次元配列
+     *      * range: 範囲
+     *      * sheetName: シート名
+     * *  2次元配列
      */
     getRangeValues(range: string, sheetName?: string): ExcelCellValue[][] {
         const sheet = this.getSheet(sheetName);
@@ -268,11 +268,11 @@ export class ExcelImporter {
     }
 
     /** 開始行から最終行までの指定列の値を取得（最終行は自動検出）
-     * @param startColumn - 列名または列番号（1始まり）
-     * @param endColumn - 列名または列番号（1始まり）
-     * @param startRow - 開始行番号（1始まり）
-     * @param sheetName - シート名
-     * @returns 値の配列
+     *      * startColumn: 列名または列番号
+     *      * endColumn: 列名または列番号
+     *      * startRow: 開始行番号
+     *      * sheetName: シート名
+     * *  値の配列
      */
     getTableData(
         startColumn: string | number,
@@ -314,12 +314,11 @@ export class ExcelImporter {
     /**
      * 開始行から最終行までのテーブルデータをDataFrame形式で取得
      * Pythonの pandas DataFrame に相当する構造で、カラム名とレコード（オブジェクト形式）を返す
-     * @param startColumn - 列名または列番号（1始まり）
-     * @param endColumn - 列名または列番号（1始まり）
-     * @param headerRow - ヘッダー行番号（1始まり、ここからカラム名を取得）
-     * @param dataStartRow - データ開始行番号（1始まり、ここから実データを読み込む）
-     * @param sheetName - シート名
-     * @returns DataFrame形式のデータ
+     *      * startColumn: 列名または列番号
+     *      * endColumn: 列名または列番号
+     *      * headerRow: ヘッダー行番号
+     *      * sheetName: シート名
+     * *  DataFrame形式のデータ
      */
     getTableDataAsDataFrame(
         startColumn: string | number,
@@ -398,13 +397,11 @@ export class ExcelImporter {
      * 縦方向のテーブルデータをDataFrame形式で取得（転置テーブル）
      * 左端（指定列）がカラム名で、右方向にデータが横並びのテーブル構造に対応
      * 例: A1:A10がカラム名、B1:X10がデータ（各行がレコード）
-     * @param headerColumn - ヘッダー列名または列番号（1始まり）。ここからカラム名を取得
-     * @param dataStartColumn - データ開始列名または列番号（1始まり）。ここからデータを読み込む
-     * @param dataEndColumn - データ終了列名または列番号（1始まり）
-     * @param startRow - 開始行番号（1始まり）
-     * @param endRow - 終了行番号（1始まり）
-     * @param sheetName - シート名
-     * @returns DataFrame形式のデータ
+     *      * headerColumn: ヘッダー列名または列番号。ここからカラム名を取得
+     *      * startRow: 開始行番号
+     *      * endRow: 終了行番号
+     *      * sheetName: シート名
+     * *  DataFrame形式のデータ
      */
     getTableDataAsDataFrameTransposed(
         headerColumn: string | number,
@@ -489,9 +486,9 @@ export class ExcelImporter {
 
     /**
      * 行番号と列番号からセルアドレスを生成
-     * @param row - 行番号（0始まり）
-     * @param col - 列番号（0始まり）
-     * @returns セルアドレス（例: "A1"）
+     *      * row: 行番号
+     *      * col: 列番号
+     * *  セルアドレス（例: "A1"）
      */
     static getCellAddress(row: number, col: number): string {
         return XLSX.utils.encode_cell({ r: row, c: col });
@@ -499,8 +496,8 @@ export class ExcelImporter {
 
     /**
      * 列名から列番号を取得
-     * @param colName - 列名（例: "A", "AB"）
-     * @returns 列番号（0始まり）
+     *      * colName: 列名
+     * *  列番号（0始まり）
      */
     static getColumnNumber(colName: string): number {
         return XLSX.utils.decode_col(colName);
@@ -508,9 +505,9 @@ export class ExcelImporter {
 
     /**
      * シート全体をJSON形式に変換
-     * @param sheetName - シート名
-     * @param options - 変換オプション
-     * @returns JSON配列
+     *      * sheetName: シート名
+     *      * options: 変換オプション
+     * *  JSON配列
      */
     sheetToJson<T extends Record<string, ExcelCellValue> = Record<string, ExcelCellValue>>(
         sheetName?: string,
@@ -526,8 +523,8 @@ export class ExcelImporter {
 
     /**
      * ファイルをArrayBufferとして読み込む
-     * @param file - 読み込むファイル
-     * @returns ArrayBuffer
+     *      * file: 読み込むファイル
+     * *  ArrayBuffer
      */
     private readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
         return new Promise((resolve, reject) => {

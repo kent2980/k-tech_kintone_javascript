@@ -88,10 +88,8 @@ function createPartsNumberDropdown(
 
         try {
             await navigator.clipboard.writeText(partsCode);
-            console.log("クリップボードにコピーしました:", partsCode);
             showToast(`部品コード「${partsCode}」をクリップボードにコピーしました`, true);
-        } catch (error) {
-            console.error("クリップボードへのコピーに失敗しました:", error);
+        } catch {
             // フォールバック: 古い方法でコピーを試みる
             try {
                 const textArea = document.createElement("textarea");
@@ -102,13 +100,8 @@ function createPartsNumberDropdown(
                 textArea.select();
                 document.execCommand("copy");
                 document.body.removeChild(textArea);
-                console.log("クリップボードにコピーしました（フォールバック）:", partsCode);
                 showToast(`部品コード「${partsCode}」をクリップボードにコピーしました`, true);
-            } catch (fallbackError) {
-                console.error(
-                    "クリップボードへのコピーに失敗しました（フォールバック）:",
-                    fallbackError
-                );
+            } catch {
                 showToast("クリップボードへのコピーに失敗しました", false);
             }
         }

@@ -6,8 +6,6 @@ import { DAYS_OF_WEEK } from "../config";
 export class DateUtil {
     /**
      * 曜日を取得する
-     * @param dateObj - 日付オブジェクト
-     * @returns 曜日
      */
     static getDayOfWeek(dateObj: Date): string {
         return DAYS_OF_WEEK[dateObj.getDay()];
@@ -15,8 +13,6 @@ export class DateUtil {
 
     /**
      * 日付を短い形式(mm/dd(曜日))に変換
-     * @param dateString - YYYY-MM-DD形式の日付文字列
-     * @returns mm/dd(曜日)形式の文字列
      */
     static formatDateShort(dateString: string): string {
         const dateObj = new Date(dateString);
@@ -28,9 +24,6 @@ export class DateUtil {
 
     /**
      * 指定された年月の最終日を取得
-     * @param year - 年
-     * @param month - 月
-     * @returns 最終日
      */
     static getLastDayOfMonth(year: number, month: number): number {
         return new Date(year, month, 0).getDate();
@@ -38,7 +31,6 @@ export class DateUtil {
 
     /**
      * 今日の日付をYYYY-MM-DD形式で取得
-     * @returns 今日の日付
      */
     static getTodayString(): string {
         return new Date().toISOString().split("T")[0];
@@ -46,7 +38,6 @@ export class DateUtil {
 
     /**
      * 現在の年を取得
-     * @returns 現在の年
      */
     static getCurrentYear(): number {
         return new Date().getFullYear();
@@ -54,7 +45,6 @@ export class DateUtil {
 
     /**
      * 現在の月を取得（1-12）
-     * @returns 現在の月
      */
     static getCurrentMonth(): number {
         return new Date().getMonth() + 1;
@@ -62,9 +52,6 @@ export class DateUtil {
 
     /**
      * 指定された年月の全日付リストを生成（YYYY-MM-DD形式）
-     * @param year - 年（文字列）
-     * @param month - 月（文字列、1-12）
-     * @returns 月の全日付の配列
      */
     static generateMonthlyDateList(year: string, month: string): string[] {
         if (!year || !month) {
@@ -91,10 +78,6 @@ export class DateUtil {
 
     /**
      * 指定された年月の全日付リスト（祝日を除く）を生成
-     * @param year - 年（文字列）
-     * @param month - 月（文字列、1-12）
-     * @param holidayData - 祝日データ
-     * @returns 祝日を除く月の全日付の配列
      */
     static generateWorkingDaysList(
         year: string,

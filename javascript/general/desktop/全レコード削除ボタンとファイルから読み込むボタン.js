@@ -6,18 +6,14 @@
     // -----------------------------------------
 
     kintone.events.on("app.record.index.show", function (event) {
-        console.log("📋 一覧画面表示イベント開始");
-
         // ボタンが既に追加されている場合はスキップ
         if (document.getElementById("delete-all-records-button")) {
-            console.log("⚠️ ボタンは既に追加されています");
             return event;
         }
 
         // ヘッダーのメニュースペースを取得
         const headerMenuSpace = kintone.app.getHeaderMenuSpaceElement();
         if (!headerMenuSpace) {
-            console.warn("⚠️ ヘッダーメニュースペースが見つかりません");
             return event;
         }
 
@@ -32,15 +28,12 @@
 
         // ボタンクリック時の処理
         deleteButton.addEventListener("click", async function () {
-            console.log("🔍 削除ボタンがクリックされました");
-
             // 確認ダイアログを表示
             const confirmDelete = confirm(
                 "⚠️ 警告: このアプリの全てのレコードを削除します。\n\nこの操作は取り消せません。本当に削除しますか？"
             );
 
             if (!confirmDelete) {
-                console.log("❌ 削除がキャンセルされました");
                 return;
             }
 
@@ -50,7 +43,6 @@
             );
 
             if (!doubleConfirm) {
-                console.log("❌ 削除がキャンセルされました（二重確認）");
                 return;
             }
 
@@ -58,11 +50,9 @@
                 // ボタンを無効化
                 deleteButton.disabled = true;
                 deleteButton.innerText = "削除中...";
-                console.log("🔄 削除処理を開始します");
 
                 // 現在のアプリIDを取得
                 const appId = kintone.app.getId();
-                console.log("📱 アプリID:", appId);
 
                 // 全レコードのIDを取得（最大500件ずつ）
                 /** @type {string[]} */
@@ -71,8 +61,6 @@
                 const limit = 500;
 
                 while (true) {
-                    console.log(`🔍 レコード取得中... (offset: ${offset})`);
-
                     const response = await kintone.api(
                         kintone.api.url("/k/v1/records", true),
                         "GET",
@@ -91,12 +79,9 @@
                         /** @param {any} record */ (record) => record.$id.value
                     );
                     allRecordIds = allRecordIds.concat(ids);
-                    console.log(`✅ ${ids.length}件のレコードIDを取得しました`);
 
                     offset += limit;
                 }
-
-                console.log(`📊 削除対象レコード数: ${allRecordIds.length}件`);
 
                 if (allRecordIds.length === 0) {
                     alert("削除するレコードがありません");
@@ -111,9 +96,6 @@
 
                 for (let i = 0; i < allRecordIds.length; i += deleteLimit) {
                     const idsToDelete = allRecordIds.slice(i, i + deleteLimit);
-                    console.log(
-                        `🗑️ 削除中: ${i + 1}〜${Math.min(i + deleteLimit, allRecordIds.length)}件目`
-                    );
 
                     await kintone.api(kintone.api.url("/k/v1/records", true), "DELETE", {
                         app: appId,
@@ -124,13 +106,11 @@
                     deleteButton.innerText = `削除中... (${deletedCount}/${allRecordIds.length})`;
                 }
 
-                console.log(`✅ 全${deletedCount}件のレコードを削除しました`);
                 alert(`✅ 全${deletedCount}件のレコードを削除しました`);
 
                 // ページをリロードして一覧を更新
                 location.reload();
             } catch (error) {
-                console.error("❌ エラーが発生しました:", error);
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 alert(
                     `❌ エラーが発生しました: ${errorMessage}\n\n詳細はコンソールを確認してください`
@@ -158,12 +138,9 @@
         importButton.style.textDecoration = "none"; // 下線を消す
         importButton.style.display = "inline-block"; // ボタンのような表示
 
-        console.log("✅ インポートリンクボタンを作成しました");
-
         // ヘッダーメニュースペースにボタンを追加
         headerMenuSpace.appendChild(deleteButton);
         headerMenuSpace.appendChild(importButton);
-        console.log("✅ 削除ボタンと読み込みボタンを追加しました");
 
         return event;
     });

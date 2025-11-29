@@ -8,9 +8,7 @@ import { getRecordIdFromRow } from "./dom";
 /**
  * テーブル行から更新レコード情報を抽出（部品タイプ列から）
  */
-export function extractUpdatedRecords(
-    table: HTMLTableElement
-): UpdatedRecord[] {
+export function extractUpdatedRecords(table: HTMLTableElement): UpdatedRecord[] {
     const updatedRecords: UpdatedRecord[] = [];
     const rows = table.querySelectorAll("tbody tr");
 
@@ -61,9 +59,7 @@ export function extractUpdatedRecords(
 /**
  * 更新レコードをAPIリクエスト形式に変換
  */
-export function createUpdateRequestBody(
-    updatedRecords: UpdatedRecord[]
-): RecordUpdateBody {
+export function createUpdateRequestBody(updatedRecords: UpdatedRecord[]): RecordUpdateBody {
     return {
         app: APP_ID,
         records: updatedRecords.map((record) => ({
@@ -86,8 +82,6 @@ export async function updateRecords(body: RecordUpdateBody): Promise<void> {
 
 /**
  * 参照先アプリのレコードを更新
- * @param appId - 参照先アプリID
- * @param records - 更新するレコード配列
  */
 export async function updateReferenceAppRecords(
     appId: number,
@@ -107,4 +101,3 @@ export async function updateReferenceAppRecords(
 
     await updateRecords(body);
 }
-

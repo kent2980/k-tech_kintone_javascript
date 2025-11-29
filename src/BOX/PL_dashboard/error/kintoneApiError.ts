@@ -7,7 +7,7 @@ export class kintoneApiFatalRegisterError extends Error {
 
     /**
      * ユーザーフレンドリーなメッセージを取得
-     * @returns ユーザーフレンドリーなメッセージ
+     * *  ユーザーフレンドリーなメッセージ
      */
     getUserFriendlyMessage(): string {
         // 技術的なメッセージをユーザーフレンドリーなメッセージに変換

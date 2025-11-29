@@ -50,9 +50,6 @@ export class KintoneApiService {
 
     /**
      * キャッシュキーを生成する
-     * @param prefix - キャッシュキーのプレフィックス
-     * @param params - 追加パラメータ（年月など）
-     * @returns キャッシュキー
      */
     private static createCacheKey(prefix: string, ...params: (string | number)[]): string {
         return params.length > 0 ? `${prefix}-${params.join("-")}` : prefix;
@@ -60,8 +57,7 @@ export class KintoneApiService {
 
     /**
      * 特定のアプリのキャッシュを無効化する
-     * @param appType - アプリタイプ（PL_MONTHLY, PL_DAILY, MASTER_MODEL, PRODUCTION_REPORT, HOLIDAY）
-     * @param params - 追加パラメータ（年月など、オプション）
+     * 追加パラメータを指定した場合は特定のキーを、省略した場合は該当アプリの全キャッシュを無効化
      */
     private static invalidateCache(
         appType: keyof typeof APP_CONFIG.CACHE_KEY_PREFIX,
@@ -82,7 +78,6 @@ export class KintoneApiService {
 
     /**
      * 複数のアプリのキャッシュを無効化する
-     * @param appTypes - アプリタイプの配列
      */
     private static invalidateMultipleCaches(
         ...appTypes: Array<keyof typeof APP_CONFIG.CACHE_KEY_PREFIX>
@@ -94,8 +89,7 @@ export class KintoneApiService {
 
     /**
      * アプリIDからアプリタイプを取得する
-     * @param appId - アプリID
-     * @returns アプリタイプ（見つからない場合はnull）
+     * 見つからない場合はnullを返す
      */
     private static getAppTypeFromId(
         appId: number
@@ -111,13 +105,9 @@ export class KintoneApiService {
     /**
      * PL月次データを取得する
      *
-     * @param year - 取得対象の年（例: "2024"）
-     * @param month - 取得対象の月（例: "01" または "1"）
-     * @returns 取得したレコードデータ。データが存在しない場合はnullを返す
-     *
-     * @remarks
-     * - キャッシュ機能を内蔵しており、設定ファイルで指定された期間はキャッシュから取得します
-     * - エラーが発生した場合は、ErrorHandlerを使用してログに記録し、nullを返します
+     * キャッシュ機能を内蔵しており、設定ファイルで指定された期間はキャッシュから取得します。
+     * エラーが発生した場合は、ErrorHandlerを使用してログに記録し、nullを返します。
+     * データが存在しない場合はnullを返す。
      *
      * @example
      * ```typescript
@@ -179,14 +169,10 @@ export class KintoneApiService {
     /**
      * PL日次データを取得する
      *
-     * @param year - 取得対象の年（例: "2024"）
-     * @param month - 取得対象の月（例: "01" または "1"）
-     * @returns 取得したレコードの配列。データが存在しない場合は空配列を返す
-     *
-     * @remarks
-     * - 指定された年月の1日から月末日までのデータを取得します
-     * - 未来の日付の場合は今日までに制限されます
-     * - エラーが発生した場合は、ErrorHandlerを使用してログに記録し、空配列を返します
+     * 指定された年月の1日から月末日までのデータを取得します。
+     * 未来の日付の場合は今日までに制限されます。
+     * エラーが発生した場合は、ErrorHandlerを使用してログに記録し、空配列を返します。
+     * データが存在しない場合は空配列を返す。
      *
      * @example
      * ```typescript
@@ -235,8 +221,6 @@ export class KintoneApiService {
 
     /**
      * 生産日報報告書データを取得する（インスタンスメソッド）
-     * @param filterConfig - フィルター設定
-     * @returns レコードの配列
      */
     async fetchProductionReportData(filterConfig: FilterConfig): Promise<line_daily.SavedFields[]> {
         const fields = FieldsUtil.getLineDailyFields();
@@ -290,7 +274,6 @@ export class KintoneApiService {
 
     /**
      * マスタ機種一覧データを取得する（インスタンスメソッド）
-     * @returns レコードの配列
      */
     async fetchMasterModelData(): Promise<model_master.SavedFields[]> {
         const cacheKey = KintoneApiService.createCacheKey(APP_CONFIG.CACHE_KEY_PREFIX.MASTER_MODEL);
@@ -335,7 +318,7 @@ export class KintoneApiService {
 
     /**
      * 祝日データを取得する（インスタンスメソッド）
-     * @returns レコードの配列
+     *
      */
     async fetchHolidayData(): Promise<holiday.SavedFields[]> {
         const fields = FieldsUtil.getHolidayFields();
@@ -349,10 +332,6 @@ export class KintoneApiService {
 
     /**
      * すべてのレコードを取得する（ページング処理込み）（インスタンスメソッド）
-     * @param appId - アプリID
-     * @param fields - 取得するフィールド
-     * @param query - クエリ条件
-     * @returns すべてのレコード
      */
     private async fetchAllRecords<T>(appId: number, fields: string[], query: string): Promise<T[]> {
         let allRecords: T[] = [];
@@ -380,9 +359,6 @@ export class KintoneApiService {
 
     /**
      * レコード取得のリトライ処理（インスタンスメソッド）
-     * @param fetchFunction - 実行する取得関数
-     * @param maxRetries - 最大リトライ回数
-     * @returns 取得結果
      */
     async withRetry<T>(
         fetchFunction: () => Promise<T>,
@@ -413,8 +389,6 @@ export class KintoneApiService {
     /**
      * 与えられた API 呼び出し関数群を並列で実行（同時実行数制限付き）（インスタンスメソッド）
      * 各呼び出しは `withRetry` でラップされます。
-     * @param tasks - 実行する API 呼び出し関数の配列
-     * @param concurrency - 同時実行数
      */
     private async executeBatchedRequests<T>(
         tasks: Array<() => Promise<T>>,
@@ -467,8 +441,7 @@ export class KintoneApiService {
 
     /**
      * PL月次データを登録する（インスタンスメソッド）
-     * @param record - 登録するレコード
-     * @returns KintoneSaveResult 登録されたレコードIDとリビジョン
+     *
      * @throws kintoneApiDuplicateError 重複レコードが見つかった場合のエラー
      * @throws kintoneApiFatalRegisterError その他の登録失敗時のエラー
      */
@@ -519,8 +492,7 @@ export class KintoneApiService {
 
     /**
      * PL日次データを登録する（インスタンスメソッド）
-     * @param records - 登録するレコード配列
-     * @returns KintoneSaveResults 登録されたレコードID配列
+     *
      * @throws kintoneApiDuplicateError 重複レコードが見つかった場合のエラー
      * @throws kintoneApiFatalRegisterError その他の登録失敗時のエラー
      */
@@ -561,14 +533,10 @@ export class KintoneApiService {
                 }
 
                 if (duplicatesInBatch.length > 0) {
-                    console.log(
-                        `バッチ内で重複する日付が見つかりました (${[...new Set(duplicatesInBatch)].join(", ")}))。重複を除いて登録を続行します。`
-                    );
                     uploadRecords = uniqueRecords;
                 }
             } catch (e) {
                 // 日付抽出で予期せぬ形式が来た場合はそのまま進める（既存の重複チェックでガード）
-                console.log("バッチ内重複チェック中にエラーが発生しました。スキップします。", e);
                 uploadRecords = records;
             }
 
@@ -583,16 +551,11 @@ export class KintoneApiService {
             const hasDuplicates = duplicatesInfo.some((info) => info.isDuplicate);
 
             if (hasDuplicates) {
-                console.log(
-                    "PL日次データの重複が検出され、登録をスキップしました:",
-                    duplicatesInfo.filter((info) => info.isDuplicate)
-                );
                 return {
                     ok: false,
                 };
             }
             // 登録処理開始
-            console.log("PL日次データ登録処理開始");
             const batchSize = API_LIMITS.RECORDS_PER_REQUEST;
 
             // バッチに分割して並列で登録（同時実行数は制限）
@@ -651,8 +614,7 @@ export class KintoneApiService {
 
     /**
      * 生産日報データを登録する（インスタンスメソッド）
-     * @param records - 登録するレコード配列
-     * @returns KintoneSaveResults 登録されたレコードID配列
+     *
      * @throws kintoneApiDuplicateError 重複レコードが見つかった場合のエラー
      * @throws kintoneApiFatalRegisterError その他の登録失敗時のエラー
      */
@@ -676,7 +638,6 @@ export class KintoneApiService {
                     "生産日報データの重複が検出され、登録をスキップしました:",
                     duplicatesInfo.filter((info) => info.isDuplicate)
                 );
-                console.log(duplicatesInfo.filter((info) => info.isDuplicate));
                 return {
                     ok: false,
                 };
@@ -750,8 +711,7 @@ export class KintoneApiService {
 
     /**
      * マスタ機種データを登録する（インスタンスメソッド）
-     * @param records - 登録するレコード配列
-     * @returns KintoneSaveResults 登録されたレコードID配列
+     *
      * @throws kintoneApiFatalRegisterError 登録失敗時のエラー
      */
     async saveMasterModelData(records: Record<string, unknown>[]): Promise<KintoneSaveResults> {
@@ -830,8 +790,7 @@ export class KintoneApiService {
 
     /**
      * 祝日データを登録する（インスタンスメソッド）
-     * @param records - 登録するレコード配列
-     * @returns KintoneSaveResults 登録されたレコードID配列
+     *
      * @throws kintoneApiFatalRegisterError 登録失敗時のエラー
      */
     async saveHolidayData(records: Record<string, unknown>[]): Promise<KintoneSaveResults> {
@@ -910,10 +869,6 @@ export class KintoneApiService {
 
     /**
      * 単一レコードを更新する（インスタンスメソッド）
-     * @param appId - アプリID
-     * @param recordId - レコードID
-     * @param record - 更新するデータ
-     * @returns 更新結果
      */
     async updateRecord(
         appId: number,
@@ -954,9 +909,6 @@ export class KintoneApiService {
 
     /**
      * 複数レコードを更新する（インスタンスメソッド）
-     * @param appId - アプリID
-     * @param records - 更新するレコードデータ配列（idを含む）
-     * @returns 更新結果
      */
     async updateRecords(appId: number, records: Record<string, unknown>[]): Promise<unknown> {
         try {
@@ -1027,9 +979,6 @@ export class KintoneApiService {
 
     /**
      * レコードを削除する（インスタンスメソッド）
-     * @param appId - アプリID
-     * @param recordIds - 削除するレコードID配列
-     * @returns 削除結果
      */
     async deleteRecords(appId: number, recordIds: number[]): Promise<{ deletedCount: number }> {
         try {
@@ -1089,10 +1038,7 @@ export class KintoneApiService {
 
     /**
      * 指定フィールドの値が既存レコードと重複しているか確認する（インスタンスメソッド）
-     * @param appId - アプリID
-     * @param record - 確認するレコードデータ
-     * @param fieldNames - 確認対象フィールド名（単数 or 複数）
-     * @returns 重複レコード情報。重複がない場合はnull
+     * 重複がない場合はnullを返す
      * @example
      * ```typescript
      * const apiService = new KintoneApiService();
@@ -1133,7 +1079,6 @@ export class KintoneApiService {
                 .map((fieldName) => {
                     const fieldValue = record[fieldName];
                     if (!fieldValue) {
-                        console.log(`フィールド ${fieldName} が見つかりません`);
                         return null;
                     }
 
@@ -1152,7 +1097,6 @@ export class KintoneApiService {
                     } else if (typeof value === "number") {
                         return `${fieldName} = ${value}`;
                     } else {
-                        console.log(`${fieldName} の値が文字列または数値ではありません: ${value}`);
                         return null;
                     }
                 })
@@ -1199,10 +1143,8 @@ export class KintoneApiService {
 
     /**
      * 複数のレコードについて一括で重複確認を実行（インスタンスメソッド）
-     * @param appId - アプリID
-     * @param records - 確認するレコード配列
-     * @param fieldNames - 確認対象フィールド名（単数 or 複数）
-     * @returns 重複情報を含む結果配列 { record, isDuplicate, duplicates }
+     * 重複情報を含む結果配列を返す
+     *
      * @example
      * ```typescript
      * const apiService = new KintoneApiService();

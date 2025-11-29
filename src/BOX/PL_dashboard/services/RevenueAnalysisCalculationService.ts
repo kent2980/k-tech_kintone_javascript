@@ -48,9 +48,9 @@ export class CumulativeData {
 
     /**
      * 日次データを累積データに追加
-     * @param addedValue - 付加価値
-     * @param expenses - 経費
-     * @returns 更新後の累積データ
+     *      * addedValue: 付加価値
+     *      * expenses: 経費
+     * *  更新後の累積データ
      */
     addDailyData(
         addedValue: number,
@@ -99,9 +99,9 @@ export class CumulativeData {
 export class RevenueAnalysisCalculationService {
     /**
      * 粗利益を計算
-     * @param addedValue - 付加価値
-     * @param expenses - 経費
-     * @returns 粗利益
+     *      * addedValue: 付加価値
+     *      * expenses: 経費
+     * *  粗利益
      */
     static calculateGrossProfit(addedValue: number, expenses: number): number {
         return addedValue - expenses;
@@ -109,9 +109,9 @@ export class RevenueAnalysisCalculationService {
 
     /**
      * 利益率を計算
-     * @param addedValue - 付加価値
-     * @param expenses - 経費
-     * @returns 利益率（%）
+     *      * addedValue: 付加価値
+     *      * expenses: 経費
+     * *  利益率（%）
      */
     static calculateProfitRate(addedValue: number, expenses: number): number {
         const grossProfit = this.calculateGrossProfit(addedValue, expenses);
@@ -120,11 +120,11 @@ export class RevenueAnalysisCalculationService {
 
     /**
      * 収益分析アイテムを作成
-     * @param date - 日付
-     * @param addedValue - 付加価値
-     * @param expenses - 経費
-     * @param cumulativeData - 累積データ管理オブジェクト
-     * @returns 収益分析アイテム
+     *      * date: 日付
+     *      * addedValue: 付加価値
+     *      * expenses: 経費
+     *      * cumulativeData: 累積データ管理オブジェクト
+     * *  収益分析アイテム
      */
     static createRevenueAnalysisItem(
         date: string,
@@ -154,7 +154,7 @@ export class RevenueAnalysisCalculationService {
 
     /**
      * 累積データ管理オブジェクトを作成
-     * @returns 累積データ管理オブジェクト
+     * *  累積データ管理オブジェクト
      */
     static createCumulativeDataManager(): CumulativeData {
         return new CumulativeData();

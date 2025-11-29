@@ -116,8 +116,7 @@ export function addPartsTypeCell(row: HTMLTableRowElement, currentValue: string 
 
 /**
  * テーブルに部品タイプ列を追加
- * @param table - テーブル要素
- * @param referenceRecords - 参照先アプリのレコード配列（parts_typeの初期値を取得するため）
+ * 参照先アプリのレコードからparts_typeの初期値を取得する
  */
 export function addPartsTypeColumnToTable(
     table: HTMLTableElement,

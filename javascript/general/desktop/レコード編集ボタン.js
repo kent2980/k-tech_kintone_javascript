@@ -8,36 +8,28 @@
     // -----------------------------------------
 
     kintone.events.on("app.record.index.show", function (event) {
-        console.log("📋 レコード一覧画面表示イベント");
-
         // 現在のアプリIDとビューIDを取得
         const appId = kintone.app.getId();
         const urlParams = new URLSearchParams(window.location.search);
         const viewId = urlParams.get("view") || "20";
 
-        console.log(`📱 アプリID: ${appId}, ビューID: ${viewId}`);
-
         // 編集ボタンを追加する関数
         function addEditButtons() {
             // 既にボタンが追加されている場合はスキップ
             if (document.querySelector(".custom-edit-button")) {
-                console.log("⚠️ 編集ボタンは既に追加されています");
                 return;
             }
 
             // レコード行を取得
             const recordRows = document.querySelectorAll(".recordlist-row-gaia, tr.recordlist-row");
 
-            console.log(`📦 ${recordRows.length}件のレコードを検出しました`);
-
             if (recordRows.length === 0) {
-                console.warn("⚠️ レコード行が見つかりません");
                 return false;
             }
 
             let buttonAddedCount = 0;
 
-            recordRows.forEach(function (row, index) {
+            recordRows.forEach(function (row) {
                 // レコードIDを取得(.recordlist-record_id-gaiaクラスのテキストから)
                 let recordId = row.querySelector(".recordlist-record_id-gaia")?.textContent;
 
@@ -51,11 +43,8 @@
                 }
 
                 if (!recordId) {
-                    console.warn(`⚠️ レコード${index + 1}のIDが取得できません`);
                     return;
                 }
-
-                console.log(`  レコード ${index + 1}: ID = ${recordId}`);
 
                 // 編集ボタンを作成
                 const editButton = document.createElement("button");
@@ -87,9 +76,6 @@
                     // 編集画面のURLを生成
                     const editUrl = `${window.location.protocol}//${window.location.host}/k/${appId}/show#record=${recordId}&l.view=${viewId}&l.q&l.next=0&l.prev=0&mode=edit`;
 
-                    console.log(`📝 編集画面に遷移: レコードID ${recordId}`);
-                    console.log(`🔗 URL: ${editUrl}`);
-
                     // 編集画面に遷移
                     window.location.href = editUrl;
                 });
@@ -109,13 +95,10 @@
 
                     firstCell.appendChild(buttonContainer);
                     buttonAddedCount++;
-                } else {
-                    console.warn(`⚠️ レコード${index + 1}のセルが見つかりません`);
                 }
             });
 
             if (buttonAddedCount > 0) {
-                console.log(`✅ 編集ボタンの追加が完了しました (${buttonAddedCount}個)`);
                 return true;
             }
             return false;
@@ -126,14 +109,11 @@
         const maxAttempts = 10;
         const interval = setInterval(function () {
             attempts++;
-            console.log(`🔄 試行 ${attempts}/${maxAttempts}`);
 
             if (addEditButtons()) {
                 clearInterval(interval);
-                console.log("✅ ボタン追加完了、監視を停止しました");
             } else if (attempts >= maxAttempts) {
                 clearInterval(interval);
-                console.warn("⚠️ 最大試行回数に達しました");
             }
         }, 300); // 300msごとに試行
 

@@ -30,7 +30,6 @@ export class PLExcelImporter extends ExcelImporter {
 
     /**
      * コンストラクタ
-     * @param file - インポートするExcelファイル
      */
     constructor(file: File) {
         super(file);
@@ -38,8 +37,6 @@ export class PLExcelImporter extends ExcelImporter {
 
     /**
      * Excelファイルを読み込む
-     * @param validateBeforeLoad - 読み込み前に検証を行うか（デフォルト: true）
-     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
      */
     async load(validateBeforeLoad: boolean = true, maxSizeMB: number = 10): Promise<void> {
         try {
@@ -67,12 +64,7 @@ export class PLExcelImporter extends ExcelImporter {
 
     /**
      * PL管理用の生産実績データを読み込む
-     * @param sheetName - シート名（例: "生産履歴（Assy）"）
-     * @param startColumn - 開始列（デフォルト: "A"）
-     * @param endColumn - 終了列（デフォルト: "P"）
-     * @param headerRow - ヘッダー行（デフォルト: 3）
-     * @param dataStartRow - データ開始行（デフォルト: 4）
-     * @returns DataFrame形式の生産実績データ
+     * DataFrame形式の生産実績データを返す
      */
     getProductionData(
         sheetName: string = "生産履歴（Assy）",
@@ -93,11 +85,6 @@ export class PLExcelImporter extends ExcelImporter {
             dataStartRow,
             sheetName
         ).records;
-
-        // console.log(`取得した生産実績データ件数: ${items.length}件`);
-        console.log("生産実績データの内容1:", items);
-        // itemsのキーをコンソールに出力
-        console.log("生産実績データのキー一覧:", Object.keys(items[0] || {}));
 
         const records: KintoneRecordFormat[] = [];
         items.forEach((item) => {
@@ -162,13 +149,6 @@ export class PLExcelImporter extends ExcelImporter {
 
     /**
      * PL管理用の経費計算データを読み込む
-     * @param sheetName - シート名（例: "経費計算"）
-     * @param headerColumn - カラム列（例: "A"）
-     * @param dataStartColumn - データ開始列（例: "B"）
-     * @param dataEndColumn - データ終了列（例: "M"）
-     * @param startRow - データ開始行（デフォルト: 2）
-     * @param endRow - データ終了行（デフォルト: 100）
-     * @returns kintone API形式のレコード配列
      */
     getExpenseCalculationData(
         sheetName: string = "ＰＬ (日毎) (計画反映版)",
@@ -250,29 +230,11 @@ export class PLExcelImporter extends ExcelImporter {
             items.push(newItem);
         });
 
-        // デバッグ: 生成されたレコード数と日付一覧を出力
-        console.log(`生成されたレコード数: ${items.length}件`);
-        const dates = items.map((item) => {
-            const dateField = item.date;
-            if (dateField && typeof dateField === "object" && "value" in dateField) {
-                return dateField.value;
-            }
-            return "";
-        });
-        console.log("日付一覧:", dates);
-        console.log(
-            "重複している日付:",
-            dates.filter((date, index) => dates.indexOf(date) !== index)
-        );
-
         return items;
     }
 
     /**
      * 月次データを取得
-     * @param sheetName1 - 生産履歴シート名（デフォルト: "生産履歴（Assy）"）
-     * @param sheetName2 - PL日毎シート名（デフォルト: "ＰＬ (日毎) (計画反映版)"）
-     * @returns 月次データのオブジェクト
      */
     getMonthlyData(
         sheetName1: string = "生産履歴（Assy）",
@@ -327,8 +289,6 @@ export class PLExcelImporter extends ExcelImporter {
 
     /**
      * 読み込んだExcelが期待するフォーマットか検証する
-     * @param opts - シート名や検証オプションを上書き可能
-     * @returns { ok: boolean, messages: string[] }
      */
     validateFormat(opts?: {
         productionSheet?: string;
@@ -366,16 +326,12 @@ export class PLExcelImporter extends ExcelImporter {
                 const need = ["日付", "ライン", "付加価値", "機種名", "台数"];
                 const ok = need.some((n) => keys.includes(n));
                 if (!ok) {
-                    console.log(
-                        `生産実績シート(${prodSheet})に必要な列が見つかりません。期待列例: ${need.join(", ")}`
-                    );
                     messages.push(
                         `生産実績シート(${prodSheet})に必要な列が見つかりません。期待列例: ${need.join(", ")}`
                     );
                 }
             }
         } catch (e) {
-            console.log(`生産実績シート(${prodSheet}) の解析に失敗しました: ${String(e)}`);
             messages.push(`生産実績シート(${prodSheet}) の解析に失敗しました: ${String(e)}`);
         }
 
@@ -393,16 +349,12 @@ export class PLExcelImporter extends ExcelImporter {
                 const need = ["実績", "直行残業(ｈ)", "間接材料費", "夜勤手当"];
                 const ok = need.some((n) => keys.includes(n));
                 if (!ok) {
-                    console.log(
-                        `経費計算シート(${expenseSheet})に必要な行/列が見つかりません。期待項目例: ${need.join(", ")}⇒実際の項目: ${keys}`
-                    );
                     messages.push(
                         `経費計算シート(${expenseSheet})に必要な行/列が見つかりません。期待項目例: ${need.join(", ")}`
                     );
                 }
             }
         } catch (e) {
-            console.log(`経費計算シート(${expenseSheet}) の解析に失敗しました: ${String(e)}`);
             messages.push(`経費計算シート(${expenseSheet}) の解析に失敗しました: ${String(e)}`);
         }
 
@@ -410,14 +362,12 @@ export class PLExcelImporter extends ExcelImporter {
             if (this.hasSheet(monthlySheet2)) {
                 const day = this.getCellValueAsDate("G26", monthlySheet2);
                 if (!day) {
-                    console.log(`月次シート(${monthlySheet2})の基準日(G26)が取得できませんでした`);
                     messages.push(
                         `月次シート(${monthlySheet2})の基準日(G26)が取得できませんでした`
                     );
                 }
             }
         } catch (e) {
-            console.log(`月次シート(${monthlySheet2}) の解析に失敗しました: ${String(e)}`);
             messages.push(`月次シート(${monthlySheet2}) の解析に失敗しました: ${String(e)}`);
         }
 
@@ -442,7 +392,6 @@ export class PLExcelImporter extends ExcelImporter {
     /**
      * 経費計算データのカラム名をマッピング
      * 元のカラム名（Column_XX形式）から日本語名に変換
-     * @param records - 変換対象のレコード配列
      */
     private renameExpenseColumns(
         record: TableDataFrame<Record<string, string | number | boolean | Date | null>>

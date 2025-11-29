@@ -114,9 +114,7 @@ function createTableRow(record: aoiDefect.SavedFields, headers: string[]): HTMLT
 
 /**
  * API取得データから新規テーブルを作成
- * @param records - aoiDefect.SavedFields型のレコード配列
- * @param originalTable - 元のテーブル（ヘッダー構造を取得するため）
- * @returns 作成されたテーブル要素
+ * 元のテーブルからヘッダー構造を取得して使用
  */
 export function createTableFromRecords(
     records: aoiDefect.SavedFields[],

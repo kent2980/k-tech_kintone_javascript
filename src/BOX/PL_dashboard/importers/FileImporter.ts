@@ -4,15 +4,15 @@
 export abstract class FileImporter<T> {
     /**
      * ファイルを読み込む
-     * @param file - インポートするファイル
-     * @returns パース済みのデータ
+     *      * file: インポートするファイル
+     * *  パース済みのデータ
      */
     abstract importFile(file: File): Promise<T[]>;
 
     /**
      * ファイルをテキストとして読み込む
-     * @param file - 読み込むファイル
-     * @returns ファイルの内容
+     *      * file: 読み込むファイル
+     * *  ファイルの内容
      */
     protected readFileAsText(file: File): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -32,9 +32,9 @@ export abstract class FileImporter<T> {
 
     /**
      * ファイル拡張子をチェック
-     * @param file - チェックするファイル
-     * @param allowedExtensions - 許可する拡張子の配列
-     * @returns 拡張子が許可されているかどうか
+     *      * file: チェックするファイル
+     *      * allowedExtensions: 許可する拡張子の配列
+     * *  拡張子が許可されているかどうか
      */
     protected validateFileExtension(file: File, allowedExtensions: string[]): boolean {
         const extension = file.name.split(".").pop()?.toLowerCase();
@@ -43,9 +43,9 @@ export abstract class FileImporter<T> {
 
     /**
      * ファイルサイズをチェック
-     * @param file - チェックするファイル
-     * @param maxSizeMB - 最大サイズ（MB）
-     * @returns サイズが許容範囲内かどうか
+     *      * file: チェックするファイル
+     *      * maxSizeMB: 最大サイズ
+     * *  サイズが許容範囲内かどうか
      */
     protected validateFileSize(file: File, maxSizeMB: number = 10): boolean {
         const maxBytes = maxSizeMB * 1024 * 1024;

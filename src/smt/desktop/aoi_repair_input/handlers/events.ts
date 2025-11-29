@@ -98,8 +98,7 @@ async function handleSaveButtonClick(table: HTMLTableElement, relatedAppId: numb
 
         // 編集ボタンは非表示のまま、保存ボタンも表示したまま
         alert("保存が完了しました。");
-    } catch (error) {
-        console.error("保存エラー:", error);
+    } catch {
         alert("保存に失敗しました。");
     }
 }
@@ -224,9 +223,8 @@ async function handleEditButtonClick(): Promise<void> {
         const buttonArea = getOrCreateButtonArea(relatedRecordsTableWrapper);
         createSaveButton(relatedRecordsTable, relatedAppId, buttonArea);
         toggleButtonArea(buttonArea, true);
-    } catch (error) {
+    } catch {
         // エラーが発生した場合は処理を終了
-        console.error("列追加エラー:", error);
         toggleEditButton(true); // 編集ボタンを再表示
         return;
     }

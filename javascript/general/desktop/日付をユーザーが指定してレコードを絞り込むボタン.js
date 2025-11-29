@@ -6,18 +6,14 @@
     // -----------------------------------------
 
     kintone.events.on("app.record.index.show", function (event) {
-        console.log("📋 一覧画面表示イベント開始");
-
         // ボタンが既に追加されている場合はスキップ
         if (document.getElementById("filter-by-date-button")) {
-            console.log("⚠️ ボタンは既に追加されています");
             return event;
         }
 
         // ヘッダーのメニュースペースを取得
         const headerMenuSpace = kintone.app.getHeaderMenuSpaceElement();
         if (!headerMenuSpace) {
-            console.warn("⚠️ ヘッダーメニュースペースが見つかりません");
             return event;
         }
 
@@ -47,7 +43,6 @@
                 // qパラメータから日付を抽出（例: "f13457549 = \"2025-10-20\"" から "2025-10-20" を抽出）
                 const dateMatch = q.match(/(\d{4}-\d{2}-\d{2})/);
                 if (dateMatch) {
-                    console.log("🔍 URLから日付を検出:", dateMatch[1]);
                     return dateMatch[1];
                 }
             }
@@ -58,7 +53,6 @@
         const urlDate = getDateFromURL();
         if (urlDate) {
             dateInput.value = urlDate;
-            console.log("✅ URLパラメータの日付を設定:", urlDate);
         } else {
             // 今日の日付をデフォルト値に設定
             const today = new Date();
@@ -66,7 +60,6 @@
             const month = String(today.getMonth() + 1).padStart(2, "0");
             const day = String(today.getDate()).padStart(2, "0");
             dateInput.value = `${year}-${month}-${day}`;
-            console.log("✅ 今日の日付を設定:", dateInput.value);
         }
 
         // 絞り込みボタンを作成
@@ -94,8 +87,6 @@
                 return;
             }
 
-            console.log("🔍 絞り込み実行:", selectedDate);
-
             // アプリID、ドメイン、プロトコルを動的に取得
             const appId = kintone.app.getId();
             const domain = location.hostname;
@@ -119,16 +110,12 @@
             // 完全なURLを生成
             const newUrl = `${protocol}//${domain}/k/${appId}/?${params.toString()}#${hashParams.toString()}`;
 
-            console.log("🔍 遷移先URL:", newUrl);
-
             // ページを遷移
             window.location.href = newUrl;
         });
 
         // クリアボタンのクリックイベント
         clearButton.addEventListener("click", function () {
-            console.log("✖ 絞り込みをクリア");
-
             // クエリなしでページをリロード
             const appId = kintone.app.getId();
             const domain = location.hostname;
@@ -145,7 +132,6 @@
 
         // ヘッダーメニュースペースにコンテナを追加
         headerMenuSpace.appendChild(container);
-        console.log("✅ 日付絞り込みボタンを追加しました");
 
         return event;
     });
