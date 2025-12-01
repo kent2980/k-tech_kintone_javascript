@@ -78,7 +78,7 @@
 
             // ドロップダウンを作成
             const select = document.createElement("select");
-            select.id = "custom_dropdown";
+            select.id = "custom_line_dropdown";
             select.className = "kintoneplugin-select gaia-argoui-select";
             lineNameSpace.appendChild(select);
 
@@ -141,7 +141,6 @@
             select.addEventListener("change", () => {
                 const record = kintone.app.record.get();
                 const target_values = select.value.split("_");
-                console.log(select.value);
                 if (target_values.length >= 2) {
                     record.record["model_name"].value = target_values[0];
                     record.record["model_code"].value = target_values[1];
@@ -152,7 +151,7 @@
 
         // --- 編集画面で既存値を反映（モデル名ドロップダウン生成後） ---
         if (event.record[fieldCode].value) {
-            const lineNameSelect = document.getElementById("custom_dropdown");
+            const lineNameSelect = document.getElementById("custom_line_dropdown");
             // @ts-ignore - tagNameチェックでHTMLSelectElementであることが保証される
             if (lineNameSelect && lineNameSelect.tagName === "SELECT") {
                 // @ts-ignore
@@ -177,7 +176,137 @@
             }
         }
 
+        // 不良入力フィールドを非表示
+        // setHideDefectField();
+
+        // ルックアップボタンの取得
+        document.getElementsByClassName("input-lookup-gaia")[0].addEventListener(
+            "click",
+            function () {
+                // console.log("1つ目のルックアップボタンがクリックされました");
+            },
+            true
+        );
+
+        document.getElementsByClassName("input-lookup-gaia")[1].addEventListener(
+            "click",
+            function () {
+                // テーブル要素がDOMに追加されるまで待機
+                waitForTableElement();
+            },
+            true
+        );
+
+        /**
+         * テーブル要素から、いずれかのセルのtextContentが指定されたライン名と一致しない行を非表示にする
+         * @param {HTMLTableElement} table - 対象のテーブル要素
+         * @param {string} lineName - フィルタリングに使用するライン名
+         */
+        function hideTableRowByLineName(table, lineName) {
+            // ライン名が未選択の場合は何もしない
+            if (lineName === "") {
+                return;
+            }
+            // テーブル要素から行を取得
+            const rows = table.getElementsByTagName("tr");
+            for (const row of rows) {
+                const cells = row.getElementsByTagName("div");
+                for (const cell of cells) {
+                    if (cell.textContent === lineName) {
+                        row.style.display = "table-row";
+                        break;
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+            }
+        }
+
+        /**
+         * テーブルに新しい行が追加されたタイミングでフィルタ処理を再実行するための監視を設定
+         * @param {HTMLTableElement} table - 対象のテーブル要素
+         */
+        function observeTableRows(table) {
+            const tbody = table.tBodies[0];
+            if (!tbody) {
+                return;
+            }
+            // 現在選択中のライン名を取得
+            const lineNameSelect = document.getElementById("custom_line_dropdown");
+            if (!lineNameSelect || lineNameSelect.tagName !== "SELECT") {
+                console.error("ライン名ドロップダウンが見つかりません");
+                return;
+            }
+            const lineName =
+                lineNameSelect instanceof HTMLSelectElement ? lineNameSelect.value : "";
+            // 最初に一度フィルタを実行
+            hideTableRowByLineName(table, lineName);
+
+            const rowObserver = new MutationObserver(function () {
+                // 行が追加・削除されたら再度フィルタを実行
+                hideTableRowByLineName(table, lineName);
+            });
+
+            rowObserver.observe(tbody, {
+                childList: true, // 行（tr）の追加・削除を監視
+            });
+        }
+
+        /**
+         * テーブル要素がDOMに追加されるまで待機する関数
+         */
+        function waitForTableElement() {
+            // 既に存在する場合は即座に取得
+            const existingTable = document.getElementsByClassName(
+                "listTable-gaia lookup-table-gaia"
+            )[0];
+            if (existingTable) {
+                // テーブル要素が見つかった後の処理（必要に応じてlineNameを使用）
+                if (existingTable instanceof HTMLTableElement) {
+                    observeTableRows(existingTable);
+                }
+                return;
+            }
+
+            // MutationObserverでDOMの変更を監視
+            const observer = new MutationObserver(function (mutations, obs) {
+                const table = document.getElementsByClassName(
+                    "listTable-gaia lookup-table-gaia"
+                )[0];
+                if (table) {
+                    // テーブル要素が見つかった後の処理（必要に応じてlineNameを使用）
+                    if (table instanceof HTMLTableElement) {
+                        observeTableRows(table);
+                    }
+                    obs.disconnect(); // 監視を停止
+                }
+            });
+
+            // 監視を開始（body配下の変更を監視）
+            observer.observe(document.body, {
+                childList: true, // 子ノードの追加・削除を監視
+                subtree: true, // 子孫ノードも監視
+            });
+
+            // タイムアウト設定（30秒後に監視を停止）
+            setTimeout(function () {
+                observer.disconnect();
+            }, 30000);
+        }
+
         return event;
+    }
+
+    /**
+     * 不良入力フィールドを非表示
+     */
+    function setHideDefectField() {
+        const formData = cybozu.data.page.FORM_DATA;
+        const defectInput = document.getElementById("19_13458387-:b5-text");
+        const parentDefectInput = defectInput?.parentElement;
+        if (parentDefectInput) {
+            parentDefectInput.style.display = "none";
+        }
     }
 
     /**
@@ -312,6 +441,9 @@
         if (record.outside_overtime) {
             record.outside_overtime.value = outsideOvertimeSum;
         }
+
+        // 不良入力フィールドを非表示
+        // setHideDefectField();
 
         return event;
     }

@@ -13,13 +13,10 @@
 
     // ----- 関数：テーブル内のテキストボックスを入力可能にする -----
     function makeTableTextEditable(record) {
-        console.log("テーブル内のテキストボックスを入力可能にする");
-
         // テーブルを取得
         const tableElement = document.getElementsByClassName(
             "subtable-gaia subtable-13457853 edit-subtable-gaia"
         )[0];
-        console.log(tableElement);
         // テーブルが存在しない場合は処理を終了
         if (!tableElement) return;
 
@@ -29,7 +26,6 @@
         if (inputElements.length === 0) return;
         // input要素を繰り返し処理
         inputElements.forEach((inputElement) => {
-            console.log(inputElement);
             // input要素のreadonly属性を削除
             inputElement.removeAttribute("readonly");
             inputElement.disabled = false; // 入力可能にする

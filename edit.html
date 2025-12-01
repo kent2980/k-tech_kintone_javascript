@@ -1,0 +1,2406 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <link
+            rel="apple-touch-icon"
+            href="https://static.cybozu.com/k/20251128054245_163_e2ff584/image/gaia/mobile/appicon_60_60@3x.png"
+        />
+        <title>新しいレコード</title>
+        <link
+            rel="shortcut icon"
+            href="https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.ico"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://static.cybozu.com/k/20251128054245_163_e2ff584/css/compiled/argo.css"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP_CSS&amp;contentId=3983&amp;hash=c7d9daa64312ddc8837986ab9a313fa8f91ca0ec"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP_CSS&amp;contentId=3987&amp;hash=3ab54bc49daf54455fff71b47d935abe8d76ecf9"
+        />
+    </head>
+    <body class="">
+        <script>
+            if (window.parent !== window.self) {
+                document.body.className += " body-iframe";
+
+                if (window.parent.document.getElementById("notification-iframe-gaia")) {
+                    document.body.className += " notification-iframe-body-gaia";
+                }
+
+                var base = document.createElement("base");
+                base.target = "_parent";
+                document.getElementsByTagName("head")[0].appendChild(base);
+            } else {
+                document.body.className += " body-top";
+            }
+        </script>
+        <noscript>
+            <div id="browser-warning-jsdisabled-cybozu">
+                <div class="browser-warning-jsdisabled-container-cybozu">
+                    <div class="browser-warning-jsdisabled-logo-cybozu"></div>
+                    <div class="browser-warning-jsdisabled-main-cybozu">
+                        <div class="browser-warning-jsdisabled-caution-cybozu"></div>
+                        <div class="browser-warning-jsdisabled-description-cybozu">
+                            <h3 class="browser-warning-jsdisabled-title-cybozu">
+                                WebブラウザーがJavaScriptに対応していません。または、Webブラウザーの設定でJavaScriptが無効に設定されています。
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="browser-warning-jsdisabled-bottom-cybozu"></div>
+                </div>
+            </div>
+        </noscript>
+        <div id="browser-warning-notsupported-cybozu" style="display: none"></div>
+        <div id="browser-warning-compatibility-cybozu" style="display: none"></div>
+        <div id="header-global-navigation-root"></div>
+        <style>
+            #header-global-navigation-root {
+                --header-height: 64px;
+                --global-navigationbar-height: 48px;
+                height: calc(var(--header-height) + var(--global-navigationbar-height));
+            }
+        </style>
+        <script>
+            if (window.parent !== window.self) {
+                document.getElementById("header-global-navigation-root").remove();
+            }
+        </script>
+        <div class="gaia-header"></div>
+        <div class="gaia-header-spacer"></div>
+        <div class="gaia-sidemenu"></div>
+        <div class="menu-gaia"></div>
+        <div class="contents-actionmenu-gaia contents-actionmenu-edit-gaia">
+            <form id="appForm-gaia" name="appForm" class="gaia-argoui-app-edit-form">
+                <div class="gaia-argoui-app-edit-buttons">
+                    <button type="button" class="gaia-ui-actionmenu-cancel">キャンセル</button>
+                    <button type="button" class="gaia-ui-actionmenu-save">保存</button>
+                </div>
+                <input type="hidden" name="app" value="40" />
+                <input type="hidden" name="record" value="" />
+            </form>
+        </div>
+        <!-- container -->
+        <div class="container-gaia no-navimenu-gaia no-actionmenu-gaia">
+            <!-- contents -->
+            <div class="contents-gaia record-edit-contents-gaia">
+                <div>
+                    <div class="box-gaia">
+                        <div id="record-gaia"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- contents -->
+        </div>
+        <script src="https://static.cybozu.com/k/20251128054245_163_e2ff584/js/resources/message-JP_ja.js"></script>
+        <script src="https://static.cybozu.com/k/20251128054245_163_e2ff584/js/compiled/third_party/kintone-react.bundle.min.js"></script>
+        <script src="https://static.cybozu.com/k/20251128054245_163_e2ff584/js/compiled/app/edit.js"></script>
+        <script>
+            cybozu.data.uri["STATIC_URL"] =
+                "https:\/\/static.cybozu.com\/k\/20251128054245_163_e2ff584";
+            cybozu.data.uri["STATIC_ROOT"] = "https:\/\/static.cybozu.com\/";
+            cybozu.data.uri["BASE_PATH"] = "\/k\/";
+            cybozu.data.uri["SLASH_PATH"] = "/";
+            cybozu.data.uri["PAGE_PREFIX"] = "";
+            cybozu.data.uri["API_PREFIX"] = "\/api";
+            cybozu.data.uri["API_PREFIX_RELEASE"] = "\/api";
+            cybozu.data.uri["API_PREFIX_DEV"] = "\/api\/dev";
+            cybozu.data.uri["MARKET_PREFIX"] = "https:\/\/static.cybozu.com\/k\/neco\/market\/44";
+            cybozu.data.uri["EMOJI_PREFIX"] = "https:\/\/static.cybozu.com\/contents\/k\/emoji";
+            cybozu.data.uri["STATIC_IMAGE_PREFIX"] =
+                "https:\/\/static.cybozu.com\/contents\/k\/image";
+            cybozu.data.uri["GUEST_PREFIX"] = "\/guest";
+            cybozu.data.uri["CURRENT_CONTEXT"] = "";
+            cybozu.data.uri["STORE_ORDER_URL"] =
+                "https:\/\/store.cybozu.com\/transfer\/order?aud=c777226&code=kintone";
+            cybozu.data.uri["CLARA_BASE_URL"] = "https:\/\/get.kintone.com";
+            cybozu.data.uri["CLARA_SSO_V2_URL"] =
+                "https:\/\/get.kintone.com\/v2\/sso\/login?subdomain=2pjcypqjfl8m";
+            cybozu.data.uri.init();
+        </script>
+        <script>
+            delete kintone.app.record.getActions;
+            delete kintone.app.record.showActionButton;
+            delete kintone.app.record.getActionButtonDisplayState;
+            delete kintone.mobile.app.record.showActionButton;
+            delete kintone.mobile.app.record.getActionButtonDisplayState;
+            delete kintone.app.record.showStatusActionButton;
+            delete kintone.app.record.getStatusActionButtonDisplayState;
+            delete kintone.mobile.app.record.showStatusActionButton;
+            delete kintone.mobile.app.record.getStatusActionButtonDisplayState;
+            delete kintone.getKeyboardShortcuts;
+            delete kintone.app.record.showChangeAssigneeButton;
+            delete kintone.app.record.getChangeAssigneeButtonDisplayState;
+            cybozu.data["BASIC_JSAPI_ENABLED"] = true;
+            cybozu.data["BASIC_JSAPI_25_8_ENABLED"] = true;
+            cybozu.data["BASIC_JSAPI_25_9_ENABLED"] = true;
+            cybozu.data["BASIC_JSAPI_25_10_ENABLED"] = true;
+            cybozu.data["BASIC_JSAPI_25_11_ENABLED"] = true;
+            cybozu.data["BASIC_JSAPI_25_12_ENABLED"] = false;
+            cybozu.data["BASIC_JSAPI_26_1_ENABLED"] = false;
+        </script>
+        <script>
+            // common
+            cybozu.data["REQUEST_TOKEN"] = "95073c81-6ec0-47dc-bcd9-c62048531b1d";
+            cybozu.data["LOGIN_USER"] = {
+                birthDate: null,
+                callto: null,
+                code: "KentaroYoshida@k-technology.co.jp",
+                ctime: "2025-11-19T01:53:43.000Z",
+                dateTimeLocale: null,
+                description: null,
+                email: "KentaroYoshida@k-technology.co.jp",
+                employeeNumber: null,
+                employeeType: null,
+                entityType: "USER",
+                extendedData: null,
+                extensionNumber: null,
+                formattedDescription: null,
+                givenName: null,
+                givenNameReading: null,
+                id: "4",
+                initials: null,
+                isBuiltIn: false,
+                joinDate: null,
+                langLocale: null,
+                localName: null,
+                localNameLocale: null,
+                locale: null,
+                middleName: null,
+                mobilePhone: null,
+                mtime: "2025-11-19T23:59:28.000Z",
+                name: "吉田 健太郎",
+                numberLocale: null,
+                office: null,
+                phone: null,
+                photo: {
+                    small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                    size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                    normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                    size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                    original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                    original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                    size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                    size_48_r: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                    size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                    size_96_r: "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                    size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                },
+                photoMd5: null,
+                photoMime: null,
+                primaryOrganization: null,
+                removed: false,
+                serviceFlags: null,
+                sortOrder: null,
+                surName: null,
+                surNameReading: null,
+                timezone: "Asia/Tokyo",
+                url: null,
+                valid: true,
+            };
+            cybozu.data["isDevelop"] = false;
+            cybozu.data["DISPLAY_LOCALE"] = "ja";
+            cybozu.data["PERSONALSETTINGS_DATA"] = {
+                hasAccessedKintone: true,
+                mailNotificationCondition: "MENTION",
+                mailNotificationMailFormat: "HTML",
+                mailNotificationWillSend: true,
+                readAddRecordHint: true,
+                readCreateAppMessage: false,
+                readEditRecordHint: true,
+                readInviteGuestMessage: false,
+                readShowRecordDetailHint: true,
+                recordListSize: 20,
+                showSpaceCreatedMessage: null,
+                shownWelcomeDialog: true,
+                timeNotation: "TWENTY_FOUR",
+            };
+            cybozu.data["PERSONALSETTINGS_DATA"]["locale"] = "ja";
+            cybozu.data["PERSONALSETTINGS_DATA"]["language"] = "ja";
+            cybozu.data["PERSONALSETTINGS_DATA"]["timezone"] = "Asia\/Tokyo";
+            cybozu.data["PERSONALSETTINGS_DATA"]["localeForDateFormat"] = "ja";
+            cybozu.data["PERSONALSETTINGS_DATA"]["localeForDecimalFormat"] = "ja";
+            cybozu.data["PERSONALSETTINGS_DATA"]["slashLocaleForDateAndDecimalFormatI18N"] = "";
+            cybozu.data["PERSONALSETTINGS_DATA"]["useEuropeanNumberFormat"] = false;
+            cybozu.data["TIMEZONE_DATA"] = {
+                id: "Asia/Tokyo",
+                names: [],
+                std_offset: 540,
+                transitions: [],
+            };
+            cybozu.data["SYSTEM_TIMEZONE_DATA"] = {
+                id: "Asia/Tokyo",
+                names: [],
+                std_offset: 540,
+                transitions: [],
+            };
+            cybozu.data["SYSTEM_SETTINGS"] = {
+                guestAvailable: true,
+                peopleAvailable: true,
+                pollingInterval: 300,
+                spaceAvailable: true,
+            };
+            cybozu.data["IS_MOBILE_DEVICE"] = false;
+            cybozu.data["MOBILE_VIEW_TYPE"] = "MOBILE";
+            cybozu.data["MOBILE_VIEW_SELECTABLE_BY_USER"] = true;
+            cybozu.data["IS_PORTLET"] = false;
+            cybozu.data["DATE_FORMAT_FOR_FORMS"] = "yyyy-MM-dd";
+            cybozu.data["SMART_DATETIME_FORMAT"] = {
+                AM_PM_FULL_FORMAT: "yyyy/M/d',' K:mm a",
+                TWENTY_FOUR_DATE_FORMAT: "M/d H:mm",
+                DATE_FORMAT: "M/d H:mm",
+                AM_PM_DATE_FORMAT: "M/d',' K:mm a",
+                TWENTY_FOUR_FULL_FORMAT: "yyyy/M/d H:mm",
+                TIME_FORMAT: "H:mm",
+                AM_PM_TIME_FORMAT: "K:mm a",
+                TWENTY_FOUR_TIME_FORMAT: "H:mm",
+                FULL_FORMAT: "yyyy/M/d H:mm",
+            };
+            cybozu.data["DATETIME_FORMAT"] = {
+                TWENTY_FOUR: "yyyy-MM-dd H:mm",
+                AM_PM: "yyyy-MM-dd K:mm a",
+            };
+            cybozu.data["DATE_FORMAT"] = "yyyy-MM-dd";
+
+            cybozu.data["DATE_FORMAT_IN_UK_ENABLED"] = true;
+            cybozu.data["JS_API_USER_LANGUAGE"] = "ja";
+
+            cybozu.data["COURSE"] = "STANDARD";
+            cybozu.data["SYSTEM_USE_MAIL_NOTIFICATION"] = true;
+
+            // for kintone
+            cybozu.data["TIMEZONE_UTC"] = {
+                id: "UTC",
+                names: [],
+                std_offset: 0,
+                transitions: [],
+            };
+            cybozu.data["TIMEZONE_DATA_DISPLAY_NAME"] = "(UTC+09:00) 大阪、札幌、東京";
+            cybozu.data["TIMEZONE_UTC_DISPLAY_NAME"] = "(UTC+00:00) GMT";
+            cybozu.data["EVERYONE_GROUP_ID"] = "7532782697181632513";
+            cybozu.data["BROWSER_WARNING_NOTSUPPORTED_TEXT"] =
+                "非対応のWebブラウザーです。一部の機能が正常に動作しない場合があります。";
+            cybozu.data["OUT_OF_SPACE_APPS_CREATABLE"] = true;
+            cybozu.data["SPACE_CREATABLE"] = true;
+            cybozu.data["APP_WIDTH_RESIZABLE_FIELDS"] = {
+                LABEL: true,
+                SINGLE_LINE_TEXT: true,
+                MULTIPLE_LINE_TEXT: true,
+                EDITOR: true,
+                DECIMAL: true,
+                CALC: true,
+                SINGLE_CHECK: true,
+                MULTIPLE_CHECK: true,
+                SINGLE_SELECT: true,
+                MULTIPLE_SELECT: true,
+                DATE: true,
+                TIME: true,
+                DATETIME: true,
+                FILE: true,
+                LINK: true,
+                USER_SELECT: true,
+                ORGANIZATION_SELECT: true,
+                GROUP_SELECT: true,
+                LOOKUP: true,
+                SPACER: true,
+                HR: true,
+                RECORD_ID: true,
+                CREATOR: true,
+                CREATED_AT: true,
+                MODIFIER: true,
+                MODIFIED_AT: true,
+            };
+            cybozu.data["APP_HEIGHT_RESIZABLE_FIELDS"] = {
+                MULTIPLE_LINE_TEXT: true,
+                EDITOR: true,
+                SPACER: true,
+            };
+            cybozu.data["GUEST_SPACE_CREATABLE"] = true;
+            cybozu.data["SYSTEM_MANAGEMENT_ACCESSIBLE"] = true;
+            cybozu.data["HAS_OTHER_DOMAIN_SPACE"] = false;
+            cybozu.data["IS_COMMONALIZED_GUEST_USER"] = false;
+            cybozu.data["LICENSE_DATA"] = {
+                guestSpaceCreateEnable: true,
+                jsCustomizeEnable: true,
+                recordLimitExceededApps: [],
+                secondPortalEnable: true,
+                spaceCreateEnable: true,
+            };
+            cybozu.data["API_TOKEN_CONFIGURABLE"] = true;
+            cybozu.data["WEBHOOK_EDITABLE"] = true;
+            cybozu.data["HOME_DOMAIN_FQDN"] = "";
+            cybozu.data["REGION"] = "JP";
+            cybozu.data["DOMAIN_MAP"] = {
+                JP: "cybozu.com",
+                CN: "cybozu.cn",
+            };
+            cybozu.data["ACCESS_FROM"] = "jp";
+            cybozu.data["NEW_DESIGN_ENABLED"] = true;
+            cybozu.data["HEADER_BACKGROUND_COLOR"] = "#ffcc00";
+            cybozu.data["IS_TRIAL"] = true;
+            cybozu.data["IS_TUTORIAL_FORCE_ENABLED"] = false;
+            cybozu.data["executeOnce"] = {
+                SYSTEM_WIDE_EXECUTED: true,
+            };
+            cybozu.data["IS_SYSTEM_WIDE_FIRST_ACCESS_USER"] = false;
+            cybozu.data["DESKTOP_NTF_POLLING_INTERVAL"] = 60;
+            cybozu.data["IS_NOTIFICATION_LIST_VIEW_ENABLED"] = false;
+            cybozu.data["GET_SPACE_INFO_JSAPI_ENABLED"] = false;
+            cybozu.data["APP_GET_JSAPI_ENABLED"] = false;
+        </script>
+        <script>
+            cybozu.data["AVAILABLE_SERVICES"] = {
+                displayGaroon: false,
+                displayOffice: false,
+                displayMailwise: false,
+            };
+            cybozu.data["HEADER_LOGO"] = {
+                linkUrl: "\/k\/",
+                sourceUrl:
+                    "https:\/\/static.cybozu.com\/k\/20251128054245_163_e2ff584\/image\/cybozu\/header\/slash-logo.png",
+                useDefault: true,
+            };
+            cybozu.data["FOR_SLASH_ADMINISTRATOR"] = false;
+            cybozu.data["DISPLAY_COMMONIZE"] = false;
+            cybozu.data["DISPLAY_PURCHACE_MENU"] = true;
+            cybozu.data["USE_CLARA"] = false;
+            cybozu.data["FOR_SSO_GUEST_USER"] = false;
+        </script>
+        <script>
+            window.__KINTONE_INITIAL_DATA__ ||= {};
+            window.__KINTONE_INITIAL_DATA__.header_global_navigation = {
+                MutableSharedData: {
+                    helpMenuHotkeyShown: false,
+                    helpMenuTourShown: false,
+                },
+                ClaraBaseUrl: "https:\/\/get.kintone.com",
+                ClaraSsoV2Url: "https:\/\/get.kintone.com\/v2\/sso\/login?subdomain=2pjcypqjfl8m",
+                UseClara: false,
+                DisplayPurchase: true,
+                HeaderBackgroundColor: "#ffcc00",
+                HeaderLogo: {
+                    linkUrl: "\/k\/",
+                    sourceUrl:
+                        "https:\/\/static.cybozu.com\/k\/20251128054245_163_e2ff584\/image\/cybozu\/header\/slash-logo.png",
+                    useDefault: true,
+                },
+                StoreOrderUrl:
+                    "https:\/\/store.cybozu.com\/transfer\/order?aud=c777226&code=kintone",
+                SystemSettings: {
+                    guestAvailable: true,
+                    peopleAvailable: true,
+                    pollingInterval: 300,
+                    spaceAvailable: true,
+                },
+                IsDevelop: false,
+                RegionCode: "JP",
+                StaticUriImagePrefix: "https:\/\/static.cybozu.com\/contents\/k\/image",
+                ArchiveImageUriPrefix: "https:\/\/static.cybozu.com\/k\/20251128054245_163_e2ff584",
+                GuestPrefix: "\/guest",
+                LoginUser: {
+                    birthDate: null,
+                    callto: null,
+                    code: "KentaroYoshida@k-technology.co.jp",
+                    ctime: "2025-11-19T01:53:43.000Z",
+                    dateTimeLocale: null,
+                    description: null,
+                    email: "KentaroYoshida@k-technology.co.jp",
+                    employeeNumber: null,
+                    employeeType: null,
+                    entityType: "USER",
+                    extendedData: null,
+                    extensionNumber: null,
+                    formattedDescription: null,
+                    givenName: null,
+                    givenNameReading: null,
+                    id: "4",
+                    initials: null,
+                    isBuiltIn: false,
+                    joinDate: null,
+                    langLocale: null,
+                    localName: null,
+                    localNameLocale: null,
+                    locale: null,
+                    middleName: null,
+                    mobilePhone: null,
+                    mtime: "2025-11-19T23:59:28.000Z",
+                    name: "吉田 健太郎",
+                    numberLocale: null,
+                    office: null,
+                    phone: null,
+                    photo: {
+                        small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                        size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                        normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                        size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                        original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                        size_48_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_96_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                        size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                    },
+                    photoMd5: null,
+                    photoMime: null,
+                    primaryOrganization: null,
+                    removed: false,
+                    serviceFlags: null,
+                    sortOrder: null,
+                    surName: null,
+                    surNameReading: null,
+                    timezone: "Asia/Tokyo",
+                    url: null,
+                    valid: true,
+                },
+                DisplayLocale: "ja",
+                PersonalSettings: {
+                    locale: "ja",
+                    language: "ja",
+                },
+                IsMobileDevice: false,
+                MobileViewSelectableByUser: true,
+                MobileViewType: "MOBILE",
+                IsSlashAdministrator: false,
+                IsOutOfSpaceAppCreatable: true,
+                IsSystemManagementAccessible: true,
+                DisplayCommonize: false,
+                RequestToken: "95073c81-6ec0-47dc-bcd9-c62048531b1d",
+                ApiPrefixRelease: "\/api",
+                CurrentContext: "",
+                AvailableServices: {
+                    displayGaroon: false,
+                    displayOffice: false,
+                    displayMailwise: false,
+                    displayMailSharedOption: false,
+                },
+                HasOtherDomainSpace: false,
+                IsForceTutorialEnabled: false,
+                IsTrial: true,
+                ForSsoGuestUser: false,
+                AccessFrom: "jp",
+                DomainMap: {
+                    JP: "cybozu.com",
+                    CN: "cybozu.cn",
+                },
+                ProductUpdateFeedbackEnabled: true,
+                ImportExcelRearchitectEnabled: false,
+                HomeDomainFqdn: "",
+                ReactEnabledInitCookie: true,
+                IsKintoneAIAdminAccessible: false,
+                IsRagChatEnabled: false,
+                IsAILabAppSettingsFlowSupportEnabled: false,
+                IsAiLabAppDiscoveryEnabled: false,
+                CybozuDays2025AnnouncementEnabled: false,
+            };
+            window.__KINTONE_INITIAL_DATA__.header_global_navigation.AppId = "40";
+
+            window.__KINTONE_INITIAL_DATA__.header_global_navigation.AppDeployed = {
+                code: null,
+                createdAt: "2025-11-20T00:08:44.000Z",
+                creator: {
+                    birthDate: null,
+                    callto: null,
+                    code: "KentaroYoshida@k-technology.co.jp",
+                    ctime: "2025-11-19T01:53:43.000Z",
+                    dateTimeLocale: null,
+                    description: null,
+                    email: "KentaroYoshida@k-technology.co.jp",
+                    employeeNumber: null,
+                    employeeType: null,
+                    entityType: "USER",
+                    extendedData: null,
+                    extensionNumber: null,
+                    formattedDescription: null,
+                    givenName: null,
+                    givenNameReading: null,
+                    id: "4",
+                    initials: null,
+                    isBuiltIn: false,
+                    joinDate: null,
+                    langLocale: null,
+                    localName: null,
+                    localNameLocale: null,
+                    locale: null,
+                    middleName: null,
+                    mobilePhone: null,
+                    mtime: "2025-11-19T23:59:28.000Z",
+                    name: "吉田 健太郎",
+                    numberLocale: null,
+                    office: null,
+                    phone: null,
+                    photo: {
+                        small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                        size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                        normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                        size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                        original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                        size_48_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_96_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                        size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                    },
+                    photoMd5: null,
+                    photoMime: null,
+                    primaryOrganization: null,
+                    removed: false,
+                    serviceFlags: null,
+                    sortOrder: null,
+                    surName: null,
+                    surNameReading: null,
+                    timezone: "Asia/Tokyo",
+                    url: null,
+                    valid: true,
+                },
+                decimalPrecision: 16,
+                decimalScale: 4,
+                deployed: true,
+                description: "",
+                fiscalYearStartMonth: 4,
+                formattedDescription: "",
+                guest: false,
+                htmlDescription: "",
+                icons: {
+                    SMALL: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue-small.png",
+                    LARGE: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue-large.png",
+                    ORIGINAL:
+                        "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.png",
+                    FAVICON: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.ico",
+                    NORMAL: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.png",
+                },
+                id: "40",
+                modified: false,
+                modifiedAt: "2025-12-01T09:31:59.000Z",
+                modifier: {
+                    birthDate: null,
+                    callto: null,
+                    code: "KentaroYoshida@k-technology.co.jp",
+                    ctime: "2025-11-19T01:53:43.000Z",
+                    dateTimeLocale: null,
+                    description: null,
+                    email: "KentaroYoshida@k-technology.co.jp",
+                    employeeNumber: null,
+                    employeeType: null,
+                    entityType: "USER",
+                    extendedData: null,
+                    extensionNumber: null,
+                    formattedDescription: null,
+                    givenName: null,
+                    givenNameReading: null,
+                    id: "4",
+                    initials: null,
+                    isBuiltIn: false,
+                    joinDate: null,
+                    langLocale: null,
+                    localName: null,
+                    localNameLocale: null,
+                    locale: null,
+                    middleName: null,
+                    mobilePhone: null,
+                    mtime: "2025-11-19T23:59:28.000Z",
+                    name: "吉田 健太郎",
+                    numberLocale: null,
+                    office: null,
+                    phone: null,
+                    photo: {
+                        small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                        size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                        normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                        size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                        original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                        size_48_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_96_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                        size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                    },
+                    photoMd5: null,
+                    photoMime: null,
+                    primaryOrganization: null,
+                    removed: false,
+                    serviceFlags: null,
+                    sortOrder: null,
+                    surName: null,
+                    surNameReading: null,
+                    timezone: "Asia/Tokyo",
+                    url: null,
+                    valid: true,
+                },
+                name: "生産日報報告書(BOX)",
+                revision: "112",
+                roundingMode: "HALF_EVEN",
+                settings: {
+                    appFacadeId: "13458251",
+                    automaticallyChooseTitleComponent: true,
+                    automaticallyChooseTitleComponentId: "13457540",
+                    enableBulkDeletion: true,
+                    enableRecordReuse: true,
+                    jsScope: "ALL",
+                    reminderTimezone: null,
+                    settingsNotesWillBeInherited: false,
+                    theme: "PLAIN",
+                    titleComponentLocalId: null,
+                    useCategory: false,
+                    useComment: true,
+                    useCommentNotification: true,
+                    useHistory: true,
+                    useInlineEditAndDelete: true,
+                    useReminder: false,
+                    useStatus: false,
+                    useThumbnail: true,
+                    vtRowRevisionId: "0",
+                },
+                spaceId: null,
+            }["deployed"];
+        </script>
+        <script
+            src="https://static.cybozu.com/k/20251128054245_163_e2ff584/js/compiled-hiyoko/header-global-navigation/render-header-global-navigation.js"
+            type="module"
+        ></script>
+        <script>
+            cybozu.data.page["APP_ID"] = "40";
+            cybozu.data.page["APP_NAME"] = "生産日報報告書(BOX)";
+            cybozu.data.page["APP_DEPLOYED"] = true;
+            cybozu.data.page["APP_DATA"] = {
+                code: null,
+                createdAt: "2025-11-20T00:08:44.000Z",
+                creator: {
+                    birthDate: null,
+                    callto: null,
+                    code: "KentaroYoshida@k-technology.co.jp",
+                    ctime: "2025-11-19T01:53:43.000Z",
+                    dateTimeLocale: null,
+                    description: null,
+                    email: "KentaroYoshida@k-technology.co.jp",
+                    employeeNumber: null,
+                    employeeType: null,
+                    entityType: "USER",
+                    extendedData: null,
+                    extensionNumber: null,
+                    formattedDescription: null,
+                    givenName: null,
+                    givenNameReading: null,
+                    id: "4",
+                    initials: null,
+                    isBuiltIn: false,
+                    joinDate: null,
+                    langLocale: null,
+                    localName: null,
+                    localNameLocale: null,
+                    locale: null,
+                    middleName: null,
+                    mobilePhone: null,
+                    mtime: "2025-11-19T23:59:28.000Z",
+                    name: "吉田 健太郎",
+                    numberLocale: null,
+                    office: null,
+                    phone: null,
+                    photo: {
+                        small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                        size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                        normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                        size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                        original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                        size_48_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_96_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                        size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                    },
+                    photoMd5: null,
+                    photoMime: null,
+                    primaryOrganization: null,
+                    removed: false,
+                    serviceFlags: null,
+                    sortOrder: null,
+                    surName: null,
+                    surNameReading: null,
+                    timezone: "Asia/Tokyo",
+                    url: null,
+                    valid: true,
+                },
+                decimalPrecision: 16,
+                decimalScale: 4,
+                deployed: true,
+                description: "",
+                fiscalYearStartMonth: 4,
+                formattedDescription: "",
+                guest: false,
+                htmlDescription: "",
+                icons: {
+                    SMALL: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue-small.png",
+                    LARGE: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue-large.png",
+                    ORIGINAL:
+                        "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.png",
+                    FAVICON: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.ico",
+                    NORMAL: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue.png",
+                },
+                id: "40",
+                modified: false,
+                modifiedAt: "2025-12-01T09:31:59.000Z",
+                modifier: {
+                    birthDate: null,
+                    callto: null,
+                    code: "KentaroYoshida@k-technology.co.jp",
+                    ctime: "2025-11-19T01:53:43.000Z",
+                    dateTimeLocale: null,
+                    description: null,
+                    email: "KentaroYoshida@k-technology.co.jp",
+                    employeeNumber: null,
+                    employeeType: null,
+                    entityType: "USER",
+                    extendedData: null,
+                    extensionNumber: null,
+                    formattedDescription: null,
+                    givenName: null,
+                    givenNameReading: null,
+                    id: "4",
+                    initials: null,
+                    isBuiltIn: false,
+                    joinDate: null,
+                    langLocale: null,
+                    localName: null,
+                    localNameLocale: null,
+                    locale: null,
+                    middleName: null,
+                    mobilePhone: null,
+                    mtime: "2025-11-19T23:59:28.000Z",
+                    name: "吉田 健太郎",
+                    numberLocale: null,
+                    office: null,
+                    phone: null,
+                    photo: {
+                        small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                        size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                        normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                        size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                        original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                        size_48_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_96_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                        size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                    },
+                    photoMd5: null,
+                    photoMime: null,
+                    primaryOrganization: null,
+                    removed: false,
+                    serviceFlags: null,
+                    sortOrder: null,
+                    surName: null,
+                    surNameReading: null,
+                    timezone: "Asia/Tokyo",
+                    url: null,
+                    valid: true,
+                },
+                name: "生産日報報告書(BOX)",
+                revision: "112",
+                roundingMode: "HALF_EVEN",
+                settings: {
+                    appFacadeId: "13458251",
+                    automaticallyChooseTitleComponent: true,
+                    automaticallyChooseTitleComponentId: "13457540",
+                    enableBulkDeletion: true,
+                    enableRecordReuse: true,
+                    jsScope: "ALL",
+                    reminderTimezone: null,
+                    settingsNotesWillBeInherited: false,
+                    theme: "PLAIN",
+                    titleComponentLocalId: null,
+                    useCategory: false,
+                    useComment: true,
+                    useCommentNotification: true,
+                    useHistory: true,
+                    useInlineEditAndDelete: true,
+                    useReminder: false,
+                    useStatus: false,
+                    useThumbnail: true,
+                    vtRowRevisionId: "0",
+                },
+                spaceId: null,
+            };
+            cybozu.data.page["APP_PLUGIN_CONFIGS"] = {};
+            cybozu.data.page["OAUTH_TOKEN_AVAILABLE"] = {
+                availables: {},
+            }.availables;
+            cybozu.data.page["CSV_APP_CREATE"] = false;
+            cybozu.data.page["ALLOWED_APP_MOVE"] = {
+                reason: null,
+                type: "TO_SPACE_AND_OUT_OF_SPACE",
+            };
+            cybozu.data.page["RECORD_GET_PERMISSIONS_JSAPI_ENABLED"] = false;
+            cybozu.data["APP_GET_PERMISSIONS_JSAPI_ENABLED"] = false;
+
+            // User selector setting
+            cybozu.data["USER_SELECT_SETTING"] = {
+                container_width: "200px",
+                multiple: false,
+                search: gaia.uri.api("/directory/search"),
+                menu: {
+                    org: {
+                        name: cybozu.i18n.getMsg("js.cybozu.ui.forms.UserSelect.organization"),
+                        url: {
+                            list: "\/api/org/descendent",
+                            users: "\/api/org/users",
+                        },
+                    },
+                    group: {
+                        name: cybozu.i18n.getMsg("js.cybozu.ui.forms.UserSelect.group"),
+                        url: {
+                            list: "\/api/group/list",
+                            users: "\/api/group/users",
+                        },
+                    },
+                    loginuser: {
+                        name: cybozu.i18n.getMsg("js.cybozu.ui.forms.UserSelect.loginuser"),
+                        url: {
+                            list: "\/api/user/get",
+                        },
+                    },
+                },
+                rootOrgId: "7532782697181632512",
+                includeDir: true,
+                noAction: true,
+                myId: cybozu.data["LOGIN_USER"]["id"],
+                fixedOrder: true,
+            };
+        </script>
+        <script>
+            cybozu.data.page.APP_RIGHT = {
+                appAccessible: true,
+                appEditable: true,
+                appId: "40",
+                recordAddable: true,
+                recordDeletable: true,
+                recordEditable: true,
+                recordExportable: true,
+                recordImportable: true,
+                recordViewable: true,
+            };
+            cybozu.data.page.FORM_DATA = {
+                deployedFields: [
+                    "13457549",
+                    "13457933",
+                    "13457868",
+                    "13457545",
+                    "13457544",
+                    "13457867",
+                    "13457605",
+                    "13457540",
+                    "13457543",
+                    "13457601",
+                    "13457600",
+                    "13457539",
+                    "13457603",
+                    "13457602",
+                    "13457885",
+                    "13457884",
+                    "13457886",
+                    "13457945",
+                    "13457944",
+                    "13457947",
+                    "13457883",
+                    "13457946",
+                    "13457882",
+                    "13457943",
+                    "13458387",
+                    "13458450",
+                    "13457517",
+                    "13457516",
+                    "13458156",
+                    "13457519",
+                    "13457518",
+                    "13457646",
+                    "13458158",
+                    "13457513",
+                    "13457512",
+                    "13457515",
+                    "13457514",
+                    "13457895",
+                    "13457894",
+                    "13457889",
+                    "13457952",
+                    "13457890",
+                    "13457599",
+                    "13457913",
+                    "13457844",
+                    "13457843",
+                    "13457842",
+                ],
+                layout: '[{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":246},"type":"SINGLE_LINE_TEXT","var":"ルックアップ","label":"社員番号"},{"isVirtical":true,"styleMap":{"width":193},"type":"SINGLE_LINE_TEXT","var":"user_name","label":"名前"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"styleMap":{"width":764},"type":"HR"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":117},"type":"DATE","var":"date","label":"生産日"},{"styleMap":{"width":212,"height":66},"elementId":"line_name_drop","type":"SPACER"},{"isVirtical":true,"styleMap":{"width":193},"type":"SINGLE_LINE_TEXT","var":"line_name","label":"ライン名"},{"styleMap":{"width":224,"height":66},"elementId":"model_name_drop","type":"SPACER"},{"isVirtical":true,"styleMap":{"width":220},"type":"SINGLE_LINE_TEXT","var":"model_name","label":"機種名"},{"isVirtical":true,"styleMap":{"width":193},"type":"SINGLE_LINE_TEXT","var":"model_code","label":"BKC"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"styleMap":{"width":764},"type":"HR"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"label":"\\u003Cdiv\\u003E\\u003Cdiv style=\\"text-align:left\\"\\u003E\\u003Cfont size=\\"4\\"\\u003E■生産実績\\u003C/font\\u003E\\u003C/div\\u003E\\u003C/div\\u003E","styleMap":{"width":154},"formatted":"\\u003Cdiv\\u003E\\u003Cdiv style=\\"text-align:left\\"\\u003E\\u003Cfont size=\\"4\\"\\u003E■生産実績\\u003C/font\\u003E\\u003C/div\\u003E\\u003C/div\\u003E","type":"LABEL"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"production_number","label":"予定台数"},{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"target_number","label":"目標台数"},{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"actual_number","label":"実績台数"},{"isVirtical":true,"styleMap":{"width":193},"type":"CALC","var":"productivity","label":"生産性"}]},{"id":"13457604","type":"SUBTABLE","isSubTable":true,"var":"man_hours_table","label":"工数","controlList":[{"isVirtical":true,"styleMap":{"width":116},"type":"SINGLE_CHECK","var":"work_type","label":"勤務区分","align":"vertical"},{"isVirtical":true,"styleMap":{"width":116},"type":"SINGLE_CHECK","var":"personnel_type","label":"人員区分","align":"vertical"},{"isVirtical":true,"styleMap":{"width":96},"type":"DECIMAL","var":"数値_2","label":"作業時間"},{"isVirtical":true,"styleMap":{"width":75},"type":"DECIMAL","var":"数値_4","label":"人数"},{"isVirtical":true,"styleMap":{"width":126},"type":"CALC","var":"man_hours","label":"工数"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{},"canvasData":[{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"inside_time","label":"社内定時合計"},{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"outside_time","label":"社外定時合計"},{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"inside_overtime","label":"社内残業合計"},{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"outside_overtime","label":"社外残業合計"}]}],"type":"GROUP","var":"グループ","label":"グループ"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"styleMap":{"width":752},"type":"HR"}]},{"id":"13457852","type":"SUBTABLE","isSubTable":true,"var":"chg_o_table","label":"4M変更(その他)","controlList":[{"isVirtical":true,"styleMap":{"width":116},"type":"SINGLE_SELECT","var":"ドロップダウン_0","label":"分類"},{"isVirtical":true,"styleMap":{"width":321},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__5","label":"変化点"},{"isVirtical":true,"styleMap":{"width":743},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__6","label":"注意点"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"styleMap":{"width":752},"type":"HR"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"label":"\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E■品質状況\\u003C/font\\u003E\\u003C/div\\u003E","styleMap":{"width":122},"formatted":"\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E■品質状況\\u003C/font\\u003E\\u003C/div\\u003E","type":"LABEL"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":529},"type":"SINGLE_CHECK","var":"ラジオボタン_1","label":"アラーム","align":"horizontal"}]},{"id":"13457853","type":"SUBTABLE","isSubTable":true,"var":"deflist_table","label":"不良一覧","controlList":[{"isVirtical":true,"styleMap":{"width":144},"type":"SINGLE_LINE_TEXT","var":"ルックアップ_0","label":"選択"},{"isVirtical":true,"styleMap":{"width":185},"type":"SINGLE_LINE_TEXT","var":"defect_name","label":"不良名"},{"isVirtical":true,"styleMap":{"width":83},"type":"DECIMAL","var":"数値_1","label":"件数"},{"isVirtical":true,"styleMap":{"width":124},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__4","label":"リファレンス"},{"isVirtical":true,"styleMap":{"width":318},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__15","label":"波及性有無と理由(他の製品に問題はないか)"},{"isVirtical":true,"styleMap":{"width":306},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__16","label":"原因"},{"isVirtical":true,"styleMap":{"width":298},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__17","label":"対策"},{"isVirtical":true,"styleMap":{"width":131},"type":"SINGLE_LINE_TEXT","var":"文字列__1行__18","label":"その他"},{"isVirtical":true,"styleMap":{"width":116},"type":"SINGLE_SELECT","var":"ドロップダウン","label":"分類"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"label":"\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;↖「取得」ボタンを押してリストから選択すると、不良名が自動入力されます。\\u003C/font\\u003E\\u003C/div\\u003E\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E　　&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;リストに存在しない場合は、\\u003Cb\\u003E「不良名」\\u003C/b\\u003E欄へ直接入力してください。\\u003C/font\\u003E\\u003C/div\\u003E\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;訂正する場合は、\\u003Cstrong\\u003E「クリア」ボタンを押してから\\u003C/strong\\u003E 再度選択してください。\\u003C/font\\u003E\\u003C/div\\u003E","styleMap":{"width":1787},"formatted":"\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E           ↖「取得」ボタンを押してリストから選択すると、不良名が自動入力されます。\\u003C/font\\u003E\\u003C/div\\u003E\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E　　        リストに存在しない場合は、\\u003Cb\\u003E「不良名」\\u003C/b\\u003E欄へ直接入力してください。\\u003C/font\\u003E\\u003C/div\\u003E\\u003Cdiv\\u003E\\u003Cfont size=\\"4\\"\\u003E              訂正する場合は、\\u003Cstrong\\u003E「クリア」ボタンを押してから\\u003C/strong\\u003E 再度選択してください。\\u003C/font\\u003E\\u003C/div\\u003E","type":"LABEL"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":1705,"height":162,"innerHeight":125},"type":"MULTIPLE_LINE_TEXT","var":"文字列__複数行_","label":"メモ"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{},"canvasData":[{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":193},"type":"SINGLE_LINE_TEXT","var":"man_hours_text","label":"工数"},{"isVirtical":true,"styleMap":{"width":193},"type":"SINGLE_LINE_TEXT","var":"chg_o_text","label":"4M変更(その他)"},{"isVirtical":true,"styleMap":{"width":193},"type":"SINGLE_LINE_TEXT","var":"deflist_text","label":"不良一覧"}]},{"id":null,"type":"ROW","isSubTable":false,"var":null,"label":null,"controlList":[{"isVirtical":true,"styleMap":{"width":193},"type":"DECIMAL","var":"added_value","label":"付加価値"}]}],"type":"GROUP","var":"グループ_0","label":"グループ"}]}]',
+                lookups: [
+                    {
+                        fieldMappings: [
+                            {
+                                fieldId: "13457540",
+                                targetFieldId: "13457534",
+                            },
+                        ],
+                        id: "13458247",
+                        keyMapping: {
+                            fieldId: "13457539",
+                            targetFieldId: "13457533",
+                        },
+                        keyTargetFieldAccessible: true,
+                        listFields: ["13457534"],
+                        query: {
+                            condition: null,
+                            limit: null,
+                            offset: null,
+                            orders: [
+                                {
+                                    name: "f13457525",
+                                    op: "DESC",
+                                },
+                            ],
+                        },
+                        targetApp: {
+                            accessible: true,
+                            icon: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue-small.png",
+                            id: "39",
+                            name: "ユーザーマスタ",
+                            schema: {
+                                groups: [],
+                                revision: "4",
+                                subTable: {},
+                                table: {
+                                    fieldList: {
+                                        13457525: {
+                                            id: "13457525",
+                                            label: "レコード番号",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "RECORD_ID",
+                                            var: "レコード番号",
+                                        },
+                                        13457526: {
+                                            id: "13457526",
+                                            label: "更新者",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "MODIFIER",
+                                            var: "更新者",
+                                        },
+                                        13457527: {
+                                            id: "13457527",
+                                            label: "作成者",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "CREATOR",
+                                            var: "作成者",
+                                        },
+                                        13457528: {
+                                            id: "13457528",
+                                            label: "更新日時",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "MODIFIED_AT",
+                                            var: "更新日時",
+                                        },
+                                        13457529: {
+                                            id: "13457529",
+                                            label: "作成日時",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "CREATED_AT",
+                                            var: "作成日時",
+                                        },
+                                        13457530: {
+                                            id: "13457530",
+                                            label: "ステータス",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "false",
+                                            },
+                                            type: "STATUS",
+                                            var: "ステータス",
+                                        },
+                                        13457531: {
+                                            id: "13457531",
+                                            label: "作業者",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "false",
+                                            },
+                                            type: "STATUS_ASSIGNEE",
+                                            var: "作業者",
+                                        },
+                                        13457532: {
+                                            id: "13457532",
+                                            label: "カテゴリー",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "false",
+                                            },
+                                            type: "CATEGORY",
+                                            var: "カテゴリー",
+                                        },
+                                        13457533: {
+                                            id: "13457533",
+                                            label: "社員番号",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: "64",
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "true",
+                                                unique: "true",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "user_code",
+                                        },
+                                        13457534: {
+                                            id: "13457534",
+                                            label: "名前",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: null,
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "true",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "use_name",
+                                        },
+                                        13457626: {
+                                            id: "13457626",
+                                            label: "会社名",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: null,
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "false",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "company",
+                                        },
+                                        13457627: {
+                                            id: "13457627",
+                                            label: "所属",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: null,
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "false",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "deputy",
+                                        },
+                                        13457629: {
+                                            id: "13457629",
+                                            label: "所属ライン",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: null,
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "false",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "line",
+                                        },
+                                        13457954: {
+                                            id: "13457954",
+                                            label: "分類",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: null,
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "false",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "文字列__1行_",
+                                        },
+                                    },
+                                    id: "1",
+                                    label: "__ROOT__",
+                                    properties: null,
+                                    var: "__ROOT__",
+                                },
+                            },
+                            spaceId: null,
+                            status: null,
+                            useCategory: false,
+                        },
+                        unAccessibleFieldIds: [],
+                    },
+                    {
+                        fieldMappings: [
+                            {
+                                fieldId: "13457913",
+                                targetFieldId: "13458384",
+                            },
+                        ],
+                        id: "13458388",
+                        keyMapping: {
+                            fieldId: "13458387",
+                            targetFieldId: "13458384",
+                        },
+                        keyTargetFieldAccessible: true,
+                        listFields: ["13458442", "13458384"],
+                        query: {
+                            condition: null,
+                            limit: null,
+                            offset: null,
+                            orders: [
+                                {
+                                    name: "f13458442",
+                                    op: "ASC",
+                                },
+                                {
+                                    name: "f13458384",
+                                    op: "DESC",
+                                },
+                            ],
+                        },
+                        targetApp: {
+                            accessible: true,
+                            icon: "https://static.cybozu.com/contents/k/image/icon/app/appTableBlue-small.png",
+                            id: "53",
+                            name: "不良名マスタ",
+                            schema: {
+                                groups: [],
+                                revision: "11",
+                                subTable: {},
+                                table: {
+                                    fieldList: {
+                                        13458375: {
+                                            id: "13458375",
+                                            label: "レコード番号",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "RECORD_ID",
+                                            var: "レコード番号",
+                                        },
+                                        13458376: {
+                                            id: "13458376",
+                                            label: "更新者",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "MODIFIER",
+                                            var: "更新者",
+                                        },
+                                        13458377: {
+                                            id: "13458377",
+                                            label: "作成者",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "CREATOR",
+                                            var: "作成者",
+                                        },
+                                        13458378: {
+                                            id: "13458378",
+                                            label: "更新日時",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "MODIFIED_AT",
+                                            var: "更新日時",
+                                        },
+                                        13458379: {
+                                            id: "13458379",
+                                            label: "作成日時",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "true",
+                                            },
+                                            type: "CREATED_AT",
+                                            var: "作成日時",
+                                        },
+                                        13458380: {
+                                            id: "13458380",
+                                            label: "ステータス",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "false",
+                                            },
+                                            type: "STATUS",
+                                            var: "ステータス",
+                                        },
+                                        13458381: {
+                                            id: "13458381",
+                                            label: "作業者",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "false",
+                                            },
+                                            type: "STATUS_ASSIGNEE",
+                                            var: "作業者",
+                                        },
+                                        13458382: {
+                                            id: "13458382",
+                                            label: "カテゴリー",
+                                            properties: {
+                                                noLabel: "false",
+                                                required: "false",
+                                            },
+                                            type: "CATEGORY",
+                                            var: "カテゴリー",
+                                        },
+                                        13458384: {
+                                            id: "13458384",
+                                            label: "不良名",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: "64",
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "true",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "defectName",
+                                        },
+                                        13458442: {
+                                            id: "13458442",
+                                            label: "ライン名",
+                                            properties: {
+                                                defaultValue: "",
+                                                expression: "",
+                                                hideExpression: "false",
+                                                max: null,
+                                                min: null,
+                                                noLabel: "false",
+                                                required: "true",
+                                                unique: "false",
+                                            },
+                                            type: "SINGLE_LINE_TEXT",
+                                            var: "lineName",
+                                        },
+                                    },
+                                    id: "1",
+                                    label: "__ROOT__",
+                                    properties: null,
+                                    var: "__ROOT__",
+                                },
+                            },
+                            spaceId: null,
+                            status: null,
+                            useCategory: false,
+                        },
+                        unAccessibleFieldIds: [],
+                    },
+                ],
+                referenceTables: [],
+                revision: "25",
+                schema: {
+                    groups: [
+                        {
+                            childLocalId: "13457882",
+                            vtComponentLocalId: "13457886",
+                        },
+                        {
+                            childLocalId: "13457883",
+                            vtComponentLocalId: "13457886",
+                        },
+                        {
+                            childLocalId: "13457884",
+                            vtComponentLocalId: "13457886",
+                        },
+                        {
+                            childLocalId: "13457885",
+                            vtComponentLocalId: "13457886",
+                        },
+                        {
+                            childLocalId: "13457890",
+                            vtComponentLocalId: "13457889",
+                        },
+                        {
+                            childLocalId: "13457894",
+                            vtComponentLocalId: "13457889",
+                        },
+                        {
+                            childLocalId: "13457895",
+                            vtComponentLocalId: "13457889",
+                        },
+                        {
+                            childLocalId: "13458158",
+                            vtComponentLocalId: "13457889",
+                        },
+                    ],
+                    revision: "106",
+                    subTable: {
+                        13457604: {
+                            fieldList: {
+                                13457599: {
+                                    id: "13457599",
+                                    label: "勤務区分",
+                                    properties: {
+                                        defaultValue: "13457590",
+                                        noLabel: "false",
+                                        options: [
+                                            {
+                                                id: "13457590",
+                                                label: "通常",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457591",
+                                                label: "残業",
+                                                valid: true,
+                                            },
+                                        ],
+                                        required: "true",
+                                    },
+                                    type: "SINGLE_CHECK",
+                                    var: "work_type",
+                                },
+                                13457600: {
+                                    id: "13457600",
+                                    label: "人員区分",
+                                    properties: {
+                                        defaultValue: "13457592",
+                                        noLabel: "false",
+                                        options: [
+                                            {
+                                                id: "13457592",
+                                                label: "社内",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457593",
+                                                label: "社外",
+                                                valid: true,
+                                            },
+                                        ],
+                                        required: "true",
+                                    },
+                                    type: "SINGLE_CHECK",
+                                    var: "personnel_type",
+                                },
+                                13457601: {
+                                    id: "13457601",
+                                    label: "作業時間",
+                                    properties: {
+                                        defaultValue: null,
+                                        digit: "false",
+                                        displayScale: null,
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        roundingMode: null,
+                                        scale: null,
+                                        unique: "false",
+                                        unit: "時間",
+                                        unitPosition: "AFTER",
+                                    },
+                                    type: "DECIMAL",
+                                    var: "数値_2",
+                                },
+                                13457602: {
+                                    id: "13457602",
+                                    label: "人数",
+                                    properties: {
+                                        defaultValue: null,
+                                        digit: "false",
+                                        displayScale: null,
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        roundingMode: null,
+                                        scale: null,
+                                        unique: "false",
+                                        unit: "名",
+                                        unitPosition: "AFTER",
+                                    },
+                                    type: "DECIMAL",
+                                    var: "数値_4",
+                                },
+                                13457603: {
+                                    id: "13457603",
+                                    label: "工数",
+                                    properties: {
+                                        displayScale: null,
+                                        expression: "数値_2 * 数値_4",
+                                        format: "NUMBER",
+                                        hideExpression: "true",
+                                        noLabel: "false",
+                                        required: "false",
+                                        roundingMode: null,
+                                        scale: null,
+                                        unit: "時間",
+                                        unitPosition: "AFTER",
+                                    },
+                                    type: "CALC",
+                                    var: "man_hours",
+                                },
+                            },
+                            id: "13457604",
+                            label: "工数",
+                            properties: {
+                                noLabel: "false",
+                            },
+                            var: "man_hours_table",
+                        },
+                        13457852: {
+                            fieldList: {
+                                13457842: {
+                                    id: "13457842",
+                                    label: "分類",
+                                    properties: {
+                                        defaultValue: null,
+                                        noLabel: "false",
+                                        options: [
+                                            {
+                                                id: "13457826",
+                                                label: "人",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13458049",
+                                                label: "機械",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457827",
+                                                label: "材料",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457831",
+                                                label: "方法",
+                                                valid: true,
+                                            },
+                                        ],
+                                        required: "false",
+                                    },
+                                    type: "SINGLE_SELECT",
+                                    var: "ドロップダウン_0",
+                                },
+                                13457843: {
+                                    id: "13457843",
+                                    label: "変化点",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__5",
+                                },
+                                13457844: {
+                                    id: "13457844",
+                                    label: "注意点",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__6",
+                                },
+                            },
+                            id: "13457852",
+                            label: "4M変更(その他)",
+                            properties: {
+                                noLabel: "false",
+                            },
+                            var: "chg_o_table",
+                        },
+                        13457853: {
+                            fieldList: {
+                                13457913: {
+                                    id: "13457913",
+                                    label: "不良名",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "defect_name",
+                                },
+                                13457933: {
+                                    id: "13457933",
+                                    label: "件数",
+                                    properties: {
+                                        defaultValue: null,
+                                        digit: "false",
+                                        displayScale: null,
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        roundingMode: null,
+                                        scale: null,
+                                        unique: "false",
+                                        unit: "件",
+                                        unitPosition: "AFTER",
+                                    },
+                                    type: "DECIMAL",
+                                    var: "数値_1",
+                                },
+                                13457943: {
+                                    id: "13457943",
+                                    label: "リファレンス",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__4",
+                                },
+                                13457944: {
+                                    id: "13457944",
+                                    label: "波及性有無と理由(他の製品に問題はないか)",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__15",
+                                },
+                                13457945: {
+                                    id: "13457945",
+                                    label: "原因",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__16",
+                                },
+                                13457946: {
+                                    id: "13457946",
+                                    label: "対策",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__17",
+                                },
+                                13457947: {
+                                    id: "13457947",
+                                    label: "その他",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "文字列__1行__18",
+                                },
+                                13457952: {
+                                    id: "13457952",
+                                    label: "分類",
+                                    properties: {
+                                        defaultValue: null,
+                                        noLabel: "false",
+                                        options: [
+                                            {
+                                                id: "13457948",
+                                                label: "L",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457949",
+                                                label: "P",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457950",
+                                                label: "SMT",
+                                                valid: true,
+                                            },
+                                            {
+                                                id: "13457951",
+                                                label: "その他",
+                                                valid: true,
+                                            },
+                                        ],
+                                        required: "false",
+                                    },
+                                    type: "SINGLE_SELECT",
+                                    var: "ドロップダウン",
+                                },
+                                13458387: {
+                                    id: "13458387",
+                                    label: "選択",
+                                    properties: {
+                                        defaultValue: "",
+                                        expression: "",
+                                        hideExpression: "false",
+                                        max: null,
+                                        min: null,
+                                        noLabel: "false",
+                                        required: "false",
+                                        unique: "false",
+                                    },
+                                    type: "SINGLE_LINE_TEXT",
+                                    var: "ルックアップ_0",
+                                },
+                            },
+                            id: "13457853",
+                            label: "不良一覧",
+                            properties: {
+                                noLabel: "false",
+                            },
+                            var: "deflist_table",
+                        },
+                    },
+                    table: {
+                        fieldList: {
+                            13457512: {
+                                id: "13457512",
+                                label: "レコード番号",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "true",
+                                },
+                                type: "RECORD_ID",
+                                var: "レコード番号",
+                            },
+                            13457513: {
+                                id: "13457513",
+                                label: "更新者",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "true",
+                                },
+                                type: "MODIFIER",
+                                var: "更新者",
+                            },
+                            13457514: {
+                                id: "13457514",
+                                label: "作成者",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "true",
+                                },
+                                type: "CREATOR",
+                                var: "作成者",
+                            },
+                            13457515: {
+                                id: "13457515",
+                                label: "更新日時",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "true",
+                                },
+                                type: "MODIFIED_AT",
+                                var: "更新日時",
+                            },
+                            13457516: {
+                                id: "13457516",
+                                label: "作成日時",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "true",
+                                },
+                                type: "CREATED_AT",
+                                var: "作成日時",
+                            },
+                            13457517: {
+                                id: "13457517",
+                                label: "ステータス",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "false",
+                                },
+                                type: "STATUS",
+                                var: "ステータス",
+                            },
+                            13457518: {
+                                id: "13457518",
+                                label: "作業者",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "false",
+                                },
+                                type: "STATUS_ASSIGNEE",
+                                var: "作業者",
+                            },
+                            13457519: {
+                                id: "13457519",
+                                label: "カテゴリー",
+                                properties: {
+                                    noLabel: "false",
+                                    required: "false",
+                                },
+                                type: "CATEGORY",
+                                var: "カテゴリー",
+                            },
+                            13457539: {
+                                id: "13457539",
+                                label: "社員番号",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "ルックアップ",
+                            },
+                            13457540: {
+                                id: "13457540",
+                                label: "名前",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "user_name",
+                            },
+                            13457543: {
+                                id: "13457543",
+                                label: "予定台数",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "true",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "台",
+                                    unitPosition: "AFTER",
+                                },
+                                type: "DECIMAL",
+                                var: "production_number",
+                            },
+                            13457544: {
+                                id: "13457544",
+                                label: "目標台数",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "true",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "台",
+                                    unitPosition: "AFTER",
+                                },
+                                type: "DECIMAL",
+                                var: "target_number",
+                            },
+                            13457545: {
+                                id: "13457545",
+                                label: "実績台数",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "true",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "台",
+                                    unitPosition: "AFTER",
+                                },
+                                type: "DECIMAL",
+                                var: "actual_number",
+                            },
+                            13457549: {
+                                id: "13457549",
+                                label: "生産日",
+                                properties: {
+                                    defaultExpression: "NOW",
+                                    defaultValue: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    unique: "false",
+                                },
+                                type: "DATE",
+                                var: "date",
+                            },
+                            13457605: {
+                                id: "13457605",
+                                label: "生産性",
+                                properties: {
+                                    displayScale: "0",
+                                    expression: "actual_number / production_number * 100",
+                                    format: "NUMBER_DIGIT",
+                                    hideExpression: "true",
+                                    noLabel: "false",
+                                    required: "false",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unit: "%",
+                                    unitPosition: "AFTER",
+                                },
+                                type: "CALC",
+                                var: "productivity",
+                            },
+                            13457646: {
+                                id: "13457646",
+                                label: "アラーム",
+                                properties: {
+                                    defaultValue: "13457645",
+                                    noLabel: "false",
+                                    options: [
+                                        {
+                                            id: "13457644",
+                                            label: "有り",
+                                            valid: true,
+                                        },
+                                        {
+                                            id: "13457645",
+                                            label: "無し",
+                                            valid: true,
+                                        },
+                                    ],
+                                    required: "true",
+                                },
+                                type: "SINGLE_CHECK",
+                                var: "ラジオボタン_1",
+                            },
+                            13457867: {
+                                id: "13457867",
+                                label: "機種名",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "model_name",
+                            },
+                            13457868: {
+                                id: "13457868",
+                                label: "ライン名",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "line_name",
+                            },
+                            13457882: {
+                                id: "13457882",
+                                label: "社内定時合計",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "false",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "",
+                                    unitPosition: "BEFORE",
+                                },
+                                type: "DECIMAL",
+                                var: "inside_time",
+                            },
+                            13457883: {
+                                id: "13457883",
+                                label: "社外定時合計",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "false",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "",
+                                    unitPosition: "BEFORE",
+                                },
+                                type: "DECIMAL",
+                                var: "outside_time",
+                            },
+                            13457884: {
+                                id: "13457884",
+                                label: "社内残業合計",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "false",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "",
+                                    unitPosition: "BEFORE",
+                                },
+                                type: "DECIMAL",
+                                var: "inside_overtime",
+                            },
+                            13457885: {
+                                id: "13457885",
+                                label: "社外残業合計",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "false",
+                                    displayScale: null,
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "",
+                                    unitPosition: "BEFORE",
+                                },
+                                type: "DECIMAL",
+                                var: "outside_overtime",
+                            },
+                            13457886: {
+                                id: "13457886",
+                                label: "グループ",
+                                properties: {
+                                    noLabel: "true",
+                                    open: "false",
+                                    required: "false",
+                                },
+                                type: "GROUP",
+                                var: "グループ",
+                            },
+                            13457889: {
+                                id: "13457889",
+                                label: "グループ",
+                                properties: {
+                                    noLabel: "false",
+                                    open: "false",
+                                    required: "false",
+                                },
+                                type: "GROUP",
+                                var: "グループ_0",
+                            },
+                            13457890: {
+                                id: "13457890",
+                                label: "工数",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "man_hours_text",
+                            },
+                            13457894: {
+                                id: "13457894",
+                                label: "4M変更(その他)",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "chg_o_text",
+                            },
+                            13457895: {
+                                id: "13457895",
+                                label: "不良一覧",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "deflist_text",
+                            },
+                            13458156: {
+                                id: "13458156",
+                                label: "BKC",
+                                properties: {
+                                    defaultValue: "",
+                                    expression: "",
+                                    hideExpression: "false",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "true",
+                                    unique: "false",
+                                },
+                                type: "SINGLE_LINE_TEXT",
+                                var: "model_code",
+                            },
+                            13458158: {
+                                id: "13458158",
+                                label: "付加価値",
+                                properties: {
+                                    defaultValue: null,
+                                    digit: "false",
+                                    displayScale: "2",
+                                    max: null,
+                                    min: null,
+                                    noLabel: "false",
+                                    required: "false",
+                                    roundingMode: null,
+                                    scale: null,
+                                    unique: "false",
+                                    unit: "",
+                                    unitPosition: "BEFORE",
+                                },
+                                type: "DECIMAL",
+                                var: "added_value",
+                            },
+                            13458450: {
+                                id: "13458450",
+                                label: "メモ",
+                                properties: {
+                                    defaultValue: "",
+                                    noLabel: "false",
+                                    required: "false",
+                                },
+                                type: "MULTIPLE_LINE_TEXT",
+                                var: "文字列__複数行_",
+                            },
+                        },
+                        id: "1",
+                        label: "__ROOT__",
+                        properties: null,
+                        var: "__ROOT__",
+                    },
+                },
+            };
+            cybozu.data.page.SCHEMA_DATA = cybozu.data.page.FORM_DATA["schema"];
+            cybozu.data.page.CATEGORY_DATA = {
+                categories: [],
+                useCategory: "false",
+            };
+            cybozu.data.page.FIELD_ACCESS_CONTROL = {
+                right: {
+                    appId: "40",
+                    fields: {
+                        13457549: "WRITE",
+                        13457933: "WRITE",
+                        13457868: "WRITE",
+                        13457545: "WRITE",
+                        13457544: "WRITE",
+                        13457867: "WRITE",
+                        13457605: "WRITE",
+                        13457540: "WRITE",
+                        13457543: "WRITE",
+                        13457601: "WRITE",
+                        13457600: "WRITE",
+                        13457539: "WRITE",
+                        13457603: "WRITE",
+                        13457602: "WRITE",
+                        13457885: "WRITE",
+                        13457884: "WRITE",
+                        13457886: "WRITE",
+                        13457945: "WRITE",
+                        13457944: "WRITE",
+                        13457947: "WRITE",
+                        13457883: "WRITE",
+                        13457946: "WRITE",
+                        13457882: "WRITE",
+                        13457943: "WRITE",
+                        13458387: "WRITE",
+                        13458450: "WRITE",
+                        13457516: "READ",
+                        13458156: "WRITE",
+                        13457518: "READ",
+                        13457646: "WRITE",
+                        13458158: "WRITE",
+                        13457513: "READ",
+                        13457512: "READ",
+                        13457515: "READ",
+                        13457514: "READ",
+                        13457895: "WRITE",
+                        13457894: "WRITE",
+                        13457889: "WRITE",
+                        13457952: "WRITE",
+                        13457890: "WRITE",
+                        13457599: "WRITE",
+                        13457913: "WRITE",
+                        13457844: "WRITE",
+                        13457843: "WRITE",
+                        13457842: "WRITE",
+                    },
+                },
+            };
+            cybozu.data.page.IS_USER_FAVORITE = false;
+            cybozu.data.page.APP_RECORD_REUSE = false;
+            cybozu.data.page.FORMULA_SOURCES = ["13457543", "13457545", "13457601", "13457602"];
+            cybozu.data.page.SETTING_DATA = {};
+            cybozu.data.page.QUERY_EMPTY_FOR_MULTIPLE_LINE_TEXT_ENABLED = true;
+            cybozu.data.page.QUERY_INCLUDE_SINGLE_CHAR_ENABLED = false;
+            cybozu.data.page.PARTIAL_MATCH_FOR_LOOKUP_ENABLED = false;
+            cybozu.data.page.IS_MAINTENANCE_AVAILABLE_USER = false;
+            cybozu.data.page.QUERY_EMPTY_FOR_FILE_ENABLED = true;
+            cybozu.data.page.DATE_FORMAT_I18N_ENABLED = true;
+            cybozu.data.page.DECIMAL_FORMAT_I18N_ENABLED = true;
+
+            cybozu.data.page.IS_ATTACHED_APP = true;
+            cybozu.data.page.ATTACHED_SPACE = {
+                announcementShown: true,
+                appCreationRight: "ADMIN",
+                appListShown: true,
+                body: '\u003Cdiv\u003E\u003Cimg class="ocean-ui-editor-kintone-app" data-app="40" data-view="13458290" data-view-count="50" /\u003E\u003C/div\u003E\u003Cdiv\u003E\u003Cbr /\u003E\u003C/div\u003E',
+                coverKey: "20251125044934A8C0011E947847A482496FC1A1CDF82C157",
+                coverType: "BLOB",
+                coverUrl:
+                    "https://2pjcypqjfl8m.cybozu.com/k/api/space/cover/download.do?spaceId=3&r=true&hash=A8C00",
+                createdAt: "2025-11-25T04:49:35.000Z",
+                creator: null,
+                defaultThread: "5",
+                finished: false,
+                finishedAt: null,
+                fixedMember: false,
+                formattedBody:
+                    '\u003Cdiv\u003E\u003Cimg class="ocean-ui-editor-kintone-app" data-app="40" data-view="13458290" data-view-count="50" src=""\u003E\u003C/div\u003E\u003Cdiv\u003E\u003Cbr\u003E\u003C/div\u003E',
+                id: "3",
+                isEditable: null,
+                isGuest: false,
+                isPrivate: true,
+                isTemplatable: null,
+                memberCount: 10,
+                modifiedAt: "2025-11-28T04:14:51.000Z",
+                modifier: null,
+                name: "製造課",
+                peopleListShown: true,
+                relatedLinkListShown: true,
+                threadListShown: true,
+                useMultiThread: true,
+            };
+        </script>
+        <script src="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?jsType=DESKTOP&amp;contentId=2281&amp;hash=c24ac56d4cbbde01ee561899912bb226e4775a8b&amp;_lc=ja"></script>
+        <script src="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP&amp;contentId=3982&amp;hash=4c1aa2d660616cf0a640b4971e68dbb2873ad56a"></script>
+        <script src="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP&amp;contentId=3986&amp;hash=b7ea5bb54260e5e70fcd3dccd34884a266db97be"></script>
+        <script src="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP&amp;contentId=3989&amp;hash=dec6ba2a76cc6a3189fba14b1412755017923308"></script>
+        <script src="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP&amp;contentId=3990&amp;hash=3d91cca54b6dd4b4ac69af7f032b9e84e4d2eb47"></script>
+        <script src="https://2pjcypqjfl8m.cybozu.com/k/api/js/download.do?app=40&amp;jsType=DESKTOP&amp;contentId=3991&amp;hash=e49adf6179a99f15121ba9013801f1ce5450c755"></script>
+        <script>
+            cybozu.data["CUSTOMIZE_JS_LOADED"] = true;
+        </script>
+        <script>
+            window.__KINTONE_INITIAL_DATA__ ||= {};
+            window.__KINTONE_INITIAL_DATA__.web_worker = {
+                requestToken: "95073c81-6ec0-47dc-bcd9-c62048531b1d",
+                loginUser: {
+                    birthDate: null,
+                    callto: null,
+                    code: "KentaroYoshida@k-technology.co.jp",
+                    ctime: "2025-11-19T01:53:43.000Z",
+                    dateTimeLocale: null,
+                    description: null,
+                    email: "KentaroYoshida@k-technology.co.jp",
+                    employeeNumber: null,
+                    employeeType: null,
+                    entityType: "USER",
+                    extendedData: null,
+                    extensionNumber: null,
+                    formattedDescription: null,
+                    givenName: null,
+                    givenNameReading: null,
+                    id: "4",
+                    initials: null,
+                    isBuiltIn: false,
+                    joinDate: null,
+                    langLocale: null,
+                    localName: null,
+                    localNameLocale: null,
+                    locale: null,
+                    middleName: null,
+                    mobilePhone: null,
+                    mtime: "2025-11-19T23:59:28.000Z",
+                    name: "吉田 健太郎",
+                    numberLocale: null,
+                    office: null,
+                    phone: null,
+                    photo: {
+                        small: "https://static.cybozu.com/contents/k/image/icon/user/user_16.svg",
+                        size_56: "https://static.cybozu.com/contents/k/image/icon/user/user_56.svg",
+                        normal: "https://static.cybozu.com/contents/k/image/icon/user/user_36.svg",
+                        size_32: "https://static.cybozu.com/contents/k/image/icon/user/user_32.svg",
+                        original: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        original_r: "https://static.cybozu.com/contents/k/image/icon/user/user.svg",
+                        size_40: "https://static.cybozu.com/contents/k/image/icon/user/user_40.svg",
+                        size_48_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_48: "https://static.cybozu.com/contents/k/image/icon/user/user_48.svg",
+                        size_96_r:
+                            "https://static.cybozu.com/contents/k/image/icon/user/user_96.svg",
+                        size_24: "https://static.cybozu.com/contents/k/image/icon/user/user_24.svg",
+                    },
+                    photoMd5: null,
+                    photoMime: null,
+                    primaryOrganization: null,
+                    removed: false,
+                    serviceFlags: null,
+                    sortOrder: null,
+                    surName: null,
+                    surNameReading: null,
+                    timezone: "Asia/Tokyo",
+                    url: null,
+                    valid: true,
+                },
+                displayLocale: "ja",
+                isMobileDevice: false,
+                isNativeApp: false,
+                desktopNtfPollingInterval: 60,
+                apiPrefixRelease: "\/api",
+                guestPrefix: "\/guest",
+            };
+        </script>
+        <script
+            type="module"
+            src="https://static.cybozu.com/k/20251128054245_163_e2ff584/js/compiled-hiyoko/web-worker/init-web-worker.bundle.min.js"
+        ></script>
+        <script>
+            cybozu.eventTarget.dispatchEvent({
+                type: "load",
+            });
+        </script>
+    </body>
+</html>

@@ -46,3 +46,7 @@ button.recordlist-edit-gaia {
 .lookup-selector-table-frame {
     height: 70vh !important;
 }
+
+.input-text-cybozu[id*="_13458387-"] {
+    display: none;
+}
