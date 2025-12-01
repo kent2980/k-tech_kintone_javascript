@@ -52,9 +52,9 @@ export interface BusinessMetricsSummary {
 export class BusinessCalculationHelperService {
     /**
      * 経営指標の計算結果を検証する
-     * @param metrics - 計算結果
-     * @param recordDate - レコード日付（ログ用）
-     * @returns 検証結果
+     *      * metrics: 計算結果
+     *      * recordDate: レコード日付
+     * *  検証結果
      */
     static validateBusinessMetrics(
         metrics: BusinessMetrics,
@@ -114,9 +114,9 @@ export class BusinessCalculationHelperService {
 
     /**
      * 異常値を検出する
-     * @param metrics - 経営指標
-     * @param thresholds - しきい値設定
-     * @returns 異常値検出結果
+     *      * metrics: 経営指標
+     *      * thresholds: しきい値設定
+     * *  異常値検出結果
      */
     static detectAnomalies(
         metrics: BusinessMetrics,

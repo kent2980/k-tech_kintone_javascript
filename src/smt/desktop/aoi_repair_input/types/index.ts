@@ -2,7 +2,7 @@
  * 型定義
  */
 
-/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+/// <reference path="../../../../app/AoiDefectFields.d.ts" />
 
 /**
  * 更新対象レコード

@@ -10,7 +10,6 @@ export class FieldsUtil {
 
     /**
      * PL月次データのフィールド名を取得
-     * @returns フィールド名の配列
      */
     static getMonthlyFields(): string[] {
         const cacheKey = "monthly_fields";
@@ -26,7 +25,6 @@ export class FieldsUtil {
 
     /**
      * PL日次データのフィールド名を取得
-     * @returns フィールド名の配列
      */
     static getDailyFields(): string[] {
         const cacheKey = "daily_fields";
@@ -42,7 +40,6 @@ export class FieldsUtil {
 
     /**
      * 生産日報データのフィールド名を取得
-     * @returns フィールド名の配列
      */
     static getLineDailyFields(): string[] {
         const cacheKey = "line_daily_fields";
@@ -58,7 +55,6 @@ export class FieldsUtil {
 
     /**
      * マスタ機種データのフィールド名を取得
-     * @returns フィールド名の配列
      */
     static getModelMasterFields(): string[] {
         const cacheKey = "model_master_fields";
@@ -74,7 +70,6 @@ export class FieldsUtil {
 
     /**
      * 祝日データのフィールド名を取得
-     * @returns フィールド名の配列
      */
     static getHolidayFields(): string[] {
         const cacheKey = "holiday_fields";
@@ -90,8 +85,6 @@ export class FieldsUtil {
 
     /**
      * 型定義からフィールド名を自動抽出する汎用メソッド
-     * @param sampleObject - 型のサンプルオブジェクト
-     * @returns フィールド名の配列
      */
     static extractFieldsFromType<T extends Record<string, unknown>>(
         sampleObject: Partial<T>
@@ -101,8 +94,6 @@ export class FieldsUtil {
 
     /**
      * 複数のフィールドリストから共通フィールドを抽出
-     * @param fieldLists - フィールドリストの配列
-     * @returns 共通フィールドの配列
      */
     static getCommonFields(fieldLists: string[][]): string[] {
         if (fieldLists.length === 0) return [];
@@ -112,10 +103,6 @@ export class FieldsUtil {
 
     /**
      * フィールドを特定の条件でフィルタリング
-     * @param fields - フィールド名の配列
-     * @param includePatterns - 含めるパターン（正規表現文字列の配列）
-     * @param excludePatterns - 除外するパターン（正規表現文字列の配列）
-     * @returns フィルタリング後のフィールド配列
      */
     static filterFields(
         fields: string[],
@@ -145,7 +132,6 @@ export class FieldsUtil {
 
     /**
      * 生成されたフィールド定義の統計情報を取得
-     * @returns フィールド統計
      */
     static getFieldStatistics(): {
         totalFields: number;
@@ -167,8 +153,6 @@ export class FieldsUtil {
 
     /**
      * 特定のフィールドタイプに基づいてフィールドをグループ化
-     * @param fields - フィールド名の配列
-     * @returns グループ化されたフィールド
      */
     static groupFieldsByType(fields: string[]): Record<string, string[]> {
         const groups: Record<string, string[]> = {
@@ -207,7 +191,7 @@ export class FieldsUtil {
 
     /**
      * キャッシュをクリア
-     * @param cacheKey - 特定のキーのキャッシュをクリア（省略時は全て）
+     * 特定のキーのキャッシュをクリア（省略時は全て）
      */
     static clearCache(cacheKey?: string): void {
         if (cacheKey !== undefined) {
@@ -219,8 +203,6 @@ export class FieldsUtil {
 
     /**
      * フィールド名の配列を文字列配列として返す
-     * @param fields - フィールド名の配列
-     * @returns 文字列配列
      */
     static fieldsToStringArray(fields: string[]): string[] {
         return fields;
@@ -230,19 +212,17 @@ export class FieldsUtil {
      * デバッグ用：全フィールド定義を表示
      */
     static debugPrintAllFields(): void {
-        console.log("📋 Generated Fields Debug Info:");
+        // デバッグ出力は削除
         const allFields = GeneratedFieldsUtil.getAllFields();
 
         for (const [type, fields] of Object.entries(allFields)) {
-            console.log(`\n🔍 ${type.toUpperCase()} (${fields.length} fields):`);
+            // デバッグ出力は削除
             fields.forEach((field, index) => {
-                console.log(`  ${(index + 1).toString().padStart(2, "0")}. ${field}`);
+                // デバッグ出力は削除
             });
         }
 
         const stats = this.getFieldStatistics();
-        console.log(
-            `\n📊 Total: ${stats.totalFields} fields across ${Object.keys(stats.fieldsByType).length} types`
-        );
+        // デバッグ出力は削除
     }
 }

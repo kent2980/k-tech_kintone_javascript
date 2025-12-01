@@ -107,9 +107,9 @@ export class BusinessCalculationService {
     /**
      * 付加価値を計算する
      *
-     * @param record - 日次レコード（line_daily.SavedFields）
-     * @param masterModelData - マスタ機種データの配列
-     * @returns 付加価値計算結果（AddedValueResult）
+     *      * record: 日次レコード
+     *      * masterModelData: マスタ機種データの配列
+     * *  付加価値計算結果（AddedValueResult）
      *
      * @remarks
      * - レコードに直接付加価値が設定されている場合は、その値を使用します
@@ -189,10 +189,10 @@ export class BusinessCalculationService {
     /**
      * 工数・コストを計算する
      *
-     * @param record - 日次レコード（line_daily.SavedFields）
-     * @param insideUnit - 社員単価（1時間あたり）
-     * @param outsideUnit - 派遣単価（1時間あたり）
-     * @returns コスト計算結果（CostCalculationResult）
+     *      * record: 日次レコード
+     *      * insideUnit: 社員単価
+     *      * outsideUnit: 派遣単価
+     * *  コスト計算結果（CostCalculationResult）
      *
      * @remarks
      * - 基本工数（社員・派遣）と残業工数を取得し、それぞれのコストを計算します
@@ -246,9 +246,9 @@ export class BusinessCalculationService {
 
     /**
      * 利益を計算する
-     * @param addedValue - 付加価値
-     * @param totalCost - 総コスト
-     * @returns 利益計算結果
+     *      * addedValue: 付加価値
+     *      * totalCost: 総コスト
+     * *  利益計算結果
      */
     static calculateProfit(addedValue: number, totalCost: number): ProfitCalculationResult {
         const grossProfit = addedValue - totalCost;
@@ -264,9 +264,9 @@ export class BusinessCalculationService {
 
     /**
      * 完全な経営指標を計算する（オールインワンメソッド）
-     * @param record - 日次レコード
-     * @param plMonthlyData - 月次データ（単価情報）
-     * @returns 完全な経営指標計算結果
+     *      * record: 日次レコード
+     *      * plMonthlyData: 月次データ
+     * *  完全な経営指標計算結果
      */
     static calculateBusinessMetrics(
         record: line_daily.SavedFields,
@@ -293,11 +293,11 @@ export class BusinessCalculationService {
 
     /**
      * 累積収益分析データを計算する
-     * @param currentAddedValue - 当日付加価値
-     * @param currentExpenses - 当日経費
-     * @param previousCumulativeAddedValue - 前日累積付加価値
-     * @param previousCumulativeExpenses - 前日累積経費
-     * @returns 累積収益分析結果
+     *      * currentAddedValue: 当日付加価値
+     *      * currentExpenses: 当日経費
+     *      * previousCumulativeAddedValue: 前日累積付加価値
+     *      * previousCumulativeExpenses: 前日累積経費
+     * *  累積収益分析結果
      */
     static calculateCumulativeRevenue(
         currentAddedValue: number,
@@ -321,8 +321,8 @@ export class BusinessCalculationService {
 
     /**
      * 利益率のフォーマット
-     * @param profitRate - 利益率（数値）
-     * @returns フォーマットされた利益率文字列
+     *      * profitRate: 利益率
+     * *  フォーマットされた利益率文字列
      */
     static formatProfitRate(profitRate: number): string {
         return `${profitRate.toFixed(2)}%`;
@@ -330,8 +330,8 @@ export class BusinessCalculationService {
 
     /**
      * 金額のフォーマット（カンマ区切り）
-     * @param amount - 金額
-     * @returns フォーマットされた金額文字列
+     *      * amount: 金額
+     * *  フォーマットされた金額文字列
      */
     static formatAmount(amount: number): string {
         return amount.toLocaleString();

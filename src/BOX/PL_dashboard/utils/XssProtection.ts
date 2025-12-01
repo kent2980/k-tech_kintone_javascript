@@ -29,8 +29,6 @@ export class XssProtection {
      * textContentで使用する前にエスケープする必要はないが、
      * 他の用途（属性値など）で使用する場合に有効
      *
-     * @param text - エスケープするテキスト
-     * @returns エスケープされたテキスト
      *
      * @example
      * ```typescript
@@ -52,9 +50,7 @@ export class XssProtection {
      * HTML文字列をサニタイズする（DOMPurifyを使用）
      * innerHTMLに設定する前に必ず使用すること
      *
-     * @param html - サニタイズするHTML文字列
-     * @param options - DOMPurifyのオプション（オプション）
-     * @returns サニタイズされたHTML文字列
+     * DOMPurifyのオプションを指定可能（オプション）
      *
      * @example
      * ```typescript
@@ -115,8 +111,6 @@ export class XssProtection {
      * 属性値として使用するテキストをエスケープする
      * HTML属性に設定する前に使用すること
      *
-     * @param text - エスケープするテキスト
-     * @returns エスケープされたテキスト
      *
      * @example
      * ```typescript
@@ -144,9 +138,8 @@ export class XssProtection {
      * URLを検証・サニタイズする
      * href属性などに設定する前に使用すること
      *
-     * @param url - 検証するURL
-     * @param allowedProtocols - 許可されるプロトコル（デフォルト: ["http", "https", "mailto"]）
-     * @returns サニタイズされたURL、無効な場合は空文字列
+     * 許可されるプロトコルを指定可能（デフォルト: ["http", "https", "mailto"]）
+     * 無効な場合は空文字列を返す
      *
      * @example
      * ```typescript
@@ -205,8 +198,6 @@ export class XssProtection {
      * textContentを使用するためのヘルパー関数
      * （textContentは自動的にエスケープされるため、この関数は主にログ用）
      *
-     * @param element - テキストを設定する要素
-     * @param text - 設定するテキスト
      */
     static setTextContent(element: HTMLElement, text: string | number | null | undefined): void {
         // textContentは自動的にエスケープされるため、そのまま設定
@@ -217,9 +208,7 @@ export class XssProtection {
      * HTMLコンテンツを安全に設定する
      * innerHTMLに設定する前にサニタイズを実行
      *
-     * @param element - HTMLを設定する要素
-     * @param html - 設定するHTML文字列
-     * @param options - DOMPurifyのオプション（オプション）
+     * DOMPurifyのオプションを指定可能（オプション）
      */
     static setInnerHtml(element: HTMLElement, html: string, options?: Config): void {
         const sanitized = this.sanitizeHtml(html, options);

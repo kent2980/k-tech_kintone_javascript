@@ -32,8 +32,6 @@ export abstract class BaseDomBuilder {
 
     /**
      * DOM要素情報を登録
-     * @param id - 要素ID
-     * @param element - DOM要素
      */
     protected registerElement(id: string, element: HTMLElement): void {
         const elementInfo: BaseDomElementInfo = {
@@ -46,8 +44,7 @@ export abstract class BaseDomBuilder {
 
     /**
      * DOM要素情報を取得
-     * @param id - 要素ID
-     * @returns DOM要素情報、存在しない場合はnull
+     * *  DOM要素情報、存在しない場合はnull
      */
     public getElementInfo(id: string): BaseDomElementInfo | null {
         return this.elements.get(id) || null;
@@ -55,8 +52,7 @@ export abstract class BaseDomBuilder {
 
     /**
      * DOM要素を取得
-     * @param id - 要素ID
-     * @returns DOM要素、存在しない場合はnull
+     * *  DOM要素、存在しない場合はnull
      */
     public getElement(id: string): HTMLElement | null {
         const elementInfo = this.elements.get(id);
@@ -65,7 +61,6 @@ export abstract class BaseDomBuilder {
 
     /**
      * すべての要素IDを取得
-     * @returns 要素IDの配列
      */
     public getAllElementIds(): string[] {
         return Array.from(this.elements.keys());
@@ -73,8 +68,7 @@ export abstract class BaseDomBuilder {
 
     /**
      * 要素が存在するかチェック
-     * @param id - 要素ID
-     * @returns 存在するかどうか
+     * *  存在するかどうか
      */
     public hasElement(id: string): boolean {
         return this.elements.has(id);
@@ -82,7 +76,6 @@ export abstract class BaseDomBuilder {
 
     /**
      * 指定された要素を削除
-     * @param id - 要素ID
      */
     public removeElement(id: string): void {
         const elementInfo = this.elements.get(id);

@@ -39,8 +39,11 @@
         "iuwp",
         "jsdom",
         "kintone",
+        "kintoneplugin",
         "lintstagedrc",
         "prettier",
+        "recordlist",
+        "subtable",
         "VITE",
         "wpzdj"
     ],

@@ -1,3 +1,4 @@
+/* eslint-env node */
 import { chromium } from "playwright";
 
 (async () => {
@@ -22,7 +23,6 @@ import { chromium } from "playwright";
     await page.goto(`${baseUrl}/login`, { waitUntil: "networkidle" });
 
     // ページのHTMLを確認（デバッグ用）
-    const pageContent = await page.content();
     console.log("ページタイトル:", await page.title());
 
     // 複数のセレクタを試す（実際のIDを最初に試す）
@@ -51,7 +51,7 @@ import { chromium } from "playwright";
             await page.fill(selector, username);
             usernameFound = true;
             break;
-        } catch (e) {
+        } catch {
             // 次のセレクタを試す
         }
     }
@@ -75,7 +75,7 @@ import { chromium } from "playwright";
             await page.fill(selector, password);
             passwordFound = true;
             break;
-        } catch (e) {
+        } catch {
             // 次のセレクタを試す
         }
     }
@@ -95,7 +95,7 @@ import { chromium } from "playwright";
             await page.click(selector);
             loginButtonFound = true;
             break;
-        } catch (e) {
+        } catch {
             // 次のセレクタを試す
         }
     }

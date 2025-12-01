@@ -27,8 +27,8 @@ import { CalculationUtil, DateUtil, Logger } from "../utils";
 export class DataProcessor {
     /**
      * 休日タイプコードを取得する
-     * @param date - 対象日付
-     * @returns 休日タイプコード（0: 平日, -1: 法定休日, -2: 所定休日）
+     *      * date: 対象日付
+     * *  休日タイプコード（0: 平日, -1: 法定休日, -2: 所定休日）
      */
     private static getHolidayTypeCode(date: string): number {
         const holidayStore = HolidayStore.getInstance();
@@ -47,9 +47,9 @@ export class DataProcessor {
 
     /**
      * 製品履歴データから日付別の合計値を計算する（休日タイプ処理を含む）
-     * @param productHistoryData - 製品履歴データ
-     * @param date - 対象日付
-     * @returns 日付別合計値
+     *      * productHistoryData: 製品履歴データ
+     *      * date: 対象日付
+     * *  日付別合計値
      */
     static getTotalsByDate(productHistoryData: ProductHistoryData[], date: string): TotalsByDate {
         let totalActualNumber = 0;
@@ -117,10 +117,10 @@ export class DataProcessor {
 
     /**
      * 製品履歴データから日付リストを取得する
-     * @param productHistoryData - 製品履歴データ
-     * @param year - 年（オプション、指定された場合は完全な日付リストを生成）
-     * @param month - 月（オプション、指定された場合は完全な日付リストを生成）
-     * @returns 一意な日付のリスト
+     *      * productHistoryData: 製品履歴データ
+     *      * year: 年
+     *      * month: 月
+     * *  一意な日付のリスト
      */
     static getDateList(
         productHistoryData: ProductHistoryData[],
@@ -142,9 +142,9 @@ export class DataProcessor {
 
     /**
      * 日次データから指定した日付のレコードを取得する
-     * @param dailyReportData - 日次データ
-     * @param date - 対象日付
-     * @returns 該当する日次レコード
+     *      * dailyReportData: 日次データ
+     *      * date: 対象日付
+     * *  該当する日次レコード
      */
     static getRecordsByDate(
         dailyReportData: daily.SavedFields[],
@@ -162,9 +162,9 @@ export class DataProcessor {
 
     /**
      * 生産レコードから付加価値を計算する
-     * @param record - 生産レコード
-     * @param masterModelData - マスタ機種データ
-     * @returns 計算された付加価値
+     *      * record: 生産レコード
+     *      * masterModelData: マスタ機種データ
+     * *  計算された付加価値
      */
     static calculateAddedValue(
         record: line_daily.SavedFields,
@@ -203,10 +203,10 @@ export class DataProcessor {
 
     /**
      * 経費データを計算する
-     * @param record - 生産レコード
-     * @param insideUnit - 社員単価
-     * @param outsideUnit - 派遣単価
-     * @returns 経費計算結果
+     *      * record: 生産レコード
+     *      * insideUnit: 社員単価
+     *      * outsideUnit: 派遣単価
+     * *  経費計算結果
      */
     static calculateCosts(
         record: line_daily.SavedFields,
@@ -248,11 +248,11 @@ export class DataProcessor {
 
     /**
      * 製品履歴データを生成する
-     * @param records - 生産レコード
-     * @param masterModelData - マスタ機種データ
-     * @param insideUnit - 社員単価
-     * @param outsideUnit - 派遣単価
-     * @returns 製品履歴データ
+     *      * records: 生産レコード
+     *      * masterModelData: マスタ機種データ
+     *      * insideUnit: 社員単価
+     *      * outsideUnit: 派遣単価
+     * *  製品履歴データ
      */
     static createProductHistoryData(
         records: line_daily.SavedFields[],
@@ -284,8 +284,8 @@ export class DataProcessor {
 
     /**
      * 数値データを安全に取得する
-     * @param field - kintoneフィールド
-     * @returns 数値（取得できない場合は0）
+     *      * field: kintoneフィールド
+     * *  数値（取得できない場合は0）
      */
     static getFieldValue(field: { value: string | number } | undefined): number {
         return CalculationUtil.safeNumber(field?.value);
@@ -293,8 +293,8 @@ export class DataProcessor {
 
     /**
      * テキストデータを安全に取得する
-     * @param field - kintoneフィールド
-     * @returns 文字列（取得できない場合は空文字）
+     *      * field: kintoneフィールド
+     * *  文字列（取得できない場合は空文字）
      */
     static getFieldText(field: { value: string } | undefined): string {
         return field?.value || "";

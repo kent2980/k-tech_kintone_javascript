@@ -5,83 +5,6 @@
 import { PartsData, PartsDictionary } from "../types";
 
 /**
- * テーブルヘッダーから列インデックスを取得
- */
-function getColumnIndexes(table: HTMLTableElement): {
-    modelCodeIndex: number | null;
-    referenceIndex: number | null;
-} {
-    const thead = table.querySelector("thead");
-    if (!thead) {
-        return { modelCodeIndex: null, referenceIndex: null };
-    }
-
-    const headerRow = thead.querySelector("tr");
-    if (!headerRow) {
-        return { modelCodeIndex: null, referenceIndex: null };
-    }
-
-    const headers = headerRow.querySelectorAll("th");
-    let modelCodeIndex: number | null = null;
-    let referenceIndex: number | null = null;
-
-    headers.forEach((header, index) => {
-        const headerText = header.textContent?.trim() || "";
-        // ヘッダーテキストからY番（model_code）とリファレンス（reference）の列を特定
-        // 実際の列名に合わせて調整が必要
-        if (
-            headerText.includes("Y番") ||
-            headerText.includes("model_code") ||
-            headerText.includes("モデルコード")
-        ) {
-            modelCodeIndex = index;
-        }
-        if (
-            headerText.includes("リファレンス") ||
-            headerText.includes("reference") ||
-            headerText.includes("参照")
-        ) {
-            referenceIndex = index;
-        }
-    });
-
-    return { modelCodeIndex, referenceIndex };
-}
-
-/**
- * テーブル行からY番とリファレンスを取得
- */
-function getModelCodeAndRefFromRow(
-    row: HTMLTableRowElement,
-    modelCodeIndex: number | null,
-    referenceIndex: number | null
-): {
-    model_code: string;
-    reference: string;
-} | null {
-    if (modelCodeIndex === null || referenceIndex === null) {
-        return null;
-    }
-
-    const cells = row.querySelectorAll("td");
-    if (cells.length <= Math.max(modelCodeIndex, referenceIndex)) {
-        return null;
-    }
-
-    const modelCodeCell = cells[modelCodeIndex];
-    const referenceCell = cells[referenceIndex];
-
-    const model_code = modelCodeCell?.textContent?.trim() || "";
-    const reference = referenceCell?.textContent?.trim() || "";
-
-    if (!model_code || !reference) {
-        return null;
-    }
-
-    return { model_code, reference };
-}
-
-/**
  * 部品番号用のドロップダウンを作成
  */
 function createPartsNumberDropdown(
@@ -114,7 +37,7 @@ function createPartsNumberDropdown(
     });
 
     // トースト通知を表示する処理
-    const showToast = (message: string, isSuccess: boolean = true) => {
+    const showToast = (message: string, isSuccess: boolean = true): void => {
         // 既存のトーストがあれば削除
         const existingToast = document.getElementById("parts-code-copy-toast");
         if (existingToast) {
@@ -158,17 +81,15 @@ function createPartsNumberDropdown(
     };
 
     // クリップボードにコピーする処理
-    const copyToClipboard = async (partsCode: string) => {
+    const copyToClipboard = async (partsCode: string): Promise<void> => {
         if (!partsCode) {
             return;
         }
 
         try {
             await navigator.clipboard.writeText(partsCode);
-            console.log("クリップボードにコピーしました:", partsCode);
             showToast(`部品コード「${partsCode}」をクリップボードにコピーしました`, true);
-        } catch (error) {
-            console.error("クリップボードへのコピーに失敗しました:", error);
+        } catch {
             // フォールバック: 古い方法でコピーを試みる
             try {
                 const textArea = document.createElement("textarea");
@@ -179,13 +100,8 @@ function createPartsNumberDropdown(
                 textArea.select();
                 document.execCommand("copy");
                 document.body.removeChild(textArea);
-                console.log("クリップボードにコピーしました（フォールバック）:", partsCode);
                 showToast(`部品コード「${partsCode}」をクリップボードにコピーしました`, true);
-            } catch (fallbackError) {
-                console.error(
-                    "クリップボードへのコピーに失敗しました（フォールバック）:",
-                    fallbackError
-                );
+            } catch {
                 showToast("クリップボードへのコピーに失敗しました", false);
             }
         }
@@ -250,30 +166,6 @@ function addPartsNumberHeader(table: HTMLTableElement): void {
     span.className = "subtable-label-inner-gaia";
     th.appendChild(span);
     headerRow.appendChild(th);
-}
-
-/**
- * テーブル行からY番とリファレンスを取得して、対応する部品データを取得
- */
-function getPartsDataForRow(
-    row: HTMLTableRowElement,
-    partsDictionary: PartsDictionary,
-    modelCodeIndex: number | null,
-    referenceIndex: number | null
-): PartsData[] {
-    const modelCodeAndRef = getModelCodeAndRefFromRow(row, modelCodeIndex, referenceIndex);
-    if (!modelCodeAndRef) {
-        return [];
-    }
-
-    // 該当するreferenceの部品データをフィルタリング
-    return partsDictionary
-        .filter((parts) => parts.reference === modelCodeAndRef.reference)
-        .map((parts) => ({
-            parts_code: parts.parts_code,
-            version: String(parts.version),
-            reference: parts.reference,
-        }));
 }
 
 /**

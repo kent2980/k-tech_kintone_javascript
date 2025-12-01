@@ -38,12 +38,7 @@ export abstract class BaseGraphManager {
 
     /**
      * グラフコンテナを作成（汎用的な部分）
-     * @param canvasId - キャンバスID
-     * @param width - コンテナの幅（デフォルト: "100%"）
-     * @param height - コンテナの高さ（デフォルト: "600px"）
-     * @param minHeight - 最小高さ（デフォルト: "500px"）
-     * @param padding - パディング（デフォルト: "20px"）
-     * @returns グラフコンテナ要素とキャンバス要素のタプル
+     * グラフコンテナ要素とキャンバス要素のタプルを返す
      */
     protected createChartContainer(
         canvasId: string,
@@ -69,9 +64,6 @@ export abstract class BaseGraphManager {
 
     /**
      * グラフ情報を登録
-     * @param canvasId - キャンバスID
-     * @param chart - Chart.jsインスタンス
-     * @param container - コンテナ要素
      */
     protected registerChart(canvasId: string, chart: Chart, container: HTMLDivElement): void {
         const chartInfo: ChartInfo = {
@@ -86,7 +78,6 @@ export abstract class BaseGraphManager {
 
     /**
      * 指定されたグラフを破棄
-     * @param canvasId - キャンバスID
      */
     public destroyChart(canvasId: string): void {
         const chartInfo = this.charts.get(canvasId);
@@ -117,7 +108,6 @@ export abstract class BaseGraphManager {
         } catch (error) {
             // エラーが発生してもチャート情報は削除（メモリリーク防止）
             this.charts.delete(canvasId);
-            console.error(`グラフ破棄でエラーが発生しました: ${error}`);
         }
     }
 
@@ -133,8 +123,6 @@ export abstract class BaseGraphManager {
 
     /**
      * グラフ情報を取得
-     * @param canvasId - キャンバスID
-     * @returns グラフ情報、存在しない場合はnull
      */
     public getChartInfo(canvasId: string): ChartInfo | null {
         return this.charts.get(canvasId) || null;
@@ -142,7 +130,6 @@ export abstract class BaseGraphManager {
 
     /**
      * すべてのグラフIDを取得
-     * @returns グラフIDの配列
      */
     public getAllChartIds(): string[] {
         return Array.from(this.charts.keys());
@@ -150,8 +137,6 @@ export abstract class BaseGraphManager {
 
     /**
      * グラフが存在するかチェック
-     * @param canvasId - キャンバスID
-     * @returns 存在するかどうか
      */
     public hasChart(canvasId: string): boolean {
         return this.charts.has(canvasId);

@@ -21,9 +21,9 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
 
     /**
      * 日付に応じた背景色を取得する
-     * @param date - 日付文字列（YYYY-MM-DD形式）
-     * @param holidayData - 会社休日マスタデータ
-     * @returns 背景色の文字列、通常日の場合は空文字
+     *      * date: 日付文字列
+     *      * holidayData: 会社休日マスタデータ
+     * *  背景色の文字列、通常日の場合は空文字
      */
     private getDateBackgroundColor(
         date: string,
@@ -54,9 +54,9 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
 
     /**
      * 折れ線と棒グラフの複合グラフを作成したコンテナを作成
-     * @param canvasId - キャンバスID
-     * @param RevenueAnalysisList - 収益分析データ
-     * @returns グラフコンテナ要素
+     *      * canvasId: キャンバスID
+     *      * RevenueAnalysisList: 収益分析データ
+     * *  グラフコンテナ要素
      */
     public createMixedChartContainer(
         canvasId: string,
@@ -241,8 +241,8 @@ export class PLDashboardGraphBuilder extends BaseGraphManager {
 
     /**
      * 既存のチャートを更新（データのみ）
-     * @param canvasId - キャンバスID
-     * @param RevenueAnalysisList - 収益分析データ
+     *      * canvasId: キャンバスID
+     *      * RevenueAnalysisList: 収益分析データ
      */
     public updateMixedChart(canvasId: string, RevenueAnalysisList: RevenueAnalysis[]): void {
         const chartInfo = this.getChartInfo(canvasId);

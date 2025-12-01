@@ -24,7 +24,7 @@ export class TableManager {
 
     /**
      * コンストラクタ
-     * @param fieldCode - テーブルフィールドコード（デフォルト: RelatedRecords）
+     * テーブルフィールドコードを指定（デフォルト: RelatedRecords）
      */
     constructor(fieldCode: string = FIELD_CODES.RELATED_RECORDS) {
         this.fieldCode = fieldCode;
@@ -32,8 +32,7 @@ export class TableManager {
 
     /**
      * 現在のレコードからテーブルフィールドを取得
-     * @param record - kintoneレコードオブジェクト（省略時は現在のレコード）
-     * @returns テーブルフィールドの値（行の配列）
+     * レコードを省略した場合は現在のレコードから取得
      */
     getTable(record?: any): Array<{
         id: string;
@@ -51,8 +50,7 @@ export class TableManager {
 
     /**
      * テーブルフィールドを設定
-     * @param rows - テーブル行のデータ配列
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
+     * レコードを省略した場合は現在のレコードに設定
      */
     setTable(
         rows: Array<{
@@ -83,9 +81,8 @@ export class TableManager {
 
     /**
      * テーブルに行を追加
-     * @param rowData - 追加する行のデータ
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
-     * @returns 追加された行のID
+     * レコードを省略した場合は現在のレコードに追加
+     * 追加された行のIDを返す
      */
     addRow(rowData: TableRowData, record?: any): string {
         const targetRecord = record || kintone.app.record.get();
@@ -111,10 +108,8 @@ export class TableManager {
 
     /**
      * テーブル行を更新
-     * @param rowId - 更新する行のID
-     * @param rowData - 更新する行のデータ
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
-     * @returns 更新に成功したかどうか
+     * レコードを省略した場合は現在のレコードを更新
+     * 更新に成功したかどうかを返す
      */
     updateRow(rowId: string, rowData: TableRowData, record?: any): boolean {
         const targetRecord = record || kintone.app.record.get();
@@ -139,9 +134,8 @@ export class TableManager {
 
     /**
      * テーブル行を削除
-     * @param rowId - 削除する行のID
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
-     * @returns 削除に成功したかどうか
+     * レコードを省略した場合は現在のレコードから削除
+     * 削除に成功したかどうかを返す
      */
     deleteRow(rowId: string, record?: any): boolean {
         const targetRecord = record || kintone.app.record.get();
@@ -166,7 +160,7 @@ export class TableManager {
 
     /**
      * テーブルをクリア（すべての行を削除）
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
+     * レコードを省略した場合は現在のレコードをクリア
      */
     clearTable(record?: any): void {
         const targetRecord = record || kintone.app.record.get();
@@ -179,8 +173,7 @@ export class TableManager {
 
     /**
      * テーブル行数を取得
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
-     * @returns テーブル行数
+     * レコードを省略した場合は現在のレコードから取得
      */
     getRowCount(record?: any): number {
         const table = this.getTable(record);
@@ -189,9 +182,8 @@ export class TableManager {
 
     /**
      * 指定されたIDの行を取得
-     * @param rowId - 行のID
-     * @param record - レコードオブジェクト（省略時は現在のレコード）
-     * @returns 行のデータ、存在しない場合はnull
+     * レコードを省略した場合は現在のレコードから取得
+     * 存在しない場合はnullを返す
      */
     getRowById(rowId: string, record?: any): { id: string; value: TableRowData } | null {
         const table = this.getTable(record);
@@ -202,7 +194,7 @@ export class TableManager {
 
     /**
      * テーブル行のIDを生成
-     * @returns 新しい行ID
+     * 新規作成時は空文字列を返すとkintoneが自動生成
      */
     private generateRowId(): string {
         // kintoneの行IDは通常、タイムスタンプベースの文字列
@@ -212,7 +204,7 @@ export class TableManager {
 
     /**
      * レコードを保存（kintone.app.record.setを使用）
-     * @param record - 保存するレコードオブジェクト（省略時は現在のレコード）
+     * レコードを省略した場合は現在のレコードを保存
      */
     saveRecord(record?: any): void {
         const targetRecord = record || kintone.app.record.get();

@@ -7,8 +7,6 @@ export class PerformanceUtil {
 
     /**
      * キャッシュからデータを取得する
-     * @param key - キャッシュキー
-     * @returns キャッシュされたデータ
      */
     static getFromCache<T>(key: string): T | null {
         const value = this.cache.get(key);
@@ -17,9 +15,7 @@ export class PerformanceUtil {
 
     /**
      * データをキャッシュに保存する
-     * @param key - キャッシュキー
-     * @param data - 保存するデータ
-     * @param ttl - TTL（ミリ秒、オプション）
+     * TTLを指定可能（ミリ秒、オプション）
      */
     static setCache<T>(key: string, data: T, ttl?: number): void {
         this.cache.set(key, data);
@@ -33,7 +29,7 @@ export class PerformanceUtil {
 
     /**
      * キャッシュをクリアする
-     * @param pattern - クリアするキーのパターン（オプション）
+     * クリアするキーのパターンを指定可能（オプション）
      */
     static clearCache(pattern?: string): void {
         if (!pattern) {
@@ -49,9 +45,6 @@ export class PerformanceUtil {
 
     /**
      * 遅延実行（デバウンス）
-     * @param func - 実行する関数
-     * @param delay - 遅延時間（ミリ秒）
-     * @returns デバウンスされた関数
      */
     static debounce<T extends (...args: unknown[]) => unknown>(
         func: T,
@@ -66,9 +59,6 @@ export class PerformanceUtil {
 
     /**
      * スロットリング（一定間隔で実行）
-     * @param func - 実行する関数
-     * @param limit - 実行間隔（ミリ秒）
-     * @returns スロットリングされた関数
      */
     static throttle<T extends (...args: unknown[]) => unknown>(
         func: T,
@@ -86,10 +76,6 @@ export class PerformanceUtil {
 
     /**
      * Intersection Observer を設定してビューポート監視する
-     * @param element - 監視対象要素
-     * @param callback - 交差時のコールバック
-     * @param options - オブザーバーのオプション
-     * @returns オブザーバーのキー
      */
     static observeViewport(
         element: Element,
@@ -109,7 +95,6 @@ export class PerformanceUtil {
 
     /**
      * Intersection Observer を停止する
-     * @param key - オブザーバーのキー
      */
     static unobserveViewport(key: string): void {
         const observer = this.observers.get(key);
@@ -121,9 +106,6 @@ export class PerformanceUtil {
 
     /**
      * 仮想スクロールのためのチャンク分割
-     * @param data - 分割するデータ配列
-     * @param chunkSize - チャンクサイズ
-     * @returns 分割されたデータチャンク
      */
     static chunkArray<T>(data: T[], chunkSize: number): T[][] {
         const chunks: T[][] = [];
@@ -135,7 +117,6 @@ export class PerformanceUtil {
 
     /**
      * メモリ使用量を監視する
-     * @returns メモリ使用量情報（利用可能な場合）
      */
     static getMemoryUsage(): {
         usedJSHeapSize: number;
@@ -158,8 +139,6 @@ export class PerformanceUtil {
 
     /**
      * DOM要素を遅延作成する
-     * @param factory - 要素作成関数
-     * @returns Promise<HTMLElement>
      */
     static async createElementLazy(factory: () => HTMLElement): Promise<HTMLElement> {
         return new Promise((resolve) => {
@@ -171,10 +150,6 @@ export class PerformanceUtil {
 
     /**
      * 大量データを非同期処理で分割処理する
-     * @param data - 処理するデータ
-     * @param processor - 処理関数
-     * @param batchSize - バッチサイズ
-     * @returns 処理結果
      */
     static async processBatches<T, R>(
         data: T[],
@@ -197,7 +172,6 @@ export class PerformanceUtil {
 
     /**
      * パフォーマンス測定を開始する
-     * @param name - 測定名
      */
     static startMeasure(name: string): void {
         performance.mark(`${name}-start`);
@@ -205,8 +179,6 @@ export class PerformanceUtil {
 
     /**
      * パフォーマンス測定を終了する
-     * @param name - 測定名
-     * @returns 測定時間（ミリ秒）
      */
     static endMeasure(name: string): number {
         performance.mark(`${name}-end`);
@@ -218,8 +190,6 @@ export class PerformanceUtil {
 
     /**
      * リソースのプリロード
-     * @param url - リソースURL
-     * @param type - リソースタイプ
      */
     static preloadResource(url: string, type: "script" | "style" | "image"): void {
         const link = document.createElement("link");

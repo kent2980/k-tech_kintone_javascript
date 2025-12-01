@@ -8,22 +8,24 @@
  */
 const ERROR_MESSAGE_MAP: Record<string, string> = {
     // ネットワーク関連
-    "NetworkError": "ネットワーク接続に問題があります。インターネット接続を確認してください。",
-    "TimeoutError": "リクエストがタイムアウトしました。しばらく待ってから再度お試しください。",
+    NetworkError: "ネットワーク接続に問題があります。インターネット接続を確認してください。",
+    TimeoutError: "リクエストがタイムアウトしました。しばらく待ってから再度お試しください。",
     "Failed to fetch": "データの取得に失敗しました。ネットワーク接続を確認してください。",
 
     // Kintone API関連
-    "CB_AU01": "この操作を実行する権限がありません。管理者にお問い合わせください。",
-    "CB_VA01": "入力データに問題があります。入力内容を確認してください。",
-    "CB_NO02": "指定されたレコードが見つかりません。",
-    "CB_DE01": "データの登録中にエラーが発生しました。",
-    "CB_DE02": "データの更新中にエラーが発生しました。",
-    "CB_DE03": "データの削除中にエラーが発生しました。",
-    "FatalRegisterError": "データの登録中にエラーが発生しました。しばらく待ってから再度お試しください。",
+    CB_AU01: "この操作を実行する権限がありません。管理者にお問い合わせください。",
+    CB_VA01: "入力データに問題があります。入力内容を確認してください。",
+    CB_NO02: "指定されたレコードが見つかりません。",
+    CB_DE01: "データの登録中にエラーが発生しました。",
+    CB_DE02: "データの更新中にエラーが発生しました。",
+    CB_DE03: "データの削除中にエラーが発生しました。",
+    FatalRegisterError:
+        "データの登録中にエラーが発生しました。しばらく待ってから再度お試しください。",
 
     // ファイル関連
     "File not found": "ファイルが見つかりません。ファイルが存在するか確認してください。",
-    "Invalid file format": "ファイルの形式が正しくありません。正しい形式のファイルを選択してください。",
+    "Invalid file format":
+        "ファイルの形式が正しくありません。正しい形式のファイルを選択してください。",
     "File too large": "ファイルサイズが大きすぎます。より小さなファイルを選択してください。",
 
     // データ関連
@@ -32,8 +34,9 @@ const ERROR_MESSAGE_MAP: Record<string, string> = {
     "Duplicate record": "同じデータが既に登録されています。",
 
     // 一般的なエラー
-    "UNKNOWN_ERROR": "予期しないエラーが発生しました。しばらく待ってから再度お試しください。",
-    "Internal server error": "サーバーでエラーが発生しました。しばらく待ってから再度お試しください。",
+    UNKNOWN_ERROR: "予期しないエラーが発生しました。しばらく待ってから再度お試しください。",
+    "Internal server error":
+        "サーバーでエラーが発生しました。しばらく待ってから再度お試しください。",
 };
 
 /**
@@ -76,14 +79,8 @@ const ERROR_PATTERNS: Array<{ pattern: RegExp; message: string }> = [
 export class UserFriendlyMessages {
     /**
      * エラーメッセージをユーザーフレンドリーなメッセージに変換
-     * @param error - エラーオブジェクトまたはメッセージ
-     * @param defaultMessage - デフォルトメッセージ（オプション）
-     * @returns ユーザーフレンドリーなメッセージ
      */
-    static toUserFriendly(
-        error: Error | unknown,
-        defaultMessage?: string
-    ): string {
+    static toUserFriendly(error: Error | unknown, defaultMessage?: string): string {
         // エラーオブジェクトからメッセージを抽出
         let errorMessage = "";
         let errorCode = "";
@@ -124,9 +121,6 @@ export class UserFriendlyMessages {
 
     /**
      * エラーコードからユーザーフレンドリーなメッセージを取得
-     * @param errorCode - エラーコード
-     * @param defaultMessage - デフォルトメッセージ（オプション）
-     * @returns ユーザーフレンドリーなメッセージ
      */
     static fromErrorCode(errorCode: string, defaultMessage?: string): string {
         return (
@@ -139,14 +133,8 @@ export class UserFriendlyMessages {
 
     /**
      * コンテキストに応じたユーザーフレンドリーなメッセージを生成
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @returns ユーザーフレンドリーなメッセージ
      */
-    static fromContext(
-        error: Error | unknown,
-        context?: Record<string, unknown>
-    ): string {
+    static fromContext(error: Error | unknown, context?: Record<string, unknown>): string {
         const baseMessage = this.toUserFriendly(error);
 
         // コンテキストに応じた追加情報を付与
@@ -171,4 +159,3 @@ export class UserFriendlyMessages {
         return baseMessage;
     }
 }
-

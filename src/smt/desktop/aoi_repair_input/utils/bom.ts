@@ -2,7 +2,7 @@
  * BOMデータ取得ユーティリティ
  */
 
-/// <reference path="../../../../app/aoiDefectFields.d.ts" />
+/// <reference path="../../../../app/AoiDefectFields.d.ts" />
 
 import { FIELD_CODES, PartsData, PartsDictionary } from "../types";
 
@@ -19,7 +19,6 @@ export function getRelatedAppId(): number | null {
 
 /**
  * 参照先アプリから指図で抽出したレコードを取得
- * @returns aoiDefect.SavedFields型のレコード配列
  */
 export async function getReferenceAppRecords(
     appId: number,
@@ -61,8 +60,7 @@ export async function getReferenceAppRecords(
 
 /**
  * 複数レコードからY番とリファレンスの配列を抽出
- * @param records - aoiDefect.SavedFields型のレコード配列
- * @returns aoiDefect.SavedFields型のレコード配列（必須フィールドが存在するもののみ）
+ * 必須フィールド（model_codeとreference）が存在するもののみを返す
  */
 export function extractModelCodeAndRefList(
     records: aoiDefect.SavedFields[]
@@ -110,8 +108,6 @@ export async function getBomPartsData(modelCode: string, reference: string): Pro
 
 /**
  * Y番とリファレンスのリストから部品データ辞書を作成
- * @param referenceDataList - aoiDefect.SavedFields型のレコード配列
- * @returns 部品データ辞書
  */
 export async function createPartsDictionary(
     referenceDataList: aoiDefect.SavedFields[]
@@ -167,10 +163,8 @@ export async function createPartsDictionary(
                 version: record[FIELD_CODES.VERSION]?.value || "",
             });
         });
-        console.log(dictionary);
         return dictionary;
-    } catch (error) {
-        console.error("部品データ辞書作成エラー:", error);
+    } catch {
         return [];
     }
 }

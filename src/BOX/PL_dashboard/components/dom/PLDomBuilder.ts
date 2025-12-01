@@ -26,9 +26,6 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * DOM要素情報を登録（PL固有の拡張）
-     * @param id - 要素ID
-     * @param element - DOM要素
-     * @param type - 要素の種類
      */
     protected registerElementWithType(
         id: string,
@@ -43,9 +40,7 @@ export class PLDomBuilder extends BaseDomBuilder {
     }
     /**
      * オプション要素をセレクトボックスに追加する
-     * @param selectElement - セレクトボックス要素
-     * @param value - オプションの値
-     * @param text - オプションの表示テキスト
+     *      * selectElement: セレクトボックス要素
      */
     public addOption(selectElement: HTMLSelectElement, value: string | number, text: string): void {
         DomUtil.addOption(selectElement, value, text);
@@ -53,8 +48,8 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * 年選択セレクトボックスを作成する
-     * @param yearCount - 過去何年分を表示するか
-     * @returns 年選択セレクトボックス
+     *      * yearCount: 過去何年分を表示するか
+     * *  年選択セレクトボックス
      */
     public createYearSelect(yearCount: number = 10): HTMLSelectElement {
         const yearSelect = document.createElement("select");
@@ -81,7 +76,7 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * 月選択セレクトボックスを作成する
-     * @returns 月選択セレクトボックス
+     * *  月選択セレクトボックス
      */
     public createMonthSelect(): HTMLSelectElement {
         const monthSelect = document.createElement("select");
@@ -107,10 +102,10 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * ラベル要素を作成する
-     * @param text - ラベルのテキスト
-     * @param forId - for属性の値
-     * @param marginLeft - 左マージン（オプション）
-     * @returns ラベル要素
+     *      * text: ラベルのテキスト
+     *      * forId: for属性の値
+     *      * marginLeft: 左マージン
+     * *  ラベル要素
      */
     public createLabel(
         text: string,
@@ -122,7 +117,7 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * フィルターコンテナを作成する
-     * @returns フィルターコンテナ
+     * *  フィルターコンテナ
      */
     public createFilterContainer(): HTMLDivElement {
         const container = document.createElement("div");
@@ -144,7 +139,7 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * 表示スペース切替ボタンを作成する
-     * @returns 切替ボタン
+     * *  切替ボタン
      */
     public createToggleViewButton(): HTMLButtonElement {
         const button = document.createElement("button");
@@ -163,7 +158,7 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * タブコンテナを作成する関数
-     * @returns タブコンテナ、ボタンコンテナ、コンテンツコンテナ
+     * *  タブコンテナ、ボタンコンテナ、コンテンツコンテナ
      */
     public createTabContainer(): TabContainerResult {
         // メインコンテナ
@@ -193,10 +188,10 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * タブボタンを作成する関数
-     * @param tabId - タブのID
-     * @param tabLabel - タブのラベル
-     * @param isActive - アクティブかどうか
-     * @returns タブボタン
+     *      * tabId: タブのID
+     *      * tabLabel: タブのラベル
+     *      * isActive: アクティブかどうか
+     * *  タブボタン
      */
     public createTabButton(
         tabId: string,
@@ -236,10 +231,10 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * タブコンテンツを作成する関数
-     * @param contentId - コンテンツのID
-     * @param content - 追加するコンテンツ（HTMLElementまたはstring）
-     * @param isActive - アクティブかどうか
-     * @returns タブコンテンツ要素
+     *      * contentId: コンテンツのID
+     *      * content: 追加するコンテンツ
+     *      * isActive: アクティブかどうか
+     * *  タブコンテンツ要素
      */
     public createTabContent(
         contentId: string,
@@ -266,8 +261,8 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * データが存在しない場合のメッセージを作成
-     * @param message - 表示するメッセージ
-     * @returns メッセージ要素
+     *      * message: 表示するメッセージ
+     * *  メッセージ要素
      */
     public createNoDataMessage(message: string): HTMLDivElement {
         const noDataMessage = document.createElement("div");
@@ -290,9 +285,9 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * スクロール可能なコンテナを作成
-     * @param id - コンテナのID
-     * @param maxHeight - 最大高さ（デフォルト: "600px"）
-     * @returns スクロール可能なコンテナ
+     *      * id: コンテナのID
+     *      * maxHeight: 最大高さ
+     * *  スクロール可能なコンテナ
      */
     public createScrollableContainer(id: string, maxHeight: string = "600px"): HTMLDivElement {
         const container = document.createElement("div");
@@ -310,8 +305,7 @@ export class PLDomBuilder extends BaseDomBuilder {
 
     /**
      * DOM要素情報を取得（PL固有の型で返す）
-     * @param id - 要素ID
-     * @returns DOM要素情報、存在しない場合はnull
+     * *  DOM要素情報、存在しない場合はnull
      */
     public getElementInfo(id: string): PLDomElementInfo | null {
         return super.getElementInfo(id) as PLDomElementInfo | null;

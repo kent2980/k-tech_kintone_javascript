@@ -33,7 +33,6 @@ import { BaseTableManager } from "./BaseTableManager";
 export class PLDashboardTableManager extends BaseTableManager {
     /**
      * コンストラクタ
-     * @param defaultConfig - デフォルト設定（オプション）
      */
     constructor(defaultConfig?: Partial<TableBuilderConfig>) {
         super(defaultConfig);
@@ -41,10 +40,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * テーブル情報を登録（PL固有の型指定）
-     * @param tableId - テーブルID
-     * @param tableType - テーブルの種類
-     * @param config - 設定
-     * @param columns - カラム
      */
     protected registerTable(
         tableId: string,
@@ -57,11 +52,7 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 生産実績テーブルのデータ変換専用メソッド
-     * @param records - 日次データのレコード配列
-     * @param plMonthlyData - 月次データ
-     * @param product_history_data - 製品履歴データ（参照渡し）
-     * @param getDayOfWeek - 曜日取得関数
-     * @returns テーブル表示用のデータ配列
+     * テーブル表示用のデータ配列を返す
      */
     private transformProductionData(
         records: line_daily.SavedFields[],
@@ -146,10 +137,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 生産実績テーブルのレンダリング専用メソッド
-     * @param tableId - テーブルID
-     * @param tableData - テーブル表示用のデータ配列
-     * @param records - 日次データのレコード配列
-     * @returns テーブル要素とコンテナ要素
      */
     private renderProductionTable(
         tableId: string,
@@ -216,7 +203,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 生産実績テーブルのDataTables統合専用メソッド
-     * @param tableId - テーブルID
      */
     private integrateDataTablesForProduction(tableId: string): void {
         setTimeout(() => {
@@ -226,13 +212,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 生産実績テーブルを作成
-     * @param tableId - テーブルID
-     * @param records - 日次データのレコード配列
-     * @param plMonthlyData - 月次データ
-     * @param product_history_data - 製品履歴データ（参照渡し）
-     * @param getDayOfWeek - 曜日取得関数
-     * @param config - 設定（オプション）
-     * @returns 生産実績テーブルのコンテナ要素
      */
     public createProductionPerformanceTable(
         tableId: string,
@@ -289,13 +268,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 損益計算テーブルのデータ変換専用メソッド
-     * @param getDateList - 日付リスト取得関数
-     * @param getTotalsByDate - 日付別集計取得関数
-     * @param getRecordsByDate - 日付別レコード取得関数
-     * @param plMonthlyData - 月次データ
-     * @param getDayOfWeek - 曜日取得関数
-     * @param RevenueAnalysisList - 収益分析リスト
-     * @returns テーブル表示用のデータ配列
      */
     private transformProfitData(
         getDateList: () => string[],
@@ -414,11 +386,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 損益計算テーブルのレンダリング専用メソッド
-     * @param tableId - テーブルID
-     * @param tableData - テーブル表示用のデータ配列
-     * @param getDateList - 日付リスト取得関数
-     * @param getTotalsByDate - 日付別集計取得関数
-     * @returns テーブル要素とコンテナ要素
      */
     private renderProfitTable(
         tableId: string,
@@ -516,7 +483,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 損益計算テーブルのDataTables統合専用メソッド
-     * @param tableId - テーブルID
      */
     private integrateDataTablesForProfit(tableId: string): void {
         setTimeout(() => {
@@ -526,17 +492,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 損益計算テーブルを作成
-     * @param tableId - テーブルID
-     * @param dailyReportData - 日報データ
-     * @param filteredRecords - フィルタリングされたレコード
-     * @param plMonthlyData - 月次データ
-     * @param getDateList - 日付リスト取得関数
-     * @param getTotalsByDate - 日付別集計取得関数
-     * @param getRecordsByDate - 日付別レコード取得関数
-     * @param getDayOfWeek - 曜日取得関数
-     * @param RevenueAnalysisList - 収益分析リスト
-     * @param config - 設定（オプション）
-     * @returns 損益計算テーブルのコンテナ要素
      */
     public createProfitCalculationTable(
         tableId: string,
@@ -616,8 +571,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 収益分析サマリテーブルのデータ変換専用メソッド
-     * @param RevenueAnalysisList - 収益分析データ
-     * @returns テーブル表示用のデータ配列
      */
     private transformRevenueData(RevenueAnalysisList: RevenueAnalysis[]): TableRowData[] {
         const tableData: TableRowData[] = [];
@@ -652,10 +605,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 収益分析サマリテーブルのレンダリング専用メソッド
-     * @param tableId - テーブルID
-     * @param tableData - テーブル表示用のデータ配列
-     * @param RevenueAnalysisList - 収益分析データ
-     * @returns テーブル要素とコンテナ要素
      */
     private renderRevenueTable(
         tableId: string,
@@ -739,7 +688,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 収益分析サマリテーブルのDataTables統合専用メソッド
-     * @param tableId - テーブルID
      */
     private integrateDataTablesForRevenue(tableId: string): void {
         setTimeout(() => {
@@ -749,10 +697,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 収益分析サマリテーブルを作成する
-     * @param tableId - テーブルID
-     * @param RevenueAnalysisList - 収益分析データ
-     * @param config - 設定（オプション）
-     * @returns 収益分析サマリテーブルのコンテナ要素
      */
     public createRevenueAnalysisSummaryTable(
         tableId: string,
@@ -797,7 +741,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * DataTables初期化完了時のコールバック（PL固有の処理を追加）
-     * @param tableId - テーブルID
      */
     protected onDataTableInitialized(tableId: string): void {
         // 色分けラベルを追加
@@ -809,8 +752,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 生産実績テーブル専用のDataTables設定
-     * @param tableId - テーブルのID
-     * @returns DataTables APIインスタンス
      */
     private enhanceProductionTable(tableId: string): DataTablesApi | null {
         const productionTableOptions: Partial<DataTablesOptions> = {
@@ -855,8 +796,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 損益計算テーブル専用のDataTables設定
-     * @param tableId - テーブルのID
-     * @returns DataTables APIインスタンス
      */
     private enhanceProfitCalculationTable(tableId: string): DataTablesApi | null {
         const calculationTableOptions: Partial<DataTablesOptions> = {
@@ -901,8 +840,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 収益分析サマリテーブル専用のDataTables設定
-     * @param tableId - テーブルのID
-     * @returns DataTables APIインスタンス
      */
     private enhanceRevenueSummaryTable(tableId: string): DataTablesApi | null {
         const summaryTableOptions: DataTablesOptions = {
@@ -947,9 +884,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 日付に応じた背景色を取得する
-     * @param date - 日付文字列（YYYY-MM-DD形式）
-     * @param holidayData - 会社休日マスタデータ
-     * @returns 背景色の文字列、通常日の場合は空文字
      */
     private getDateBackgroundColor(
         date: string,
@@ -980,7 +914,6 @@ export class PLDashboardTableManager extends BaseTableManager {
 
     /**
      * 会社営業日数ラベルを作成する
-     * @param tableId - テーブルのID
      */
     private addCompanyOperatingDaysLabel(tableId: string): void {
         try {
@@ -1028,7 +961,6 @@ export class PLDashboardTableManager extends BaseTableManager {
                 Logger.debug(`${tableId} に適切な追加先が見つかりませんでした`);
             }
         } catch (error) {
-            console.error(`営業日数ラベル追加でエラーが発生しました:`, error);
             Logger.debug(`営業日数ラベル追加でエラーが発生しました: ${error}`);
         }
     }

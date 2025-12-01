@@ -72,7 +72,7 @@ export abstract class BaseTableManager {
 
     /**
      * コンストラクタ
-     * @param defaultConfig - デフォルト設定（オプション）
+     * デフォルト設定を指定可能（オプション）
      */
     constructor(defaultConfig?: Partial<TableBuilderConfig>) {
         if (defaultConfig) {
@@ -82,9 +82,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブル要素を作成
-     * @param id - テーブルのID
-     * @param className - テーブルのクラス名
-     * @returns テーブル要素
      */
     protected createTable(
         id: string,
@@ -98,8 +95,6 @@ export abstract class BaseTableManager {
 
     /**
      * 固定ヘッダーを持つテーブルヘッダーを作成
-     * @param columns - カラム名の配列
-     * @returns テーブルヘッダー要素
      */
     protected createStickyTableHeader(columns: string[]): HTMLTableSectionElement {
         const thead = document.createElement("thead");
@@ -122,8 +117,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルボディを作成
-     * @param className - ボディのクラス名
-     * @returns テーブルボディ要素
      */
     protected createTableBody(className: string = "recordlist-body-gaia"): HTMLTableSectionElement {
         const tbody = document.createElement("tbody");
@@ -133,9 +126,7 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルセルを作成
-     * @param content - セルの内容
-     * @param isNumeric - 数値セルかどうか（右寄せにする）
-     * @returns テーブルセル要素
+     * 数値セルの場合は右寄せにする
      */
     protected createTableCell(
         content: string | number,
@@ -151,9 +142,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブル行を作成
-     * @param cells - セルの配列
-     * @param className - 行のクラス名
-     * @returns テーブル行要素
      */
     protected createTableRow(
         cells: HTMLTableCellElement[],
@@ -172,9 +160,7 @@ export abstract class BaseTableManager {
 
     /**
      * 数値をフォーマットして表示用文字列に変換
-     * @param value - 数値
-     * @param decimals - 小数点以下の桁数（デフォルト: 0）
-     * @returns フォーマットされた文字列
+     * 小数点以下の桁数を指定可能（デフォルト: 0）
      */
     protected formatNumber(value: number, decimals: number = 0): string {
         if (isNaN(value)) return "0";
@@ -186,8 +172,7 @@ export abstract class BaseTableManager {
 
     /**
      * パーセンテージをフォーマット
-     * @param value - パーセンテージ値（0-100）
-     * @returns フォーマットされた文字列
+     * 値は0-100の範囲
      */
     protected formatPercentage(value: number): string {
         if (isNaN(value)) return "0%";
@@ -196,10 +181,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブル情報を登録
-     * @param tableId - テーブルID
-     * @param tableType - テーブルの種類
-     * @param config - 設定
-     * @param columns - カラム
      */
     protected registerTable(
         tableId: string,
@@ -226,8 +207,7 @@ export abstract class BaseTableManager {
 
     /**
      * テーブル情報を取得
-     * @param tableId - テーブルID
-     * @returns テーブル情報、存在しない場合はnull
+     * 存在しない場合はnullを返す
      */
     public getTableInfo(tableId: string): TableInfo | null {
         return this.tables.get(tableId) || null;
@@ -235,7 +215,6 @@ export abstract class BaseTableManager {
 
     /**
      * すべてのテーブルIDを取得
-     * @returns テーブルIDの配列
      */
     public getAllTableIds(): string[] {
         return Array.from(this.tables.keys());
@@ -243,8 +222,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルが存在するかチェック
-     * @param tableId - テーブルID
-     * @returns 存在するかどうか
      */
     public hasTable(tableId: string): boolean {
         return this.tables.has(tableId);
@@ -252,9 +229,7 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルにDataTables機能を適用
-     * @param tableId - テーブルのID
-     * @param options - DataTablesのオプション
-     * @returns DataTables APIインスタンス（利用可能な場合）
+     * 利用可能な場合のみDataTables APIインスタンスを返す
      */
     protected enhanceTableWithDataTables(
         tableId: string,
@@ -332,7 +307,7 @@ export abstract class BaseTableManager {
 
             // DataTablesを適用
             // DataTablesの型定義が不完全なため、型アサーションを使用
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             const dataTable = $(`#${tableId}`).DataTable(finalOptions as any);
 
             // テーブル情報を更新
@@ -352,7 +327,6 @@ export abstract class BaseTableManager {
 
     /**
      * DataTables初期化完了時のコールバック（サブクラスでオーバーライド可能）
-     * @param tableId - テーブルID
      */
     protected onDataTableInitialized(tableId: string): void {
         // サブクラスで実装
@@ -360,7 +334,6 @@ export abstract class BaseTableManager {
 
     /**
      * DataTablesの破棄
-     * @param tableId - テーブルのID
      */
     public destroyTable(tableId: string): void {
         const tableInfo = this.tables.get(tableId);
@@ -426,8 +399,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルデータの動的更新
-     * @param tableId - テーブルのID
-     * @param newData - 新しいデータ
      */
     public updateTableData(tableId: string, newData: unknown[]): void {
         const tableInfo = this.tables.get(tableId);
@@ -495,7 +466,6 @@ export abstract class BaseTableManager {
 
     /**
      * DataTablesライブラリの利用可能チェック
-     * @returns boolean - 利用可能かどうか
      */
     protected isDataTablesAvailable(): boolean {
         try {
@@ -521,7 +491,6 @@ export abstract class BaseTableManager {
     /**
      * カスタムテーブルスタイルを適用
      * DataTablesのテーブルラッパーに必要なCSSクラスを追加
-     * @param tableId - テーブルのID
      */
     protected applyCustomTableStyles(tableId: string): void {
         try {
@@ -540,7 +509,6 @@ export abstract class BaseTableManager {
 
     /**
      * 色分けラベルを作成する
-     * @returns 色分けラベルのHTML要素
      */
     protected createColorLegend(): HTMLDivElement {
         const legend = document.createElement("div");
@@ -572,7 +540,6 @@ export abstract class BaseTableManager {
 
     /**
      * 色分けラベルのアイテムを取得（サブクラスでオーバーライド可能）
-     * @returns 色分けアイテムの配列
      */
     protected getColorLegendItems(): Array<{ className: string; label: string }> {
         return [
@@ -584,7 +551,6 @@ export abstract class BaseTableManager {
 
     /**
      * DataTablesの検索バーの右に色分けラベルを追加する
-     * @param tableId - テーブルのID
      */
     protected addColorLegendToDataTable(tableId: string): void {
         try {
@@ -645,15 +611,13 @@ export abstract class BaseTableManager {
                 Logger.debug(`${tableId} に適切な追加先が見つかりませんでした`);
             }
         } catch (error) {
-            console.error(`色分けラベル追加でエラーが発生しました:`, error);
             Logger.debug(`色分けラベル追加でエラーが発生しました: ${error}`);
         }
     }
 
     /**
      * テーブルのDataTableインスタンスを取得
-     * @param tableId - テーブルID
-     * @returns DataTableインスタンス、存在しない場合はnull
+     * 存在しない場合はnullを返す
      */
     public getDataTableInstance(tableId: string): DataTablesApi | null {
         const tableInfo = this.tables.get(tableId);
@@ -662,8 +626,7 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルのデータを取得
-     * @param tableId - テーブルID
-     * @returns テーブルデータ、存在しない場合はnull
+     * 存在しない場合はnullを返す
      */
     public getTableData(tableId: string): TableRowData[] | null {
         const tableInfo = this.tables.get(tableId);
@@ -672,8 +635,6 @@ export abstract class BaseTableManager {
 
     /**
      * テーブルの設定を更新
-     * @param tableId - テーブルID
-     * @param config - 新しい設定
      */
     public updateTableConfig(tableId: string, config: Partial<TableBuilderConfig>): void {
         const tableInfo = this.tables.get(tableId);

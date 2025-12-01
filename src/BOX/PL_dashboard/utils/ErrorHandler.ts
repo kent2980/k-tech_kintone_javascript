@@ -27,14 +27,8 @@ export enum ErrorHandlingStrategy {
 export class ErrorHandler {
     /**
      * エラーを標準形式に変換
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @returns エラー詳細
      */
-    static normalizeError(
-        error: Error | unknown,
-        context?: Record<string, unknown>
-    ): ErrorDetails {
+    static normalizeError(error: Error | unknown, context?: Record<string, unknown>): ErrorDetails {
         if (error instanceof Error) {
             return {
                 message: error.message,
@@ -56,9 +50,6 @@ export class ErrorHandler {
 
     /**
      * エラーをログに記録（詳細情報を含む）
-     * @param message - エラーメッセージ
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
      */
     static logError(
         message: string,
@@ -77,10 +68,6 @@ export class ErrorHandler {
 
     /**
      * ユーザー向けエラーメッセージを取得
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @param defaultMessage - デフォルトメッセージ（オプション）
-     * @returns ユーザーフレンドリーなメッセージ
      */
     static getUserFriendlyMessage(
         error: Error | unknown,
@@ -92,14 +79,8 @@ export class ErrorHandler {
 
     /**
      * エラーを処理してResult型を返す
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @returns Failure型のResult
      */
-    static handleError(
-        error: Error | unknown,
-        context?: Record<string, unknown>
-    ): Result<never> {
+    static handleError(error: Error | unknown, context?: Record<string, unknown>): Result<never> {
         const errorDetails = this.normalizeError(error, context);
         this.logError("エラーが発生しました", error, context);
         return {
@@ -110,10 +91,6 @@ export class ErrorHandler {
 
     /**
      * エラーを処理してnullを返す（既存コードとの互換性）
-     * @param message - エラーメッセージ
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @returns null
      */
     static handleErrorAndReturnNull(
         message: string,
@@ -126,10 +103,6 @@ export class ErrorHandler {
 
     /**
      * エラーを処理して空配列を返す（既存コードとの互換性）
-     * @param message - エラーメッセージ
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @returns 空配列
      */
     static handleErrorAndReturnEmpty<T>(
         message: string,
@@ -142,10 +115,7 @@ export class ErrorHandler {
 
     /**
      * エラーを処理して再スローする
-     * @param message - エラーメッセージ
-     * @param error - エラーオブジェクト
-     * @param context - エラー発生コンテキスト
-     * @throws エラーを再スロー
+     * エラーを再スローする
      */
     static handleErrorAndRethrow(
         message: string,
@@ -159,4 +129,3 @@ export class ErrorHandler {
         throw new Error(`${message}: ${String(error)}`);
     }
 }
-

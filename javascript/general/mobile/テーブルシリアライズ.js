@@ -72,37 +72,22 @@
                 // 文字列フィールドが存在するかチェック
                 if (record[stringField]) {
                     record[stringField].value = serializedData;
-                    console.log(`${tableField} → ${stringField}: シリアライズ完了`);
-                } else {
-                    console.log(`警告: ${stringField}フィールドが存在しません`);
                 }
-            } else {
-                console.log(`警告: ${tableField}フィールドが存在しないか空です`);
             }
         });
 
         return record;
     }
 
-    // アプリIDとドメインを動的に取得
-    const currentAppId = kintone.app.getId();
-    const currentDomain = location.hostname;
-
-    console.log(`アプリID: ${currentAppId}, ドメイン: ${currentDomain}`);
-
     // レコード保存前にシリアライズ処理を実行
     kintone.events.on(
         ["mobile.app.record.create.submit", "mobile.app.record.edit.submit"],
         function (event) {
-            console.log("レコード保存前のシリアライズ処理を開始...");
-
             try {
                 event.record = processAllTablePairs(event.record);
-                console.log("保存前シリアライズ処理が完了しました");
-            } catch (error) {
-                console.error("保存前シリアライズ処理でエラーが発生しました:", error);
+            } catch (err) {
                 // エラーが発生した場合は保存を中止
-                const errorMessage = error instanceof Error ? error.message : String(error);
+                const errorMessage = err instanceof Error ? err.message : String(err);
                 event.error = "シリアライズ処理でエラーが発生しました: " + errorMessage;
             }
 
@@ -119,19 +104,13 @@
     });
 
     kintone.events.on(tableChangeEvents, function (event) {
-        console.log("テーブルフィールドの変更を検知しました");
-
         try {
             event.record = processAllTablePairs(event.record);
             kintone.app.record.set(event);
-            console.log("リアルタイムシリアライズ処理が完了しました");
-        } catch (error) {
-            console.error("リアルタイムシリアライズ処理でエラーが発生しました:", error);
+        } catch {
+            // エラーは無視
         }
 
         return event;
     });
-
-    console.log("テーブルシリアライズ機能が初期化されました");
-    console.log("対象ペア:", tableFieldPairs);
 })();

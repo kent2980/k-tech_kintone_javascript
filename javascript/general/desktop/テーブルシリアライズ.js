@@ -7,10 +7,6 @@
         { tableField: "chg_o_table", stringField: "chg_o_text" },
         { tableField: "deflist_table", stringField: "deflist_text" },
     ];
-    // 設定：テーブルとテキストボックスのフィールドコード
-    var TABLE_FIELD_CODE = "production_number"; // テーブルのフィールドコード
-    var TEXT_FIELD_CODE = "defect_name"; // テーブル内のテキストボックスのフィールドコード
-
     // ----- 関数：テーブル内のテキストボックスを入力可能にする -----
     function makeTableTextEditable(record) {
         // テーブルを取得
@@ -97,24 +93,16 @@
                 // 文字列フィールドが存在するかチェック
                 if (record[stringField]) {
                     record[stringField].value = serializedData;
-                } else {
-                    console.log(`警告: ${stringField}フィールドが存在しません`);
                 }
-            } else {
-                console.log(`警告: ${tableField}フィールドが存在しないか空です`);
             }
         });
 
         return record;
     }
 
-    // アプリIDとドメインを動的に取得
-    const currentAppId = kintone.app.getId();
-    const currentDomain = location.hostname;
-
     // ----- イベント：作成・編集画面表示時 -----
     kintone.events.on(["app.record.create.show", "app.record.edit.show"], function (event) {
-        makeTableTextEditable(event.record);
+        makeTableTextEditable();
         return event;
     });
 
@@ -134,10 +122,9 @@
     kintone.events.on(["app.record.create.submit", "app.record.edit.submit"], function (event) {
         try {
             event.record = processAllTablePairs(event.record);
-        } catch (error) {
-            console.error("保存前シリアライズ処理でエラーが発生しました:", error);
+        } catch (err) {
             // エラーが発生した場合は保存を中止
-            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorMessage = err instanceof Error ? err.message : String(err);
             event.error = "シリアライズ処理でエラーが発生しました: " + errorMessage;
         }
 
@@ -154,13 +141,13 @@
 
     kintone.events.on(tableChangeEvents, function (event) {
         // テーブル内のテキストボックスを入力可能にする
-        makeTableTextEditable(event.record);
+        makeTableTextEditable();
 
         try {
             event.record = processAllTablePairs(event.record);
             kintone.app.record.set(event);
-        } catch (error) {
-            console.error("リアルタイムシリアライズ処理でエラーが発生しました:", error);
+        } catch {
+            // エラーは無視
         }
 
         return event;

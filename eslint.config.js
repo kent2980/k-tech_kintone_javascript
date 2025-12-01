@@ -78,13 +78,17 @@ module.exports = [
         },
     },
     {
-        files: ["**/*.{js,jsx}"],
+        files: ["**/*.{js,jsx,mjs}"],
         languageOptions: {
             parser: tsParser,
             parserOptions: {
                 ecmaVersion: 2020,
                 sourceType: "module",
                 // JavaScriptファイルにはprojectオプションを指定しない
+            },
+            globals: {
+                process: "readonly",
+                console: "readonly",
             },
         },
         plugins: {
@@ -99,6 +103,19 @@ module.exports = [
             "no-var": "error",
             "no-undef": "off",
             "no-unused-vars": "warn",
+        },
+    },
+    {
+        files: ["scripts/**/*.mjs"],
+        languageOptions: {
+            globals: {
+                process: "readonly",
+                console: "readonly",
+            },
+        },
+        rules: {
+            "no-console": "off",
+            "no-undef": "off",
         },
     },
     {

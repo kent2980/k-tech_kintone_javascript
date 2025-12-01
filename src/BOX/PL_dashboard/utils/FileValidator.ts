@@ -51,9 +51,7 @@ export class FileValidator {
 
     /**
      * Excelファイルを検証する
-     * @param file - 検証するファイル
-     * @param maxSizeMB - 最大ファイルサイズ（MB、デフォルト: 10MB）
-     * @returns 検証結果
+     * 最大ファイルサイズを指定可能（MB、デフォルト: 10MB）
      */
     static validateExcelFile(
         file: File,
@@ -93,9 +91,8 @@ export class FileValidator {
 
     /**
      * ファイルサイズを検証する
-     * @param file - 検証するファイル
-     * @param maxSizeMB - 最大ファイルサイズ（MB）
-     * @returns 検証結果
+     *      * file: 検証するファイル
+     *      * maxSizeMB: 最大ファイルサイズ
      */
     static validateFileSize(file: File, maxSizeMB: number): FileValidationResult {
         const maxBytes = maxSizeMB * 1024 * 1024;
@@ -128,9 +125,8 @@ export class FileValidator {
 
     /**
      * ファイル拡張子を検証する
-     * @param file - 検証するファイル
-     * @param allowedExtensions - 許可される拡張子の配列（小文字）
-     * @returns 検証結果
+     *      * file: 検証するファイル
+     *      * allowedExtensions: 許可される拡張子の配列
      */
     static validateFileExtension(file: File, allowedExtensions: string[]): FileValidationResult {
         const extension = file.name.split(".").pop()?.toLowerCase();
@@ -162,9 +158,8 @@ export class FileValidator {
 
     /**
      * MIMEタイプを検証する
-     * @param file - 検証するファイル
-     * @param allowedMimeTypes - 許可されるMIMEタイプの配列
-     * @returns 検証結果
+     *      * file: 検証するファイル
+     *      * allowedMimeTypes: 許可されるMIMEタイプの配列
      */
     static validateMimeType(file: File, allowedMimeTypes: string[]): FileValidationResult {
         // ブラウザによってはMIMEタイプが正しく設定されない場合があるため、警告のみ
@@ -188,8 +183,7 @@ export class FileValidator {
     /**
      * ファイルのマジックナンバー（ファイルシグネチャ）を検証する
      * 悪意のあるファイルの検出に有効
-     * @param file - 検証するファイル
-     * @returns 検証結果（Promise）
+     *      * file: 検証するファイル
      */
     static async validateMagicNumber(file: File): Promise<FileValidationResult> {
         return new Promise((resolve) => {
@@ -242,8 +236,7 @@ export class FileValidator {
 
     /**
      * Excelファイルのマジックナンバーをチェック
-     * @param bytes - ファイルの先頭バイト列
-     * @returns 検証結果
+     *      * bytes: ファイルの先頭バイト列
      */
     private static checkExcelMagicNumber(bytes: Uint8Array): FileValidationResult {
         if (bytes.length < 4) {
@@ -292,8 +285,7 @@ export class FileValidator {
     /**
      * ファイル名の安全性を検証する
      * 危険な文字やパストラバーサル攻撃を防ぐ
-     * @param fileName - 検証するファイル名
-     * @returns 検証結果
+     *      * fileName: 検証するファイル名
      */
     static validateFileName(fileName: string): FileValidationResult {
         const errors: string[] = [];

@@ -34,7 +34,7 @@ export class MemoryLeakDetector {
 
     /**
      * メモリリーク検出を有効化
-     * @param intervalMs - チェック間隔（ミリ秒、デフォルト: 30000）
+     * チェック間隔を指定可能（ミリ秒、デフォルト: 30000）
      */
     static enable(intervalMs: number = 30000): void {
         if (this.isEnabled) {
@@ -67,7 +67,6 @@ export class MemoryLeakDetector {
 
     /**
      * メモリリークをチェック
-     * @returns メモリリークレポート
      */
     static checkMemoryLeaks(): MemoryLeakReport {
         const report: MemoryLeakReport = {
@@ -81,9 +80,8 @@ export class MemoryLeakDetector {
         // DataTablesインスタンスの検出
         try {
             // jQueryはグローバルに存在する可能性があるため、型アサーションを使用
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             if (typeof window !== "undefined" && (window as any).jQuery) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const $ = (window as any).jQuery;
                 const tables = $("table").filter(function (this: HTMLElement) {
                     return $.fn.DataTable && $.fn.DataTable.isDataTable(this);
@@ -126,7 +124,7 @@ export class MemoryLeakDetector {
 
     /**
      * 現在のメモリ使用状況を取得
-     * @returns メモリ使用状況（performance.memoryが利用可能な場合）
+     * performance.memoryが利用可能な場合のみ返す
      */
     static getMemoryUsage(): {
         usedJSHeapSize?: number;
@@ -134,9 +132,8 @@ export class MemoryLeakDetector {
         jsHeapSizeLimit?: number;
     } {
         // performance.memoryは非標準のプロパティのため、型アサーションを使用
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         if (typeof performance !== "undefined" && (performance as any).memory) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const memory = (performance as any).memory;
             return {
                 usedJSHeapSize: memory.usedJSHeapSize as number,

@@ -44,7 +44,6 @@ export class DataFetcher {
 
     /**
      * コンストラクタ
-     * @param apiService - KintoneApiServiceのインスタンス（オプション、渡されない場合は内部で作成）
      */
     constructor(apiService?: KintoneApiService) {
         this.apiService = apiService || new KintoneApiService();

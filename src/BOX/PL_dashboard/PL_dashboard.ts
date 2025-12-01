@@ -62,7 +62,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * 表示スペース切替ボタンを作成する
-     * @returns 切替ボタン
+     * *  切替ボタン
      */
     function createToggleViewButton(): HTMLButtonElement {
         const button = document.createElement("button");
@@ -77,7 +77,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * 読み込みオーバーレイを表示
-     * @param parent - オーバーレイを追加する親要素（通常はヘッダースペース）
+     *      * parent: オーバーレイを追加する親要素
      */
     function showLoading(parent: HTMLElement): void {
         try {
@@ -156,14 +156,13 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * Assy工程生産実績表を作成する関数
-     * @param plMonthlyData - PL月次データのレコードオブジェクト
-     * @returns Assy工程生産実績表コンテナ
+     * *  Assy工程生産実績表コンテナ
      */
     /**
      * PL月次データを取得する関数
-     * @param year - 年
-     * @param month - 月
-     * @returns 取得したレコードデータ
+     *      * year: 年
+     *      * month: 月
+     * *  取得したレコードデータ
      */
     async function fetchPLMonthlyData(
         year: string,
@@ -174,18 +173,18 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * PL日次データを取得する関数
-     * @param year - 年
-     * @param month - 月
-     * @returns レコードの配列
+     *      * year: 年
+     *      * month: 月
+     * *  レコードの配列
      */
     async function fetchPLDailyData(year: string, month: string): Promise<daily.SavedFields[]> {
         return await apiService.fetchPLDailyData(year, month);
     }
 
     /**生産日報報告書データを取得する関数
-     * @param year - 年（nullの場合は全期間）
-     * @param month - 月（nullの場合は年のみでフィルタ）
-     * @returns レコードの配列
+     *      * year: 年
+     *      * month: 月
+     * *  レコードの配列
      */
     async function fetchProductionReportData(
         year: string | null = null,
@@ -197,7 +196,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * マスタ機種一覧データを取得する関数
-     * @returns レコードの配列
+     * *  レコードの配列
      */
     async function fetchMasterModelData(): Promise<model_master.SavedFields[]> {
         return await apiService.fetchMasterModelData();
@@ -205,7 +204,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * 祝日データを取得する関数
-     * @returns レコードの配列
+     * *  レコードの配列
      */
     async function fetchHolidayData(): Promise<holiday.SavedFields[]> {
         return await apiService.fetchHolidayData();
@@ -494,8 +493,8 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
     /**
      * product_history_dataから指定した日付の合計値を取得する関数
      * DataProcessorの静的メソッドを使用
-     * @param date - 指定する日付（YYYY-MM-DD形式）
-     * @returns 合計値のオブジェクト
+     *      * date: 指定する日付
+     * *  合計値のオブジェクト
      */
     function getTotalsByDate(date: string): TotalsByDate {
         return DataProcessor.getTotalsByDate(product_history_data, date);
@@ -525,8 +524,8 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
     /**
      * dailyReportDataから指定した日付のレコードを取得する関数
      * DataProcessorの静的メソッドを使用
-     * @param date - 指定する日付（YYYY-MM-DD形式）
-     * @returns レコードの配列
+     *      * date: 指定する日付
+     * *  レコードの配列
      */
     function getRecordsByDate(date: string): daily.SavedFields[] {
         return DataProcessor.getRecordsByDate(dailyReportData, date);
@@ -538,7 +537,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
      */
     /**
      * タブコンテナを作成する関数
-     * @returns タブコンテナ、ボタンコンテナ、コンテンツコンテナ
+     * *  タブコンテナ、ボタンコンテナ、コンテンツコンテナ
      */
     function createTabContainer(): TabContainerResult {
         // メインコンテナ
@@ -561,10 +560,10 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * タブボタンを作成する関数
-     * @param tabId - タブのID
-     * @param tabLabel - タブのラベル
-     * @param isActive - アクティブかどうか
-     * @returns タブボタン
+     *      * tabId: タブのID
+     *      * tabLabel: タブのラベル
+     *      * isActive: アクティブかどうか
+     * *  タブボタン
      */
     function createTabButton(
         tabId: string,
@@ -580,10 +579,10 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * タブコンテンツを作成する関数
-     * @param tabId - タブのID
-     * @param content - コンテンツ要素
-     * @param isActive - アクティブかどうか
-     * @returns タブコンテンツ
+     *      * tabId: タブのID
+     *      * content: コンテンツ要素
+     *      * isActive: アクティブかどうか
+     * *  タブコンテンツ
      */
     function createTabContent(
         tabId: string,
@@ -599,7 +598,7 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
 
     /**
      * タブを切り替える関数
-     * @param targetTabId - 切り替え先のタブID
+     *      * targetTabId: 切り替え先のタブID
      */
     function switchTab(targetTabId: string): void {
         lastActiveTabId = targetTabId;
