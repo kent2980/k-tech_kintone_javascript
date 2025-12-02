@@ -1,0 +1,22 @@
+{
+    "title": "生産日報報告書(BOX)",
+    "app": "55",
+    "scope": "ALL",
+    "desktop": {
+        "js": [
+            "javascript/general/desktop/日付をユーザーが指定してレコードを絞り込むボタン.js",
+            "javascript/general/desktop/ファイルに書き出すボタンを作成.js",
+            "javascript/general/desktop/レコード編集ボタン.js",
+            "dist/table_serialize.js",
+            "dist/production_report.js"
+        ],
+        "css": ["css/レコード編集ボタン.css", "css/生産日報報告書.css"]
+    },
+    "mobile": {
+        "js": [
+            "javascript/general/mobile/テーブルシリアライズ.js",
+            "javascript/box/mobile/生産日報報告書_mobile.js"
+        ],
+        "css": ["css/生産日報報告書_mobile.css"]
+    }
+}

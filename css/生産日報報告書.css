@@ -50,3 +50,7 @@ button.recordlist-edit-gaia {
 .input-text-cybozu[id*="_13458387-"] {
     display: none;
 }
+
+input.input-text-cybozu.lookupbridge-field {
+    display: none !important;
+}

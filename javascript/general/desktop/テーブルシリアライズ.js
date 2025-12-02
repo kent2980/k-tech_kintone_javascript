@@ -106,18 +106,6 @@
         return event;
     });
 
-    // // ----- イベント：テーブル行が追加された時 -----
-    // kintone.events.on(
-    //     [
-    //         "app.record.create.change." + TABLE_FIELD_CODE,
-    //         "app.record.edit.change." + TABLE_FIELD_CODE,
-    //     ],
-    //     function (event) {
-    //         makeTableTextEditable(event.record);
-    //         return event;
-    //     }
-    // );
-
     // レコード保存前にシリアライズ処理を実行
     kintone.events.on(["app.record.create.submit", "app.record.edit.submit"], function (event) {
         try {

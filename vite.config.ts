@@ -1,20 +1,27 @@
 import { defineConfig, loadEnv } from "vite";
 
+// inputMapをエクスポートして、ビルドスクリプトからも使用可能にする
+export const inputMap = {
+    desktop: { PL_dashboard: "./src/BOX/PL_dashboard/PL_dashboard.ts" },
+    space_desktop: { space_desktop: "./src/system/space_desktop.ts" },
+    space_mobile: { space_mobile: "./src/system/space_mobile.ts" },
+    aoi_repair_input: {
+        aoi_repair_input: "./src/smt/desktop/aoi_repair_input/index.ts",
+    },
+    table_serialize: {
+        table_serialize: "./src/general/テーブルシリアライズ/desktop/テーブルシリアライズ.ts",
+    },
+    production_report: {
+        production_report: "./src/BOX/生産日報報告書/desktop.ts",
+    },
+};
+
 export default defineConfig(({ command, mode }) => {
     // 環境変数を読み込む
     const env = loadEnv(mode, process.cwd(), "");
 
     // 環境変数でビルド対象を制御
     const buildTarget = process.env.BUILD_TARGET || "desktop";
-
-    const inputMap = {
-        desktop: { PL_dashboard: "./src/BOX/PL_dashboard/PL_dashboard.ts" },
-        space_desktop: { space_desktop: "./src/system/space_desktop.ts" },
-        space_mobile: { space_mobile: "./src/system/space_mobile.ts" },
-        aoi_repair_input: {
-            aoi_repair_input: "./src/smt/desktop/aoi_repair_input/index.ts",
-        },
-    };
 
     // 出力ディレクトリを分ける代わりに、emptyOutDirをfalseにして上書きを防ぐ
     const selectedInput = inputMap[buildTarget as keyof typeof inputMap] || inputMap.desktop;
