@@ -7,8 +7,8 @@
             "javascript/general/desktop/日付をユーザーが指定してレコードを絞り込むボタン.js",
             "javascript/general/desktop/ファイルに書き出すボタンを作成.js",
             "javascript/general/desktop/レコード編集ボタン.js",
-            "javascript/general/desktop/テーブルシリアライズ.js",
-            "javascript/box/desktop/生産日報報告書.js"
+            "dist/table_serialize.js",
+            "dist/production_report.js"
         ],
         "css": ["css/レコード編集ボタン.css", "css/生産日報報告書.css"]
     },

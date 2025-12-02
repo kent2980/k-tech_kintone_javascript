@@ -49,5 +49,12 @@
     ],
     "cSpell.ignoreRegExpList": ["/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF]+/g"],
     "cursor.chat.language": "ja",
-    "cursor.commitMessage.language": "ja"
+    "cursor.commitMessage.language": "ja",
+    "editor.foldingStrategy": "indentation",
+    "editor.foldingImportsByDefault": true,
+    "editor.showFoldingControls": "always",
+    "[typescript]": {
+        "editor.foldingStrategy": "indentation",
+        "editor.foldingImportsByDefault": true
+    }
 }

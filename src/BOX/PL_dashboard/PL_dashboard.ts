@@ -1,5 +1,4 @@
 /// <reference path="../../../kintone.d.ts" />
-/// <reference path="../../../globals.d.ts" />
 /// <reference path="./fields/daily_fields.d.ts" />
 /// <reference path="./fields/line_daily_fields.d.ts" />
 /// <reference path="./fields/month_fields.d.ts" />
@@ -701,8 +700,9 @@ import { ActiveFilterStore, HolidayStore, MasterModelStore } from "./store";
         const masterModelStore = MasterModelStore.getInstance();
         let masterModelData = masterModelStore.getMasterData();
         Logger.debug("マスタデータ確認:", masterModelData);
-        if (!masterModelData) {
+        if (!masterModelData || masterModelData.length === 0) {
             masterModelData = await fetchMasterModelData();
+            masterModelStore.setMasterData(masterModelData);
         }
 
         // 初回表示時にフィルタリングを実行（現在の年月でデータ取得）

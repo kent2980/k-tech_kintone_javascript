@@ -281,6 +281,7 @@ export class KintoneApiService {
         // キャッシュから取得を試行
         const cachedData = PerformanceUtil.getFromCache<model_master.SavedFields[]>(cacheKey);
         if (cachedData) {
+            console.log("マスタ機種データをキャッシュから取得: " + cachedData.length + "件");
             Logger.debug(`マスタ機種データをキャッシュから取得: ${cachedData.length}件`);
             return cachedData;
         }

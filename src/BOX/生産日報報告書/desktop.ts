@@ -1,3 +1,6 @@
+// 定数
+const DEFECT_NAME_APP_ID = 53;
+
 // 型定義
 interface KintoneEvent {
     record: KintoneRecord;
@@ -45,8 +48,6 @@ interface MasterRecord {
 
 /**
  * レコード作成・編集画面表示時の処理
- * @param event - kintoneイベントオブジェクト
- * @returns event
  */
 async function handleRecordShow(event: KintoneEvent): Promise<KintoneEvent> {
     const appId = 24; // 🔁 他アプリのID
@@ -228,129 +229,11 @@ async function handleRecordShow(event: KintoneEvent): Promise<KintoneEvent> {
         );
     }
 
-    if (lookupButtons[1]) {
-        lookupButtons[1].addEventListener(
-            "click",
-            function () {
-                // テーブル要素がDOMに追加されるまで待機
-                waitForTableElement();
-            },
-            true
-        );
-    }
-
-    /**
-     * テーブル要素から、いずれかのセルのtextContentが指定されたライン名と一致しない行を非表示にする
-     * @param table - 対象のテーブル要素
-     * @param lineName - フィルタリングに使用するライン名
-     */
-    function hideTableRowByLineName(table: HTMLTableElement, lineName: string): void {
-        // ライン名が未選択の場合は何もしない
-        if (lineName === "") {
-            return;
-        }
-        // テーブル要素から行を取得
-        const rows = table.getElementsByTagName("tr");
-        for (const row of rows) {
-            const cells = row.getElementsByTagName("div");
-            let found = false;
-            for (const cell of cells) {
-                if (cell.textContent === lineName) {
-                    row.style.display = "table-row";
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                row.style.display = "none";
-            }
-        }
-    }
-
-    /**
-     * テーブルに新しい行が追加されたタイミングでフィルタ処理を再実行するための監視を設定
-     * @param table - 対象のテーブル要素
-     */
-    function observeTableRows(table: HTMLTableElement): void {
-        const tbody = table.tBodies[0];
-        if (!tbody) {
-            return;
-        }
-        // 現在選択中のライン名を取得
-        const lineNameSelect = document.getElementById("custom_line_dropdown");
-        if (!lineNameSelect || !(lineNameSelect instanceof HTMLSelectElement)) {
-            console.error("ライン名ドロップダウンが見つかりません");
-            return;
-        }
-        const lineName = lineNameSelect.value;
-        // 最初に一度フィルタを実行
-        hideTableRowByLineName(table, lineName);
-
-        const rowObserver = new MutationObserver(function () {
-            // 行が追加・削除されたら再度フィルタを実行
-            hideTableRowByLineName(table, lineName);
-        });
-
-        rowObserver.observe(tbody, {
-            childList: true, // 行（tr）の追加・削除を監視
-        });
-    }
-
-    /**
-     * テーブル要素がDOMに追加されるまで待機する関数
-     */
-    function waitForTableElement(): void {
-        // 既に存在する場合は即座に取得
-        const existingTable = document.getElementsByClassName(
-            "listTable-gaia lookup-table-gaia"
-        )[0];
-        if (existingTable && existingTable instanceof HTMLTableElement) {
-            // テーブル要素が見つかった後の処理（必要に応じてlineNameを使用）
-            observeTableRows(existingTable);
-            return;
-        }
-
-        // MutationObserverでDOMの変更を監視
-        const observer = new MutationObserver(function (mutations, obs) {
-            const table = document.getElementsByClassName("listTable-gaia lookup-table-gaia")[0];
-            if (table && table instanceof HTMLTableElement) {
-                // テーブル要素が見つかった後の処理（必要に応じてlineNameを使用）
-                observeTableRows(table);
-                obs.disconnect(); // 監視を停止
-            }
-        });
-
-        // 監視を開始（body配下の変更を監視）
-        observer.observe(document.body, {
-            childList: true, // 子ノードの追加・削除を監視
-            subtree: true, // 子孫ノードも監視
-        });
-
-        // タイムアウト設定（30秒後に監視を停止）
-        setTimeout(function () {
-            observer.disconnect();
-        }, 30000);
-    }
-
     return event;
 }
 
 /**
- * 不良入力フィールドを非表示
- */
-function setHideDefectField(): void {
-    const formData = (window as any).cybozu?.data?.page?.FORM_DATA;
-    const defectInput = document.getElementById("19_13458387-:b5-text");
-    const parentDefectInput = defectInput?.parentElement;
-    if (parentDefectInput) {
-        parentDefectInput.style.display = "none";
-    }
-}
-
-/**
  * モデル名ドロップダウンを更新する関数
- * @param lineName - 選択されたライン名
- * @param allRecords - 全レコードデータ
  */
 function updateModelNameDropdown(lineName: string, allRecords: MasterRecord[]): void {
     // 入力された値に対応するモデルコードリストを作成
@@ -393,8 +276,6 @@ function updateModelNameDropdown(lineName: string, allRecords: MasterRecord[]): 
 
 /**
  * ライン名変更時の処理
- * @param event - kintoneイベントオブジェクト
- * @returns event
  */
 function handleLineNameChange(event: KintoneEvent): KintoneEvent {
     // キャッシュからデータを取得
@@ -416,8 +297,6 @@ function handleLineNameChange(event: KintoneEvent): KintoneEvent {
 
 /**
  * テーブル変更・送信時の工数計算処理
- * @param event - kintoneイベントオブジェクト
- * @returns event
  */
 function handleManHoursTableChange(event: KintoneEvent): KintoneEvent {
     const record = event.record;
@@ -491,7 +370,259 @@ function handleManHoursTableChange(event: KintoneEvent): KintoneEvent {
     return event;
 }
 
-// イベントハンドラーの登録
+// 不良データの型定義
+interface DefectData {
+    lineName: string;
+    reference: string;
+    defectName: string;
+}
+
+/**
+ * テーブルの列ヘッダーから列インデックスを取得する
+ */
+function getColumnIndices(tableElement: Element, columnNames: string[]): Map<string, number> {
+    const columnIndices = new Map<string, number>();
+    const headerRows = tableElement.getElementsByTagName("tr");
+    const targetColumnSet = new Set(columnNames);
+
+    // ヘッダー行を検索（最初に見つかったヘッダー行で処理）
+    for (const row of Array.from(headerRows)) {
+        const headerCells = row.getElementsByTagName("th");
+        if (headerCells.length === 0) continue;
+
+        // 各ヘッダーセルを確認
+        for (let index = 0; index < headerCells.length; index++) {
+            const span = headerCells[index].getElementsByTagName("span")[0];
+            if (!span) continue;
+
+            const columnName = span.textContent?.trim() || "";
+            if (targetColumnSet.has(columnName) && !columnIndices.has(columnName)) {
+                columnIndices.set(columnName, index);
+                // 全ての列が見つかったら早期終了
+                if (columnIndices.size === columnNames.length) {
+                    return columnIndices;
+                }
+            }
+        }
+        // ヘッダー行が見つかったら処理終了
+        if (columnIndices.size > 0) break;
+    }
+
+    return columnIndices;
+}
+
+/**
+ * テーブルから不良データを抽出する
+ */
+function extractDefectData(
+    tableElement: Element,
+    columnIndices: Map<string, number>,
+    lineName: string
+): DefectData[] {
+    const defectList: DefectData[] = [];
+    const referenceIndex = columnIndices.get("不具合場所");
+    const defectNameIndex = columnIndices.get("不良名");
+
+    // 必要な列インデックスが取得できていない場合は空配列を返す
+    if (referenceIndex === undefined || defectNameIndex === undefined || !lineName) {
+        return defectList;
+    }
+
+    const rows = tableElement.getElementsByTagName("tr");
+
+    // データ行を処理（ヘッダー行をスキップ）
+    for (const row of Array.from(rows)) {
+        // ヘッダー行はスキップ
+        if (row.getElementsByTagName("th").length > 0) continue;
+
+        const cells = row.getElementsByClassName("input-text-cybozu");
+        if (cells.length === 0) continue;
+
+        // 必要な列の値を取得
+        const referenceCell = cells[referenceIndex];
+        const defectNameCell = cells[defectNameIndex];
+
+        if (
+            !(referenceCell instanceof HTMLInputElement) ||
+            !(defectNameCell instanceof HTMLInputElement)
+        ) {
+            continue;
+        }
+
+        const referenceValue = referenceCell.value.trim();
+        const defectNameValue = defectNameCell.value.trim();
+
+        // 有効なデータのみ追加
+        if (referenceValue && defectNameValue) {
+            defectList.push({
+                lineName: lineName,
+                reference: referenceValue,
+                defectName: defectNameValue,
+            });
+        }
+    }
+
+    return defectList;
+}
+
+/**
+ * ライン名を取得する
+ */
+function getLineName(elementId: string): string {
+    const lineNameElement = document.getElementById(elementId);
+    if (lineNameElement instanceof HTMLInputElement) {
+        return lineNameElement.value.trim();
+    }
+    return "";
+}
+
+// kintone APIレスポンスの型定義
+interface KintoneApiResponse {
+    records: Array<{
+        [fieldCode: string]: {
+            value: string;
+        };
+    }>;
+}
+
+/**
+ * 不良名マスタへのJavaScriptAPI自動登録処理(重複レコードは登録しない)
+ */
+async function autoRegistrationDefectName(defectList: DefectData[]): Promise<void> {
+    // データが空の場合は処理を終了
+    if (defectList.length === 0) {
+        return;
+    }
+
+    const DEFECT_NAME_APP_ID = 53;
+    const lineName = defectList[0].lineName;
+
+    try {
+        // 既存のレコードを取得
+        const params = {
+            app: DEFECT_NAME_APP_ID,
+            query: `lineName = "${lineName}"`,
+            fields: ["lineName", "reference", "defectName"],
+        };
+
+        const response = (await kintone.api(
+            kintone.api.url("/k/v1/records", true),
+            "GET",
+            params
+        )) as KintoneApiResponse;
+
+        const existingRecords = response.records || [];
+
+        // 既存レコードから重複チェック用のセットを作成
+        const existingRecordSet = new Set<string>();
+        existingRecords.forEach((record) => {
+            const reference = record.reference?.value || "";
+            const defectName = record.defectName?.value || "";
+            if (reference && defectName) {
+                existingRecordSet.add(`${reference}_${defectName}`);
+            }
+        });
+
+        // 重複していない新しいレコードのみを抽出
+        const newRecords = defectList
+            .filter((defect) => {
+                const key = `${defect.reference}_${defect.defectName}`;
+                return !existingRecordSet.has(key);
+            })
+            .map((defect) => ({
+                lineName: { value: defect.lineName },
+                reference: { value: defect.reference },
+                defectName: { value: defect.defectName },
+            }));
+
+        // 新しいレコードがある場合のみ登録
+        if (newRecords.length > 0) {
+            await kintone.api(kintone.api.url("/k/v1/records", true), "POST", {
+                app: DEFECT_NAME_APP_ID,
+                records: newRecords,
+            });
+            console.log(`${newRecords.length}件の不良データを登録しました`);
+        } else {
+            console.log("登録する新しい不良データはありません");
+        }
+    } catch (error) {
+        console.error("不良名マスタへの登録処理でエラーが発生しました:", error);
+        throw error; // エラーを上位に伝播
+    }
+}
+
+/**
+ * 不良データを準備する（changeイベント用の同期処理）
+ * @param event - kintoneイベントオブジェクト
+ * @returns event
+ */
+function prepareDefectData(event: KintoneEvent): KintoneEvent {
+    // changeイベントでは同期処理のみ
+    // データの準備やバリデーションは行わず、submitイベントで処理する
+    return event;
+}
+
+/**
+ * 不良名マスタへのJavaScriptAPIで自動登録処理(重複レコードは登録しない)
+ * submitイベントでのみ実行される非同期処理
+ */
+async function handleDefectNameAutoRegistration(event: KintoneEvent): Promise<KintoneEvent> {
+    const TARGET_COLUMNS = ["不具合場所", "不良名"];
+    const LINE_NAME_ELEMENT_ID = "6_13457868-:9f-text";
+    const TABLE_CLASS_NAME = "subtable-13457853";
+
+    // ライン名を取得
+    const lineName = getLineName(LINE_NAME_ELEMENT_ID);
+    if (!lineName) {
+        return event; // ライン名が取得できない場合は処理を終了
+    }
+
+    // テーブル要素を取得
+    const subTable = document.getElementsByClassName(TABLE_CLASS_NAME)[0];
+    if (!subTable) {
+        return event; // テーブルが見つからない場合は処理を終了
+    }
+
+    // 列インデックスを取得
+    const columnIndices = getColumnIndices(subTable, TARGET_COLUMNS);
+    if (columnIndices.size !== TARGET_COLUMNS.length) {
+        return event; // 必要な列が見つからない場合は処理を終了
+    }
+
+    // 不良データを抽出
+    const defectList = extractDefectData(subTable, columnIndices, lineName);
+
+    // 不良データが存在する場合のみ登録処理を実行
+    if (defectList.length > 0) {
+        try {
+            await autoRegistrationDefectName(defectList);
+        } catch (error) {
+            // エラーが発生した場合はエラーメッセージを設定
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            event.error = `不良名マスタへの登録処理でエラーが発生しました: ${errorMessage}`;
+            console.error("不良名マスタ登録エラー:", error);
+        }
+    }
+
+    return event;
+}
+
+/**
+ * フィールドIDを取得する関数
+ */
+function findFieldId(fieldCode: string): string {
+    let FORM_DATA = cybozu.data.page["FORM_DATA"];
+    let ELEMENT_FIELD_ID = {};
+
+    return "";
+}
+
+// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════
+//                         イベントハンドラーの登録
+// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+
 // 作成・編集画面で動作
 kintone.events.on(["app.record.create.show", "app.record.edit.show"], handleRecordShow);
 
@@ -514,4 +645,22 @@ kintone.events.on(
         "app.record.edit.submit",
     ],
     handleManHoursTableChange
+);
+
+// 不良名マスタへの自動登録処理(重複レコードは登録しない)
+// submitイベントでのみ非同期処理を実行
+kintone.events.on(
+    ["app.record.create.submit", "app.record.edit.submit"],
+    handleDefectNameAutoRegistration
+);
+
+// changeイベントでは同期処理のみ（データ準備など）
+kintone.events.on(
+    [
+        "app.record.create.change.deflist_table",
+        "app.record.edit.change.deflist_table",
+        "app.record.create.change.memo",
+        "app.record.edit.change.memo",
+    ],
+    prepareDefectData
 );
