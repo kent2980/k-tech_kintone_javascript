@@ -233,6 +233,16 @@ async function handleRecordShow(event: KintoneEvent): Promise<KintoneEvent> {
 }
 
 /**
+ * レコード作成・編集画面のデフォルトフィールドスタイル設定
+ */
+function setCreateEditDefaultFieldStyle(event: KintoneEvent): KintoneEvent {
+    kintone.app.record.setFieldShown("line_name", false);
+    kintone.app.record.setFieldShown("model_name", false);
+    kintone.app.record.setFieldShown("model_code", false);
+    return event;
+}
+
+/**
  * モデル名ドロップダウンを更新する関数
  */
 function updateModelNameDropdown(lineName: string, allRecords: MasterRecord[]): void {
@@ -626,6 +636,11 @@ function findFieldId(fieldCode: string): string {
 // 作成・編集画面で動作
 kintone.events.on(["app.record.create.show", "app.record.edit.show"], handleRecordShow);
 
+// 作成・編集画面でデフォルトフィールドスタイル設定
+kintone.events.on(
+    ["app.record.create.show", "app.record.edit.show"],
+    setCreateEditDefaultFieldStyle
+);
 // レコード追加 or 編集画面で、文字列フィールドが変わった時に発火
 kintone.events.on(
     ["app.record.create.change.line_name", "app.record.edit.change.line_name"],
