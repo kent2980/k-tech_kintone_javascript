@@ -1,4 +1,5 @@
 import reportSvg from "../../../assets/report.svg?raw";
+import { Logger } from "../../utils/Logger";
 
 /**
  * SVG文字列をDOM要素に変換する
@@ -11,12 +12,9 @@ function createSvgElement(svgString: string): SVGSVGElement {
 }
 
 /**
- * spaceIdが3の時のスペースカスタマイズを実行
+ * アプリ選択メニューを作成
  */
-export function renderSpace3(): void {
-    const baseUrl = document.location.origin;
-    const root = document.getElementsByClassName("gaia-argoui-page-space-show-left")[0];
-    
+function createAppSelectMenu(root: Element, baseUrl: string): void {
     // divを作成
     const div = document.createElement("div");
     div.className = "gaia-argoui-widget gaia-argoui-space-spacebodywidget";
@@ -129,3 +127,89 @@ export function renderSpace3(): void {
     div.appendChild(table);
 }
 
+/**
+ * チュートリアルメニューを作成
+ */
+function createTutorialMenu(root: Element): void {
+    const div = document.createElement("div");
+    div.className = "gaia-argoui-widget gaia-argoui-space-spacebodywidget";
+    div.style.padding = "10px";
+    root.appendChild(div);
+
+    // タイトルを作成
+    const title = document.createElement("div");
+    title.style.height = "56px";
+    title.style.lineHeight = "56px";
+    const h3 = document.createElement("h3");
+    h3.textContent = "キントーンの使い方";
+    h3.className = "gaia-argoui-widget-title";
+    h3.style.fontSize = "20px";
+    title.appendChild(h3);
+    div.appendChild(title);
+
+    // サブタイトル1
+    const subTitle = document.createElement("div");
+    subTitle.style.height = "40px";
+    subTitle.style.lineHeight = "40px";
+    const h4 = document.createElement("h4");
+    h4.textContent = "1.トップページ";
+    h4.className = "gaia-argoui-widget-subtitle";
+    h4.style.fontSize = "16px";
+    subTitle.appendChild(h4);
+    div.appendChild(subTitle);
+
+    // 操作方法の画像を配置
+    const img = document.createElement("img");
+    img.src =
+        "https://2pjcypqjfl8m.cybozu.com/k/api/record/download.do/-/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202025-12-11%20133812.png?app=57&field=13458476&detectType=true&record=1&row=14554&id=5626&hash=a3b6574d6229efedca638d3aa466138332ddc1d9&revision=1&.png&w=1280&h=800&flag=SHRINK";
+    img.style.width = "100%";
+    img.style.height = "auto";
+    img.style.display = "block";
+    div.appendChild(img);
+
+    // 線を引く
+    const line = document.createElement("div");
+    line.style.width = "100%";
+    line.style.height = "1px";
+    line.style.marginTop = "10px";
+    line.style.marginBottom = "10px";
+    line.style.backgroundColor = "#ddd";
+    div.appendChild(line);
+
+    // サブタイトル2
+    const subTitle2 = document.createElement("div");
+    subTitle2.style.height = "40px";
+    subTitle2.style.lineHeight = "40px";
+    const h42 = document.createElement("h4");
+    h42.textContent = "2.レコード閲覧画面";
+    h42.className = "gaia-argoui-widget-subtitle";
+    h42.style.fontSize = "16px";
+    subTitle2.appendChild(h42);
+    div.appendChild(subTitle2);
+
+    // 操作方法の画像を配置
+    const img2 = document.createElement("img");
+    img2.src =
+        "https://2pjcypqjfl8m.cybozu.com/k/api/record/download.do/-/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202025-12-11%20133824.png?app=57&field=13458476&detectType=true&record=2&row=14556&id=5627&hash=b4d3296473159830b2b773d821a9837bc3cc241e&revision=1&.png&w=1280&h=800&flag=SHRINK";
+    img2.style.width = "100%";
+    img2.style.height = "auto";
+    img2.style.display = "block";
+    div.appendChild(img2);
+}
+
+/**
+ * spaceIdが3の時のスペースカスタマイズを実行
+ */
+export function renderSpace3(): void {
+    const baseUrl = document.location.origin;
+    const root = document.getElementsByClassName("gaia-argoui-page-space-show-left")[0];
+    if (!root) {
+        Logger.error("スペースエリアが見つかりません");
+        return;
+    }
+
+    // アプリ選択メニューを作成
+    createAppSelectMenu(root, baseUrl);
+    // チュートリアルメニューを作成
+    createTutorialMenu(root);
+}

@@ -3,7 +3,7 @@
  * DataTablesやChart.jsのインスタンスが適切に破棄されているかを監視
  */
 
-import { Logger } from "./Logger";
+import { Logger } from "../../../utils/Logger";
 
 /**
  * メモリリーク検出結果

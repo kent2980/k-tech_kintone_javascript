@@ -3,7 +3,7 @@
  * ファイルサイズ、形式、悪意のあるファイルの検出を行う
  */
 
-import { Logger } from "./Logger";
+import { Logger } from "../../../utils/Logger";
 
 /**
  * ファイル検証結果

@@ -3,7 +3,7 @@
  * BusinessCalculationServiceを補完し、計算結果の検証やログ出力などのユーティリティ機能を提供
  */
 
-import { Logger } from "../utils/Logger";
+import { Logger } from "../../../utils/Logger";
 import type { BusinessMetrics } from "./BusinessCalculationService";
 
 /**

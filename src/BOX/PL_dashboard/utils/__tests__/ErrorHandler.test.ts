@@ -2,8 +2,8 @@
  * ErrorHandlerのユニットテスト
  */
 
-import { ErrorHandler, ErrorHandlingStrategy } from "../ErrorHandler";
-import { Logger } from "../Logger";
+import { Logger } from "../../../../utils/Logger";
+import { ErrorHandler } from "../ErrorHandler";
 import { UserFriendlyMessages } from "../UserFriendlyMessages";
 
 // Loggerをモック

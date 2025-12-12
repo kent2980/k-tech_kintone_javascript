@@ -3,8 +3,8 @@
  * エラー情報を保持し、一貫したエラーハンドリングを提供
  */
 
-import { Logger } from "./Logger";
-import { Result, ErrorDetails } from "../types/result";
+import { Logger } from "../../../utils/Logger";
+import { ErrorDetails, Result } from "../types/result";
 import { UserFriendlyMessages } from "./UserFriendlyMessages";
 
 /**

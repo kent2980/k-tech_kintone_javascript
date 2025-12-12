@@ -110,10 +110,10 @@ const createMockFileReader = () => {
     return reader;
 };
 
-import { PLExcelImporter } from "../PLExcelImporter";
-import { FileValidator } from "../../utils/FileValidator";
-import { Logger } from "../../utils/Logger";
 import * as XLSX from "xlsx";
+import { Logger } from "../../../../utils/Logger";
+import { FileValidator } from "../../utils/FileValidator";
+import { PLExcelImporter } from "../PLExcelImporter";
 
 describe("PLExcelImporter", () => {
     let importer: PLExcelImporter;

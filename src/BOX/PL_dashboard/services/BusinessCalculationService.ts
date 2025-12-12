@@ -6,8 +6,8 @@
 /// <reference path="../fields/line_daily_fields.d.ts" />
 /// <reference path="../fields/model_master_fields.d.ts" />
 /// <reference path="../fields/month_fields.d.ts" />
+import { Logger } from "../../../utils/Logger";
 import { MasterModelStore } from "../store";
-import { Logger } from "../utils/Logger";
 
 /**
  * 付加価値計算結果

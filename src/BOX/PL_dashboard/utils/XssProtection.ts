@@ -3,9 +3,9 @@
  * テキストコンテンツのエスケープとHTMLサニタイズを行う
  */
 
-import DOMPurify from "dompurify";
 import type { Config } from "dompurify";
-import { Logger } from "./Logger";
+import DOMPurify from "dompurify";
+import { Logger } from "../../../utils/Logger";
 
 /**
  * HTMLエスケープマップ
