@@ -183,8 +183,14 @@ async function handleRecordShow(event: KintoneEvent): Promise<KintoneEvent> {
                 const modelNameField = record.record["model_name"] as { value: string };
                 const modelCodeField = record.record["model_code"] as { value: string };
                 if (modelNameField && modelCodeField) {
-                    modelNameField.value = target_values[0];
-                    modelCodeField.value = target_values[1];
+                    // 最後の要素がモデルコード
+                    const modelCode = target_values[target_values.length - 1];
+                    // 最後の要素を除いたものがモデル名
+                    const modelName = target_values.slice(0, -1).join("_");
+                    // モデル名とモデルコードを設定
+                    modelNameField.value = modelName;
+                    modelCodeField.value = modelCode;
+                    // レコードを更新
                     kintone.app.record.set(record);
                 }
             }

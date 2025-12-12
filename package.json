@@ -24,6 +24,7 @@
         "deploy:app14": "npm run build:desktop && npm run upload:app14",
         "deploy:app11": "npm run build:aoi_repair_input && npm run upload:app11",
         "deploy:app55": "npm run build:production_report && npm run upload:app55",
+        "deploy:app40": "npm run build:production_report && npm run upload:app40",
         "auto:deploy:app14": "chokidar \"src/**/*.ts\" \"src/**/*.css\" --ignore \"src/**/generated/**\" -c \"npm run deploy:app14\"",
         "watch:vite": "vite build --watch",
         "watch:upload:app14": "chokidar \"dist/**/*.js\" -c \"npm run upload:app14\"",
